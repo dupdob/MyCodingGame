@@ -16,23 +16,13 @@ using System.Collections.Generic;
  **/
 class Zone
 {
-	static public int MyID;
 	public List<Zone> Links = new List<Zone>();
 	public Dictionary<int, int> Pods = new Dictionary<int, int>(); 
 	public int Platinum;
 	public int Owner;
 	public int ID;
 
-	public int ComputeScore(int podsCount)
-	{
-		if (Owner < 0) { // no owner
-			return 10*(1+Platinum);
-		}
-		if (Owner != MyID) {
-			return 50*(1+Platinum);
-		}
-		return 5*(1+Platinum);
-	}
+
 }
 
 class Pod
@@ -46,7 +36,7 @@ class Player
 	{
 		string[] inputs = Console.ReadLine().Split(' ');
 		int playerCount = int.Parse(inputs[0]); // the amount of players (2 to 4)
-		Zone.MyID = int.Parse(inputs[1]); // my player ID (0, 1, 2 or 3)
+		int myId = int.Parse(inputs[1]); // my player ID (0, 1, 2 or 3)
 		int zoneCount = int.Parse(inputs[2]); // the amount of zones on the map
 		int linkCount = int.Parse(inputs[3]); // the amount of links between all zones
 		var rnd = new Random (0);
@@ -69,7 +59,7 @@ class Player
 		}
 
 		// game loop
-		for(;;)
+		while (true)
 		{
 			var myPods = new List<Pod>(10);
 
@@ -83,7 +73,7 @@ class Player
 				{
 					var pods = int.Parse(inputs[2 + j]);
 					zone.Pods[j] = pods;
-					if (pods > 0 && j == Zone.MyID)
+					if (pods > 0 && j == myId)
 					{
 						var pod = new Pod();
 						pod.CurrentZone = i;
@@ -100,13 +90,18 @@ class Player
 				var zone = zones [pod.CurrentZone];
 				var nbNeighbour = zone.Links.Count;
 				var offset = rnd.Next (nbNeighbour - 1);
-				var scoring = new SortedList<int, int> (6);
+				var target = zone.Links[ offset ].ID;
 				// pod logic: scan all neigbour, choose one I do not own
 				for (var j = 0; j < nbNeighbour; j++) {
 					var neighbour = zone.Links [(j + offset) % nbNeighbour];
-					scoring [neighbour.ComputeScore (1)] = neighbour.ID;
+					if (neighbour.Owner < 0)
+						target = neighbour.ID;
+					else if (neighbour.Owner != myId) {
+						target = neighbour.ID;
+						break;
+					}
 				}
-				Console.Write ("1 {0} {1} ", pod.CurrentZone, scoring.Last().Value);
+				Console.Write ("1 {0} {1} ", pod.CurrentZone, target);
 			}
 			Console.WriteLine(""); // first line for movement commands, second line for POD purchase (see the protocol in the statement for details)
 			Console.WriteLine("WAIT");
