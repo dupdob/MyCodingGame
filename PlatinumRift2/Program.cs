@@ -41,14 +41,19 @@ class Zone
 	{
 		var offset = rnd.Next (10);
 		if (this.EnemyBase)
-			return 10000;
-		if (Owner < 0) { // no owner
-			return 100*(Links.Count-1+Platinum)+offset;
+			offset=10000;
+		if (Links.Count == 1 && ((Platinum == 0) || (Owner == MyID)))
+			return 0;
+		if (owner == MyID) {
+			offset += Links.Count * 10 - VisitCount;
+		} else if (Platinum > 0) {
+			offset += 500 * (Platinum + 1) + Links.Count;
+		} else if (Owner != MyID) {
+			offset += 100 + Links.Count;
+		} else {
+			offset += 5 + Links.Count;
 		}
-		if (Owner != MyID) {
-			return 500*(Links.Count+Platinum)+offset;
-		}
-		return ((Links.Count-1)-VisitCount)*10+offset;
+		return offset;
 	}
 }
 
@@ -68,7 +73,6 @@ class Player
 		LogLine ("MyId:{0}", Zone.MyID);
 		int zoneCount = int.Parse(inputs[2]); // the amount of zones on the map
 		int linkCount = int.Parse(inputs[3]); // the amount of links between all zones
-		var rnd = new Random (0);
 		var zones = new Dictionary<int, Zone>(zoneCount);
 		for (var i = 0; i < zoneCount; i++)
 		{
@@ -87,7 +91,7 @@ class Player
 			zones[z2].Links.Add (zones [z1]);
 		}
 
-		DumpTerrain (zones);
+//		DumpTerrain (zones);
 
 		bool firstRound = true;
 		// game loop
@@ -136,6 +140,7 @@ class Player
 				LogLine ();
 				var nextZone = scoring.Last ().Value;
 				zones [nextZone].VisitCount++;
+				zones [nextZone].Owner = Zone.MyID;
 				Console.Write ("1 {0} {1} ", pod.CurrentZone, nextZone);
 			}
 			Console.WriteLine(""); // first line for movement commands, second line for POD purchase (see the protocol in the statement for details)
@@ -147,11 +152,11 @@ class Player
 	static void DumpTerrain (Dictionary<int, Zone> zones)
 	{
 		foreach (var zone in zones) {
-			Log ("#{0}: P:{1} O:{2}", zone.Value.ID, zone.Value.Platinum, zone.Value.Owner);
+			Log ("#{0}: P:{1} O:{2};" , zone.Value.ID, zone.Value.Platinum, zone.Value.Owner);
 			if (zone.Value.EnemyBase) {
-				Console.Error.Write ("Enemmy base ");
+				Console.Error.Write ("Enemmy base; ");
 			}
-			LogLine ("Next to:");
+			Log ("Next to: ");
 			foreach(var next in zone.Value.Links)
 			{
 				Log ("{0},", next.ID);
