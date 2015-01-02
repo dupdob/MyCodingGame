@@ -12,7 +12,8 @@ using System.Collections;
  **/
 class Zone
 {
-	private int owner;
+	private int owner=-1;
+	static private Random rnd = new Random();
 	static public int MyID;
 
 	public List<Zone> Links = new List<Zone>();
@@ -26,6 +27,8 @@ class Zone
 		get { return this.owner;}
 		set {
 			if (this.owner != value) {
+				this.owner = value;
+				Player.LogLine("Z#{0}: New Owner: {1}", this.ID, this.owner);
 				if (value != MyID)
 					VisitCount = 0;
 			}
@@ -36,15 +39,16 @@ class Zone
 
 	public int ComputeScore(int podsCount)
 	{
+		var offset = rnd.Next (10);
 		if (this.EnemyBase)
-			return 1000;
+			return 10000;
 		if (Owner < 0) { // no owner
-			return 10*(1+Platinum);
+			return 100*(Links.Count-1+Platinum)+offset;
 		}
 		if (Owner != MyID) {
-			return 50*(1+Platinum);
+			return 500*(Links.Count+Platinum)+offset;
 		}
-		return (1+Platinum)-VisitCount;
+		return ((Links.Count-1)-VisitCount)*10+offset;
 	}
 }
 
@@ -57,10 +61,11 @@ class Player
 {
 	static void Main(string[] args)
 	{
-		Console.Error.WriteLine ("dupdob: Algo V2");
+		LogLine ("dupdob: Algo V2.1");
 		string[] inputs = Console.ReadLine().Split(' ');
-//		int playerCount = int.Parse(inputs[0]); // the amount of players (2 to 4)
+		//		int playerCount = int.Parse(inputs[0]); // the amount of players (2 to 4)
 		Zone.MyID = int.Parse(inputs[1]); // my player ID (0, 1, 2 or 3)
+		LogLine ("MyId:{0}", Zone.MyID);
 		int zoneCount = int.Parse(inputs[2]); // the amount of zones on the map
 		int linkCount = int.Parse(inputs[3]); // the amount of links between all zones
 		var rnd = new Random (0);
@@ -81,6 +86,8 @@ class Player
 			zones[z1].Links.Add(zones[z2]);
 			zones[z2].Links.Add (zones [z1]);
 		}
+
+		DumpTerrain (zones);
 
 		bool firstRound = true;
 		// game loop
@@ -115,19 +122,18 @@ class Player
 				var pod = myPods [i];
 				var zone = zones [pod.CurrentZone];
 				var nbNeighbour = zone.Links.Count;
-				var offset = rnd.Next (nbNeighbour - 1);
 				var scoring = new SortedList<int, int> (6);
 				// pod logic: scan all neigbour, choose one I do not own
 				for (var j = 0; j < nbNeighbour; j++) {
-					var neighbour = zone.Links [(j + offset) % nbNeighbour];
+					var neighbour = zone.Links [j];
 					scoring [neighbour.ComputeScore (1)] = neighbour.ID;
 				}
 
-				Console.Error.Write ("Pod #{0} from {1}", i, pod.CurrentZone);
+				Log ("Pod #{0} @ {1}:", i, pod.CurrentZone);
 				foreach (var dump in scoring) {
-					Console.Error.Write ("{0} {1};", dump.Value, dump.Key);
+					Log ("{0} {1};", dump.Value, dump.Key);
 				}
-				Console.Error.WriteLine ();
+				LogLine ();
 				var nextZone = scoring.Last ().Value;
 				zones [nextZone].VisitCount++;
 				Console.Write ("1 {0} {1} ", pod.CurrentZone, nextZone);
@@ -136,5 +142,34 @@ class Player
 			Console.WriteLine("WAIT");
 			firstRound = false;
 		}
+	}
+
+	static void DumpTerrain (Dictionary<int, Zone> zones)
+	{
+		foreach (var zone in zones) {
+			Log ("#{0}: P:{1} O:{2}", zone.Value.ID, zone.Value.Platinum, zone.Value.Owner);
+			if (zone.Value.EnemyBase) {
+				Console.Error.Write ("Enemmy base ");
+			}
+			LogLine ("Next to:");
+			foreach(var next in zone.Value.Links)
+			{
+				Log ("{0},", next.ID);
+			}
+			LogLine ();
+		}
+	}	
+
+	public static void Log(string fmt, params object[] pars)
+	{
+		Console.Error.Write (fmt, pars);
+	}
+	public static void LogLine(string fmt, params object[] pars)
+	{
+		Console.Error.WriteLine (fmt, pars);
+	}
+	public static void LogLine()
+	{
+		Console.Error.WriteLine ();
 	}
 } 
