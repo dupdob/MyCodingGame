@@ -7,9 +7,9 @@ using System.IO;
 using System.Collections;
 
 /**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+	 * Auto-generated code below aims at helping you parse
+	 * the standard input according to the problem statement.
+	 **/
 class Zone
 {
 	private int owner=-1;
@@ -20,6 +20,8 @@ class Zone
 	public int ID;
 	public bool EnemyBase;
 
+	public List<int> DeadFrom = new List<int>();
+
 	public Dictionary<int, int> Pods = new Dictionary<int, int>(); 
 	public int Platinum;
 	public int Owner
@@ -28,7 +30,8 @@ class Zone
 		set {
 			if (this.owner != value) {
 				this.owner = value;
-				Player.LogLine("Z#{0}: New Owner: {1}", this.ID, this.owner);
+				//Player.LogLine("Z#{0}: New Owner: {1}", this.ID, this.owner);
+				this.DeadFrom.Clear ();
 				if (value != MyID)
 					VisitCount = 0;
 			}
@@ -37,15 +40,18 @@ class Zone
 
 	public int VisitCount;
 
-	public int ComputeScore(int podsCount)
+	public int ComputeScore(int from)
 	{
 		var offset = rnd.Next (10);
 		if (this.EnemyBase)
-			offset=10000;
-		if (Links.Count == 1 && ((Platinum == 0) || (Owner == MyID)))
+			return int.MaxValue;
+		var path = new List<int> ();
+		path.Add (from);
+		if (DeadEndPath (path)) {
 			return 0;
+		}
 		if (owner == MyID) {
-			offset += Links.Count * 10 - VisitCount;
+			offset += Links.Count - VisitCount;
 		} else if (Platinum > 0) {
 			offset += 500 * (Platinum + 1) + Links.Count;
 		} else if (Owner != MyID) {
@@ -53,7 +59,27 @@ class Zone
 		} else {
 			offset += 5 + Links.Count;
 		}
-		return offset;
+		return Math.Max(offset, 0);
+	}
+
+	public bool DeadEndPath(List<int> from)
+	{
+		var lastZone = from.Last();
+		if (this.DeadFrom.Contains(lastZone))
+			return true;
+		if ((Platinum > 0 && Owner!=MyID) || EnemyBase || this.Links.Count>6)
+			return false;
+		var nextList = new List<int> (from);
+		nextList.Add (ID);
+		foreach (var next in this.Links) {
+			if (nextList.Contains(next.ID))
+				continue;
+			if (!next.DeadEndPath (nextList))
+				return false;
+		}
+		Player.LogLine("Zone #{0} is dead end from {1}!", ID, lastZone);
+		this.DeadFrom.Add(lastZone);
+		return true;
 	}
 }
 
@@ -66,7 +92,7 @@ class Player
 {
 	static void Main(string[] args)
 	{
-		LogLine ("dupdob: Algo V2.1");
+		LogLine ("dupdob: Algo V2.2");
 		string[] inputs = Console.ReadLine().Split(' ');
 		//		int playerCount = int.Parse(inputs[0]); // the amount of players (2 to 4)
 		Zone.MyID = int.Parse(inputs[1]); // my player ID (0, 1, 2 or 3)
@@ -91,7 +117,7 @@ class Player
 			zones[z2].Links.Add (zones [z1]);
 		}
 
-//		DumpTerrain (zones);
+		//		DumpTerrain (zones);
 
 		bool firstRound = true;
 		// game loop
@@ -127,10 +153,10 @@ class Player
 				var zone = zones [pod.CurrentZone];
 				var nbNeighbour = zone.Links.Count;
 				var scoring = new SortedList<int, int> (6);
-				// pod logic: scan all neigbour, choose one I do not own
+				// pod logic: scan all neigbour, pick best one
 				for (var j = 0; j < nbNeighbour; j++) {
 					var neighbour = zone.Links [j];
-					scoring [neighbour.ComputeScore (1)] = neighbour.ID;
+					scoring [neighbour.ComputeScore (pod.CurrentZone)] = neighbour.ID;
 				}
 
 				Log ("Pod #{0} @ {1}:", i, pod.CurrentZone);
