@@ -10,15 +10,17 @@ using System.Collections;
 	 * Auto-generated code below aims at helping you parse
 	 * the standard input according to the problem statement.
 	 **/
+
+enum ZoneType {Neutral, MyBase, EnnemyBase};
 class Zone
 {
 	private int owner=-1;
+	public ZoneType type;
 	static private Random rnd = new Random();
 	static public int MyID;
 
 	public List<Zone> Links = new List<Zone>();
 	public int ID;
-	public bool EnemyBase;
 
 	public List<int> DeadFrom = new List<int>();
 
@@ -43,23 +45,34 @@ class Zone
 	public int ComputeScore(int from)
 	{
 		var offset = rnd.Next (10);
-		if (this.EnemyBase)
+		if (this.type == ZoneType.EnnemyBase)
 			return int.MaxValue;
 		var path = new List<int> ();
 		path.Add (from);
 		if (DeadEndPath (path)) {
-			return 0;
+			return int.MinValue;
 		}
 		if (owner == MyID) {
-			offset += Links.Count - VisitCount;
+			offset += 5- VisitCount;
 		} else if (Platinum > 0) {
-			offset += 500 * (Platinum + 1) + Links.Count;
-		} else if (Owner != MyID) {
-			offset += 100 + Links.Count;
+			offset += 500 * (Platinum + 1) + LinksToVisit();
+		} else if (Owner== -1) {
+			offset += 100 + LinksToVisit();
 		} else {
-			offset += 5 + Links.Count;
+			offset += 5 + LinksToVisit();
 		}
-		return Math.Max(offset, 0);
+		return offset;
+	}
+
+	public int LinksToVisit()
+	{
+		var res = 0;
+		foreach(var zone in Links)
+		{
+			if (zone.Owner != MyID)
+				res++;
+		}
+		return res;
 	}
 
 	public bool DeadEndPath(List<int> from)
@@ -67,7 +80,7 @@ class Zone
 		var lastZone = from.Last();
 		if (this.DeadFrom.Contains(lastZone))
 			return true;
-		if ((Platinum > 0 && Owner!=MyID) || EnemyBase || this.Links.Count>6)
+		if ((Platinum > 0 && Owner!=MyID) || this.type==ZoneType.EnnemyBase || this.Links.Count>4)
 			return false;
 		var nextList = new List<int> (from);
 		nextList.Add (ID);
@@ -119,7 +132,7 @@ class Player
 
 		//		DumpTerrain (zones);
 
-		bool firstRound = true;
+		var turnCount = 0;
 		// game loop
 		for(;;)
 		{
@@ -135,13 +148,23 @@ class Player
 				{
 					var pods = int.Parse(inputs[2 + j]);
 					zone.Pods[j] = pods;
+
 					if (j == Zone.MyID) {
 						var pod = new Pod ();
 						pod.CurrentZone = i;
+						if (zone.type == ZoneType.MyBase && turnCount > 20)
+							pods -= 10;
+
 						for (var k = 0; k < pods; k++)
 							myPods.Add (pod);
-					} else if (firstRound && pods > 0) {
-						zone.EnemyBase = true;
+					}
+					if (turnCount == 0) {
+						if (pods == 0)
+							zone.type = ZoneType.Neutral;
+						else if (j == Zone.MyID)
+							zone.type = ZoneType.MyBase;
+						else
+							zone.type = ZoneType.EnnemyBase;
 					}
 				}
 			}
@@ -171,7 +194,7 @@ class Player
 			}
 			Console.WriteLine(""); // first line for movement commands, second line for POD purchase (see the protocol in the statement for details)
 			Console.WriteLine("WAIT");
-			firstRound = false;
+			turnCount++;
 		}
 	}
 
@@ -179,7 +202,7 @@ class Player
 	{
 		foreach (var zone in zones) {
 			Log ("#{0}: P:{1} O:{2};" , zone.Value.ID, zone.Value.Platinum, zone.Value.Owner);
-			if (zone.Value.EnemyBase) {
+			if (zone.Value.type == ZoneType.EnnemyBase) {
 				Console.Error.Write ("Enemmy base; ");
 			}
 			Log ("Next to: ");
