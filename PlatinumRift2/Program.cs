@@ -44,7 +44,7 @@ class Zone
 
 	public int ComputeScore(int from)
 	{
-		var offset = rnd.Next (10);
+		var offset = rnd.Next (20);
 		if (this.type == ZoneType.EnnemyBase)
 			return int.MaxValue;
 		var path = new List<int> ();
@@ -53,13 +53,15 @@ class Zone
 			return int.MinValue;
 		}
 		if (owner == MyID) {
-			offset += 5- VisitCount;
+			offset += 10- VisitCount;
 		} else if (Platinum > 0) {
-			offset += 500 * (Platinum + 1) + LinksToVisit();
+			offset += 500 * Platinum + LinksToVisit();
+			if (owner > 0)
+				offset += 10;
 		} else if (Owner== -1) {
-			offset += 100 + LinksToVisit();
+			offset += 20 * LinksToVisit();
 		} else {
-			offset += 5 + LinksToVisit();
+			offset += 10 + LinksToVisit();
 		}
 		return offset;
 	}
@@ -149,22 +151,29 @@ class Player
 					var pods = int.Parse(inputs[2 + j]);
 					zone.Pods[j] = pods;
 
-					if (j == Zone.MyID) {
-						var pod = new Pod ();
-						pod.CurrentZone = i;
-						if (zone.type == ZoneType.MyBase && turnCount > 20)
-							pods -= 10;
-
-						for (var k = 0; k < pods; k++)
-							myPods.Add (pod);
-					}
 					if (turnCount == 0) {
 						if (pods == 0)
 							zone.type = ZoneType.Neutral;
-						else if (j == Zone.MyID)
+						else if (j == Zone.MyID) {
 							zone.type = ZoneType.MyBase;
-						else
+							LogLine("MyBase is at #{0}.", i);
+						}
+						else {
 							zone.type = ZoneType.EnnemyBase;
+							LogLine("EnnemyBase is at #{0}.", i);
+						}
+					}
+					if (j == Zone.MyID) {
+						var pod = new Pod ();
+						pod.CurrentZone = i;
+						if (zone.type == ZoneType.MyBase)
+						if (turnCount > 20)
+							pods -= 7;
+						else
+							pods -= 1;
+
+						for (var k = 0; k < pods; k++)
+							myPods.Add (pod);
 					}
 				}
 			}
