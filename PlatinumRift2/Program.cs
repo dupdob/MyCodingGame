@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
+using System.Diagnostics;
 
 /**
 	 * Auto-generated code below aims at helping you parse
@@ -15,7 +16,7 @@ enum ZoneType {Neutral, MyBase, EnnemyBase};
 class Zone
 {
 	private int owner=-1;
-	public ZoneType type;
+	public ZoneType type = ZoneType.Neutral;
 	static private Random rnd = new Random();
 	static public int MyID;
 
@@ -26,6 +27,7 @@ class Zone
 
 	public Dictionary<int, int> Pods = new Dictionary<int, int>(); 
 	public int Platinum;
+	public bool Visible;
 	public int Owner
 	{
 		get { return this.owner;}
@@ -37,6 +39,20 @@ class Zone
 				if (value != MyID)
 					VisitCount = 0;
 			}
+		}
+	}
+
+	public bool Fighting
+	{
+		get {
+			bool podsFound = false;
+			foreach (var pod in this.Pods)
+				if (pod.Value > 0)
+				if (podsFound)
+					return true;
+				else
+					podsFound = true;
+			return false;
 		}
 	}
 
@@ -53,7 +69,7 @@ class Zone
 			return int.MinValue;
 		}
 		if (owner == MyID) {
-			offset += 10- VisitCount;
+			offset = 10- VisitCount;
 		} else if (Platinum > 0) {
 			offset += 500 * Platinum + LinksToVisit();
 			if (owner > 0)
@@ -82,7 +98,8 @@ class Zone
 		var lastZone = from.Last();
 		if (this.DeadFrom.Contains(lastZone))
 			return true;
-		if ((Platinum > 0 && Owner!=MyID) || this.type==ZoneType.EnnemyBase || this.Links.Count>4)
+		if (((Platinum > 0 || !this.Visible) && Owner!=MyID) || this.type==ZoneType.EnnemyBase 
+			|| this.Links.Count>3)
 			return false;
 		var nextList = new List<int> (from);
 		nextList.Add (ID);
@@ -92,7 +109,7 @@ class Zone
 			if (!next.DeadEndPath (nextList))
 				return false;
 		}
-		Player.LogLine("Zone #{0} is dead end from {1}!", ID, lastZone);
+		//Player.LogLine("Zone #{0} is dead end from {1}!", ID, lastZone);
 		this.DeadFrom.Add(lastZone);
 		return true;
 	}
@@ -107,7 +124,7 @@ class Player
 {
 	static void Main(string[] args)
 	{
-		LogLine ("dupdob: Algo V2.2");
+		LogLine ("dupdob: Algo V2.3");
 		string[] inputs = Console.ReadLine().Split(' ');
 		//		int playerCount = int.Parse(inputs[0]); // the amount of players (2 to 4)
 		Zone.MyID = int.Parse(inputs[1]); // my player ID (0, 1, 2 or 3)
@@ -128,8 +145,8 @@ class Player
 			inputs = Console.ReadLine().Split(' ');
 			var z1 = int.Parse (inputs [0]);
 			var z2 = int.Parse (inputs [1]);
-			zones[z1].Links.Add(zones[z2]);
-			zones[z2].Links.Add (zones [z1]);
+			zones[z1].Links.Add(zones [z2]);
+			zones[z2].Links.Add(zones [z1]);
 		}
 
 		//		DumpTerrain (zones);
@@ -138,23 +155,22 @@ class Player
 		// game loop
 		for(;;)
 		{
+			var clock = new Stopwatch ();
 			var myPods = new List<Pod>(10);
-
+			clock.Start ();
 			int platinum = int.Parse(Console.ReadLine()); // my available Platinum
 			for (int i = 0; i < zoneCount; i++)
 			{
 				inputs = Console.ReadLine().Split(' ');
 				var zone = zones[int.Parse(inputs[0])];
 				zone.Owner = int.Parse(inputs[1]);
-				for (var j = 0; j < 4; j++)
+				for (var j = 0; j < 2; j++)
 				{
 					var pods = int.Parse(inputs[2 + j]);
 					zone.Pods[j] = pods;
 
 					if (turnCount == 0) {
-						if (pods == 0)
-							zone.type = ZoneType.Neutral;
-						else if (j == Zone.MyID) {
+						if (j == Zone.MyID) {
 							zone.type = ZoneType.MyBase;
 							LogLine("MyBase is at #{0}.", i);
 						}
@@ -167,14 +183,22 @@ class Player
 						var pod = new Pod ();
 						pod.CurrentZone = i;
 						if (zone.type == ZoneType.MyBase)
-						if (turnCount > 20)
-							pods -= 7;
-						else
-							pods -= 1;
+						{
+							LogLine("Save some pods at #{0}!", zone.ID);
+							if (turnCount > 20)
+								pods -= 7;
+							else
+								pods -= 1;
 
+						}
 						for (var k = 0; k < pods; k++)
 							myPods.Add (pod);
 					}
+				}
+				zone.Visible = int.Parse(inputs[4]) > 0;
+				if (zone.Visible)
+				{
+					zone.Platinum = int.Parse(inputs[5]);
 				}
 			}
 
@@ -185,12 +209,25 @@ class Player
 				var zone = zones [pod.CurrentZone];
 				var nbNeighbour = zone.Links.Count;
 				var scoring = new SortedList<int, int> (6);
-				// pod logic: scan all neigbour, pick best one
-				for (var j = 0; j < nbNeighbour; j++) {
-					var neighbour = zone.Links [j];
-					scoring [neighbour.ComputeScore (pod.CurrentZone)] = neighbour.ID;
-				}
+				// pod logic
+				// check if we are on an ennemy zone, because movements are limited then
+				if (zone.Fighting) {
+					// we can stay, or we retreat
+					for (var j = 0; j < nbNeighbour; j++) {
+						var neighbour = zone.Links [j];
+						if (zone.Owner != Zone.MyID)
+							continue;
 
+						scoring [neighbour.Platinum] = neighbour.ID;
+					}
+				} else {
+					// scan all neigbour, pick best one
+					for (var j = 0; j < nbNeighbour; j++) {
+						var neighbour = zone.Links [j];
+						scoring [neighbour.ComputeScore (pod.CurrentZone)] = neighbour.ID;
+					}
+
+				}
 				Log ("Pod #{0} @ {1}:", i, pod.CurrentZone);
 				foreach (var dump in scoring) {
 					Log ("{0} {1};", dump.Value, dump.Key);
@@ -200,8 +237,13 @@ class Player
 				zones [nextZone].VisitCount++;
 				zones [nextZone].Owner = Zone.MyID;
 				Console.Write ("1 {0} {1} ", pod.CurrentZone, nextZone);
+
+				if (clock.ElapsedMilliseconds > 90) {
+					LogLine ("*** Interrupting our play, too much time spent ***");
+					break;
+				}
 			}
-			Console.WriteLine(""); // first line for movement commands, second line for POD purchase (see the protocol in the statement for details)
+			Console.WriteLine(); // first line for movement commands, second line for POD purchase (see the protocol in the statement for details)
 			Console.WriteLine("WAIT");
 			turnCount++;
 		}
