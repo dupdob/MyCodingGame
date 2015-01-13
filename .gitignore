@@ -5,6 +5,8 @@
 *.suo
 *.user
 *.sln.docstates
+# Xamarin
+*.userprefs
 
 # Build results
 Artifacts/Binaries/*.dll
@@ -157,5 +159,3 @@ $RECYCLE.BIN/
 .DS_Store
 ._.DS_Store
 
-# Xamarin
-*.userprefs
