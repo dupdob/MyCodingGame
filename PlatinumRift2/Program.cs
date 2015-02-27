@@ -7,18 +7,15 @@ using System.IO;
 using System.Collections;
 using System.Diagnostics;
 
-/**
-	 * Auto-generated code below aims at helping you parse
-	 * the standard input according to the problem statement.
-	 **/
-
 enum ZoneType {Neutral, MyBase, EnnemyBase};
 class Zone
 {
-	private int owner=-1;
-	public ZoneType type = ZoneType.Neutral;
 	static private Random rnd = new Random();
 	static public int MyID;
+	static public int MaxDepth = 10;
+
+	private int owner=-1;
+	public ZoneType type = ZoneType.Neutral;
 
 	public List<Zone> Links = new List<Zone>();
 	public int ID;
@@ -99,7 +96,10 @@ class Zone
 		if (this.DeadFrom.Contains(lastZone))
 			return true;
 		if (((Platinum > 0 || !this.Visible) && Owner!=MyID) || this.type==ZoneType.EnnemyBase 
-			|| this.Links.Count>3)
+			|| this.LinksToVisit()>0)
+			return false;
+
+		if (from.Count >= MaxDepth)
 			return false;
 		var nextList = new List<int> (from);
 		nextList.Add (ID);
@@ -122,7 +122,7 @@ class Pod
 
 class Player
 {
-	static void Main(string[] args)
+	static void qMain(string[] args)
 	{
 		LogLine ("dupdob: Algo V2.3");
 		string[] inputs = Console.ReadLine().Split(' ');
@@ -132,6 +132,8 @@ class Player
 		int zoneCount = int.Parse(inputs[2]); // the amount of zones on the map
 		int linkCount = int.Parse(inputs[3]); // the amount of links between all zones
 		var zones = new Dictionary<int, Zone>(zoneCount);
+		int maxEnemyPods;
+
 		for (var i = 0; i < zoneCount; i++)
 		{
 			var zone = new Zone();
@@ -157,6 +159,7 @@ class Player
 		{
 			var clock = new Stopwatch ();
 			var myPods = new List<Pod>(10);
+			maxEnemyPods = 0;
 			clock.Start ();
 			int platinum = int.Parse(Console.ReadLine()); // my available Platinum
 			for (int i = 0; i < zoneCount; i++)
@@ -169,7 +172,7 @@ class Player
 					var pods = int.Parse(inputs[2 + j]);
 					zone.Pods[j] = pods;
 
-					if (turnCount == 0) {
+					if (turnCount == 0 && pods>0) {
 						if (j == Zone.MyID) {
 							zone.type = ZoneType.MyBase;
 							LogLine("MyBase is at #{0}.", i);
@@ -182,17 +185,20 @@ class Player
 					if (j == Zone.MyID) {
 						var pod = new Pod ();
 						pod.CurrentZone = i;
-						if (zone.type == ZoneType.MyBase)
-						{
-							LogLine("Save some pods at #{0}!", zone.ID);
-							if (turnCount > 20)
-								pods -= 7;
+						if (zone.type == ZoneType.MyBase) {
+							LogLine ("Save some pods at #{0}!", zone.ID);
+							if (turnCount == 0)
+								pods--;
+							else if (turnCount < 10)
+								pods -= 4;
 							else
-								pods -= 1;
+								pods -= Math.Max(4, maxEnemyPods);
 
 						}
 						for (var k = 0; k < pods; k++)
 							myPods.Add (pod);
+					} else {
+						maxEnemyPods = Math.Max (maxEnemyPods, pods);
 					}
 				}
 				zone.Visible = int.Parse(inputs[4]) > 0;
@@ -228,17 +234,18 @@ class Player
 					}
 
 				}
+				/*
 				Log ("Pod #{0} @ {1}:", i, pod.CurrentZone);
 				foreach (var dump in scoring) {
 					Log ("{0} {1};", dump.Value, dump.Key);
 				}
-				LogLine ();
+				LogLine ();*/
 				var nextZone = scoring.Last ().Value;
 				zones [nextZone].VisitCount++;
 				zones [nextZone].Owner = Zone.MyID;
 				Console.Write ("1 {0} {1} ", pod.CurrentZone, nextZone);
 
-				if (clock.ElapsedMilliseconds > 90) {
+				if (clock.ElapsedMilliseconds > 50) {
 					LogLine ("*** Interrupting our play, too much time spent ***");
 					break;
 				}

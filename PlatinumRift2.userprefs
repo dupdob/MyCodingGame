@@ -1,8 +1,11 @@
-﻿<Properties GitUserInfo="UsingGIT">
+﻿<Properties GitUserInfo="UsingGIT" StartupItem="PlatinumRift2/PlatinumRift2.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="PlatinumRift2/Program.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Program.cs">
     <Files>
-      <File FileName="PlatinumRift2/Program.cs" Line="18" Column="18" />
+      <File FileName="PlatinumRift2/Game1.cs" Line="1" Column="1" />
+      <File FileName="Test/EmptyCSharpFile.cs" Line="1" Column="1" />
+      <File FileName="Test/Clones.cs" Line="1" Column="1" />
+      <File FileName="Test/Program.cs" Line="39" Column="39" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
