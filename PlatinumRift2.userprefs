@@ -1,12 +1,13 @@
 ﻿<Properties GitUserInfo="UsingGIT" StartupItem="PlatinumRift2/PlatinumRift2.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Moyen/Cadeau.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Moyen/CalculMaya.cs">
     <Files>
-      <File FileName="Test/Moyen/PlayerMars.cs" Line="19" Column="19" />
-      <File FileName="Test/Moyen/Scrabble.cs" Line="19" Column="19" />
-      <File FileName="Test/Moyen/Cadeau.cs" Line="5" Column="5" />
+      <File FileName="Test/Moyen/PlayerMars.cs" Line="1" Column="1" />
+      <File FileName="Test/Moyen/Scrabble.cs" Line="1" Column="1" />
+      <File FileName="Test/Moyen/Cadeau.cs" Line="19" Column="19" />
       <File FileName="Test/Moyen/Skynet.cs" Line="1" Column="1" />
       <File FileName="Test/Moyen/Bender.cs" Line="1" Column="1" />
+      <File FileName="Test/Moyen/CalculMaya.cs" Line="45" Column="45" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

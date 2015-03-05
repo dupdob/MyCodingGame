@@ -11,16 +11,18 @@ using System.Collections.Generic;
  **/
 class SolutionCalculMaya
 {
+	static Dictionary<Digit, int> digits = new Dictionary<Digit, int> (20); 
+	static Digit[] digitList = new Digit[20];
+	static int CharLen;
+	static int CharHeight;
+
 	class Digit
 	{
-		private string[] lines = new string[4];
+		private IList<string> lines;
 
-		public Digit(string line1, string line2, string line3, string line4)
+		public Digit(IList<string> extract)
 		{
-			lines[0] = line1;
-			lines[1] = line2;
-			lines[2] = line3;
-			lines[3] = line4;
+			lines = extract;
 		}
 
 		public override bool Equals(object other)
@@ -28,47 +30,108 @@ class SolutionCalculMaya
 			var otherDigit = other as Digit;
 			if (otherDigit == null)
 				return false;
-			return this.lines[0] == otherDigit.lines[0] && this.lines[1] == otherDigit.lines[1]
-				&& this.lines[2] == otherDigit.lines[2] && this.lines[3] == otherDigit.lines[3];
+			for (int i = 0; i < lines.Count; i++) {
+				if (lines [i] != otherDigit.lines [i])
+					return false;
+			}
+			return true;
 		}
 
 		public override int GetHashCode()
 		{
-			int hash = lines[0].GetHashCode() + lines[1].GetHashCode()+lines[2].GetHashCode() + lines[3].GetHashCode();
+			int hash = 0;
+			foreach (var line in lines) {
+				hash += line.GetHashCode ();
+			}
 			return hash;
+		}
+
+		public void Print()
+		{
+			foreach (var line in lines) {
+				Console.WriteLine (line);
+			}
+		}
+	}
+
+	static long ReadVal()
+	{
+		int S1 = int.Parse(Console.ReadLine());
+		var val = 0L;
+		for (int i = 0; i < S1/CharHeight; i++)
+		{
+			var lines = new List<string> (CharHeight);
+			val *= 20;
+			for (int j = 0; j < CharHeight; j++) {
+				lines.Add(Console.ReadLine ());
+			}
+			var thisDigit = new Digit (lines);
+			val += digits [thisDigit];
+		}
+		Console.Error.WriteLine ("Value is {0}", val);
+		return val;
+	}
+
+	static void Print(long value)
+	{
+		var toPrint = new List<int> ();
+
+		do {
+			toPrint.Add ((int)(value % 20));
+			value /= 20;
+		} while (value != 0);
+		toPrint.Reverse ();
+		foreach (var next in toPrint) {
+			Console.Error.WriteLine("Digit: {0}", next);
+			digitList [next].Print ();
 		}
 	}
 
 	static void Main(string[] args)
 	{
 		string[] inputs = Console.ReadLine().Split(' ');
-		int L = int.Parse(inputs[0]);
-		int H = int.Parse(inputs[1]);
-		string[] lines = new string[4];
-		for (int i = 0; i < H; i++)
+		CharLen = int.Parse(inputs[0]);
+		CharHeight = int.Parse(inputs[1]);
+		string[] lines = new string[CharHeight];
+		for (int i = 0; i < CharHeight; i++)
 		{
 			string numeral = Console.ReadLine();
 			lines [i] = numeral;
 		}
-		Digit[] digits = new Digit[20];
 		for (int i = 0; i < 20; i++) {
-			digits [i] = new Digit (lines [0].Substring (i * 4, 4), lines [1].Substring (i * 4, 4), lines [2].Substring (i * 4, 4), lines [3].Substring (i * 4, 4));
+			var extract = new List<string> (CharHeight);
+			foreach (var line in lines) {
+				extract.Add(line.Substring(i * CharLen, CharLen));
+			}
+			var digit = new Digit (extract);
+			digits [digit] = i;
+			digitList [i] = digit;
 		}
-		int S1 = int.Parse(Console.ReadLine());
-		for (int i = 0; i < S1; i++)
-		{
-			string num1Line = Console.ReadLine();
-		}
-		int S2 = int.Parse(Console.ReadLine());
-		for (int i = 0; i < S2; i++)
-		{
-			string num2Line = Console.ReadLine();
-		}
+		var val = ReadVal ();
+		var val2 = ReadVal ();
 		string operation = Console.ReadLine();
 
+		long result;
+		switch (operation) {
+		case "+":
+			result = val + val2;
+			break;
+		case "-":
+			result = val - val2;
+			break;
+		case "*":
+			result = val * val2;
+			break;
+		case "/":
+			result = val / val2;
+			break;
+		default:
+			result = 0;
+			break;
+		}
 		// Write an action using Console.WriteLine()
 		// To debug: Console.Error.WriteLine("Debug messages...");
-
-		Console.WriteLine("result");
+		Console.Error.WriteLine ("Result : {0}", result);
+		Print (result);
 	}
 }
