@@ -35,8 +35,19 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EmptyCSharpFile.cs" />
     <Compile Include="Clones.cs" />
+    <Compile Include="Facile\EmptyClass.cs" />
+    <Compile Include="Moyen\Skynet.cs" />
+    <Compile Include="Moyen\Bender.cs" />
+    <Compile Include="CodinGameRunner.cs" />
+    <Compile Include="Moyen\PlayerMars.cs" />
+    <Compile Include="Moyen\Scrabble.cs" />
+    <Compile Include="Moyen\Cadeau.cs" />
+    <Compile Include="Moyen\CalculMaya.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Facile\" />
+    <Folder Include="Moyen\" />
+  </ItemGroup>
 </Project>
