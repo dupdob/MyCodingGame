@@ -44,10 +44,12 @@
     <Compile Include="Moyen\Scrabble.cs" />
     <Compile Include="Moyen\Cadeau.cs" />
     <Compile Include="Moyen\CalculMaya.cs" />
+    <Compile Include="Difficile\Kirk.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Facile\" />
     <Folder Include="Moyen\" />
+    <Folder Include="Difficile\" />
   </ItemGroup>
 </Project>

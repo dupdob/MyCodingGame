@@ -87,7 +87,7 @@ class SolutionCalculMaya
 		}
 	}
 
-	static void Main(string[] args)
+	static void Main2(string[] args)
 	{
 		string[] inputs = Console.ReadLine().Split(' ');
 		CharLen = int.Parse(inputs[0]);
