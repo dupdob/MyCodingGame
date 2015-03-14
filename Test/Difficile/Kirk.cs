@@ -80,42 +80,47 @@ class PlayerKirk
 			return room [coord.R, coord.C] == '?';
 		}
 
-		private Direction PathFromTo(Coordinates start, Coordinates to, List<Coordinates> path)
+		private Direction PathFromTo(Coordinates start, Coordinates to, List<Coordinates> path, ref int minLength)
 		{
-			if (start.Equals(to)) {
-				Console.Error.WriteLine ("Found path to dest");
-				return Direction.Up;
-			}
-			if (path.Where((x) => x.Equals(start)).Any()) {
-				Console.Error.WriteLine ("Loop");
+			if (path.Where((x) => x.Equals(start)).Any()|| path.Count == minLength) {
 				return Direction.None;
 			}
-			//Console.Error.WriteLine ("{0} : {1} ({2}), ", start.R, start.C, room[start.R, start.C]);
+
+			if (start.Equals(to)) {
+				Console.Error.WriteLine ("Found path to dest");
+				minLength = path.Count;
+				return Direction.Up;
+			}
+			Console.Error.Write("{0}.{1}, ", start.R, start.C);
 			var updatedPath = new List<Coordinates> (path);
 			updatedPath.Add (start);
-			Direction result;
+
+			Direction result = Direction.None;
 
 			foreach (Direction value in typeof(Direction).GetEnumValues()) {
-				Console.Error.Write ("{0},", value);
+				int length = minLength;
 				var next = start.Move (value);
-				if (next == null)
-					continue;
-				if (IsAWall (next) || IsUnknonw(next)) {
+				if (next == null || IsAWall (next) || IsUnknonw(next)) {
 					continue;
 				}
-				result = PathFromTo (next, to, updatedPath);
-				if (result != Direction.None)
-					return value;
+				var tempresult = PathFromTo (next, to, updatedPath, ref length);
+				if (tempresult != Direction.None && length<minLength) {
+					Console.Error.WriteLine ("Found path going {0} (l:{1})", value, length);
+					minLength = length;
+					result = value;
+				}
 			}
-			Console.Error.WriteLine ("End");
-			return Direction.None;
+			return result;
 		}
 
 		public Direction PathFromTo(Coordinates from, Coordinates to)
 		{
 			Console.Error.WriteLine ("Start Scan path to {0}, {1}", to.R, to.C);
 			var path = new List<Coordinates> ();
-			return PathFromTo (from, to, path);
+			int length = int.MaxValue;
+			var result = PathFromTo (from, to, path, ref length);
+			Console.Error.WriteLine("Path length is {0}.", length);
+			return result;
 		}
 
 		public Direction NextScan(Coordinates start)
@@ -150,7 +155,7 @@ class PlayerKirk
 		}
 	}
 
-	static void Main(string[] args)
+	static void Main2(string[] args)
 	{
 		string[] inputs;
 		inputs = Console.ReadLine().Split(' ');
