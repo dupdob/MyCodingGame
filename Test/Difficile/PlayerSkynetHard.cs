@@ -55,6 +55,8 @@ class PlayerSkynetHard
 		public int AccessibleGatewaysCount {
 			get {
 				var result = 0;
+				if (IsGateWay)
+					return result;
 				foreach (var node in Nodes) {
 					if (node.IsGateWay) {
 						result++;
@@ -95,7 +97,7 @@ class PlayerSkynetHard
 
 		public void CutLink(int x, int y)
 		{
-			Console.Error.WriteLine ("Add link {0} -> {1}", x, y);
+			Console.Error.WriteLine ("Cut link {0} -> {1}", x, y);
 			nodes [x].Nodes.Remove (nodes [y]);
 			nodes [y].Nodes.Remove (nodes [x]);
 		}
@@ -115,11 +117,14 @@ class PlayerSkynetHard
 					continue;
 				result [new Pair (node.ID, node.ID)] = 0;
 				foreach (var subnode in node.Nodes) {
-						var pair = new Pair (node.ID, subnode.ID);
-					result [pair] = 1;
+					if (subnode.IsGateWay)
+						continue;
+					var pair = new Pair (node.ID, subnode.ID);
+					result [pair] = 1 - subnode.AccessibleGatewaysCount > 0 ? 1 : 0;
 				}
 			}
 
+			// initial
 			for (int k = 0; k < nodesCount; k++) {
 				for (int i = 0; i < nodesCount; i++) {
 					int partialPath1;
@@ -136,7 +141,8 @@ class PlayerSkynetHard
 					}
 				}
 			}
-			Console.Error.WriteLine ("End of compute");
+			// initial
+			Console.Error.WriteLine("Computed");
 			DumpDistances (result);
 			return result;
 		}
@@ -147,7 +153,8 @@ class PlayerSkynetHard
 			Node dangerousNode = null;
 			int minLength = int.MaxValue;
 			int minNodes = 0;
-			int maxMarker = int.MinValue;
+			if (this.nodes [idFrom].AccessibleGatewaysCount > 0)
+				return this.nodes [idFrom];
 			foreach (var node in nodes.Values) {
 				var pair = new Pair (idFrom, node.ID);
 				Console.Error.Write ("Scanning {0} ", node.ID);
@@ -158,15 +165,14 @@ class PlayerSkynetHard
 				}
 
 				var thisLength = lengths [pair];
-				var marker = node.AccessibleGatewaysCount - thisLength;
-				Console.Error.WriteLine ("at {0} with {1} gateways!", thisLength, node.AccessibleGatewaysCount);
-				if (node.AccessibleGatewaysCount>0 &&  (maxMarker < marker || (marker == maxMarker && minLength>thisLength))) {
+				var exits = node.AccessibleGatewaysCount-1;
+				Console.Error.WriteLine ("at {0} with {1} gateways!", thisLength, exits);
+				if (node.AccessibleGatewaysCount>0 &&  (minNodes < exits || (minNodes == exits && minLength>thisLength))) {
+					Console.Error.WriteLine ("Selected");
 					// more dangerous
-					maxMarker = marker;
 					dangerousNode = node;
 					minLength = thisLength;
-					minNodes = node.AccessibleGatewaysCount;
-//					Console.Error.WriteLine ("Found a dangerous node : {0} at {1} with {2} gateways.", dangerousNode.ID, minLength, minNodes);
+					minNodes = exits;
 				}
 			}
 			Console.Error.WriteLine ("Found a dangerous node : {0} at {1} with {2} gateways.", dangerousNode.ID, minLength, minNodes);
