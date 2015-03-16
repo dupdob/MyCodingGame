@@ -106,65 +106,61 @@ class PlayerSkynetHard
 		{
 			get{ return this.nodes [ID];}
 		}
-
-		public IDictionary<Pair, int> ComputeMinimalPathLenghts()
+			
+		public IDictionary<int, int> ComputeMinimalPathLenghts(int idFrom)
 		{
 			var nodesCount = nodes.Count;
-			// build initial graph
-			var result = new Dictionary<Pair, int> (nodesCount * nodesCount);
-			foreach (var node in nodes.Values) {
+			var result = new Dictionary<int, int> (nodesCount);
+
+			var queue = new List<int> (nodesCount);
+
+			foreach (var node in this.nodes.Values) {
 				if (node.IsGateWay)
 					continue;
-				result [new Pair (node.ID, node.ID)] = 0;
-				foreach (var subnode in node.Nodes) {
-					if (subnode.IsGateWay)
+				result [node.ID] = int.MaxValue;
+				queue.Add (node.ID);
+			}
+			result [idFrom] = 0;
+
+			while (queue.Count > 0) {
+				var minlength = int.MaxValue;
+				var minID = -1;
+				foreach (var id in queue) {
+					if (result [id] < minlength) {
+						minlength = result [id];
+						minID = id;
+					}
+				}
+				queue.Remove (minID);
+
+				var node = this.nodes [minID];
+				var curdist = result [minID];
+				foreach (var next in node.Nodes) {
+					if (next.IsGateWay)
 						continue;
-					var pair = new Pair (node.ID, subnode.ID);
-					result [pair] = 1 - subnode.AccessibleGatewaysCount > 0 ? 1 : 0;
+					var nextLength = curdist + (next.AccessibleGatewaysCount > 0 ? 0 : 1); 
+					if (nextLength < result [next.ID])
+						result [next.ID] = nextLength;
 				}
 			}
 
-			// initial
-			for (int k = 0; k < nodesCount; k++) {
-				for (int i = 0; i < nodesCount; i++) {
-					int partialPath1;
-					if (result.TryGetValue(new Pair(i, k), out partialPath1)) {
-						for (int j = 0; j < nodesCount; j++) {
-							int partialPath2;
-							if (result.TryGetValue(new Pair(k, j), out partialPath2)) {
-								int fullpath;
-								if (!result.TryGetValue (new Pair (i, j), out fullpath) || fullpath> partialPath1 + partialPath2) {
-									result [new Pair (i, j)] = partialPath1 + partialPath2;
-								}
-							}
-						}
-					}
-				}
-			}
-			// initial
-			Console.Error.WriteLine("Computed");
-			DumpDistances (result);
 			return result;
 		}
 
 		public Node GetMostRiskyNode(int idFrom)
 		{
-			var lengths = ComputeMinimalPathLenghts ();
+			var lengths = ComputeMinimalPathLenghts (idFrom);
 			Node dangerousNode = null;
 			int minLength = int.MaxValue;
 			int minNodes = 0;
 			if (this.nodes [idFrom].AccessibleGatewaysCount > 0)
 				return this.nodes [idFrom];
 			foreach (var node in nodes.Values) {
-				var pair = new Pair (idFrom, node.ID);
-				Console.Error.Write ("Scanning {0} ", node.ID);
-				if (!lengths.ContainsKey (pair)) {
-					// no path to this node
-					Console.Error.WriteLine ("is inaccessible!", node.ID);
+				if (node.IsGateWay)
 					continue;
-				}
+				Console.Error.Write ("Scanning {0} ", node.ID);
 
-				var thisLength = lengths [pair];
+				var thisLength = lengths [node.ID];
 				var exits = node.AccessibleGatewaysCount-1;
 				Console.Error.WriteLine ("at {0} with {1} gateways!", thisLength, exits);
 				if (node.AccessibleGatewaysCount>0 &&  (minNodes < exits || (minNodes == exits && minLength>thisLength))) {
