@@ -44,8 +44,8 @@
     <Compile Include="Moyen\Scrabble.cs" />
     <Compile Include="Moyen\Cadeau.cs" />
     <Compile Include="Moyen\CalculMaya.cs" />
-    <Compile Include="Difficile\Kirk.cs" />
     <Compile Include="Difficile\PlayerSkynetHard.cs" />
+    <Compile Include="Difficile\PlayerKirk.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

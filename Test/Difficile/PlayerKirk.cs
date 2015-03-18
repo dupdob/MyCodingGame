@@ -80,7 +80,7 @@ class PlayerKirk
 			return room [coord.R, coord.C] == '?';
 		}
 
-		private Direction PathFromTo(Coordinates start, Coordinates to, List<Coordinates> path, ref int minLength)
+		private Direction PathFromTo(Coordinates start, Coordinates to, List<Coordinates> path, Direction lastDir, ref int minLength)
 		{
 			if (path.Where((x) => x.Equals(start)).Any()|| path.Count == minLength) {
 				return Direction.None;
@@ -91,19 +91,25 @@ class PlayerKirk
 				minLength = path.Count;
 				return Direction.Up;
 			}
+
 			Console.Error.Write("{0}.{1}, ", start.R, start.C);
 			var updatedPath = new List<Coordinates> (path);
 			updatedPath.Add (start);
 
 			Direction result = Direction.None;
 
-			foreach (Direction value in typeof(Direction).GetEnumValues()) {
-				int length = minLength;
+			var directions = new ArrayList (typeof(Direction).GetEnumValues ());
+			directions.Remove (lastDir);
+			directions.Insert (0, lastDir);
+			directions.Remove (Direction.None);
+			foreach (Direction value in directions) {
 				var next = start.Move (value);
 				if (next == null || IsAWall (next) || IsUnknonw(next)) {
 					continue;
 				}
-				var tempresult = PathFromTo (next, to, updatedPath, ref length);
+				int length = minLength;
+
+				var tempresult = PathFromTo (next, to, updatedPath, value, ref length);
 				if (tempresult != Direction.None && length<minLength) {
 					Console.Error.WriteLine ("Found path going {0} (l:{1})", value, length);
 					minLength = length;
@@ -118,7 +124,7 @@ class PlayerKirk
 			Console.Error.WriteLine ("Start Scan path to {0}, {1}", to.R, to.C);
 			var path = new List<Coordinates> ();
 			int length = int.MaxValue;
-			var result = PathFromTo (from, to, path, ref length);
+			var result = PathFromTo (from, to, path, Direction.None, ref length);
 			Console.Error.WriteLine("Path length is {0}.", length);
 			return result;
 		}
@@ -130,6 +136,52 @@ class PlayerKirk
 					return value;
 			}
 			return Direction.None;
+		}
+
+		private Direction MaximizeDiscovery(Coordinates start, List<Coordinates> path, ref int minLength)
+		{
+			if (path.Where((x) => x.Equals(start)).Any()|| path.Count == minLength) {
+				return Direction.None;
+			}
+
+			if (IsUnknonw(start)) {
+				Console.Error.WriteLine ("Found unknown cell at {0}:{1}", start.R, start.C);
+				minLength = path.Count;
+				return Direction.Up;
+			}
+			Console.Error.Write("{0}.{1}, ", start.R, start.C);
+			var updatedPath = new List<Coordinates> (path);
+			updatedPath.Add (start);
+
+			Direction result = Direction.None;
+
+			foreach (Direction value in typeof(Direction).GetEnumValues()) {
+				int length = minLength;
+				var next = start.Move (value);
+				if (next == null || IsAWall (next)) {
+					continue;
+				}
+
+				var tempresult = MaximizeDiscovery (next, updatedPath, ref length);
+				if (tempresult != Direction.None && length<minLength) {
+					Console.Error.WriteLine ("Found path going {0} (l:{1})", value, length);
+					minLength = length;
+					result = value;
+				}
+			}
+			return result;
+		}
+
+		public Direction MaximizeDiscovery(Coordinates start)
+		{
+			// start looking for a unknown room
+			Console.Error.WriteLine ("Start Scan for unknown.");
+			var path = new List<Coordinates> ();
+			int length = int.MaxValue;
+			var result = MaximizeDiscovery (start, path, ref length);
+			Console.Error.WriteLine("Path length is {0}.", length);
+			return result;
+
 		}
 
 		public void Capture()
@@ -155,7 +207,7 @@ class PlayerKirk
 		}
 	}
 
-	static void Main2(string[] args)
+	static void Main(string[] args)
 	{
 		string[] inputs;
 		inputs = Console.ReadLine().Split(' ');
@@ -183,7 +235,7 @@ class PlayerKirk
 				if (plan.Control == null) {
 					// keep scanning
 					Console.Error.WriteLine ("Looking for control");
-					next = plan.NextScan (kirk);
+					next = plan.MaximizeDiscovery (kirk);
 				} else {
 					Console.Error.WriteLine ("Move to control");
 					next = plan.PathFromTo (kirk, plan.Control);

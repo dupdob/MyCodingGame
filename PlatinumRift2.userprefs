@@ -1,8 +1,8 @@
 ﻿<Properties GitUserInfo="UsingGIT" StartupItem="PlatinumRift2/PlatinumRift2.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/PlayerKirk.cs">
     <Files>
-      <File FileName="Test/Difficile/PlayerSkynetHard.cs" Line="137" Column="65" />
+      <File FileName="Test/Difficile/PlayerKirk.cs" Line="113" Column="5" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
