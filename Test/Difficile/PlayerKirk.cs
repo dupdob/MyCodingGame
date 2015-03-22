@@ -51,6 +51,15 @@ class PlayerKirk
 			return null;
 		}
 
+		public Direction FindDirection(Coordinates scan)
+		{
+			if (this.C == scan.C) {
+				return this.R > scan.R ? Direction.Up : Direction.Down;
+			} else {
+				return this.C > scan.C ? Direction.Left : Direction.Right;
+			}
+		}
+
 		public override bool Equals(object obj)
 		{
 			var other =  obj as Coordinates;
@@ -61,8 +70,7 @@ class PlayerKirk
 		{
 			return (other != null && other.R == this.R && other.C == this.C);
 		}
-
-
+			
 		public override int GetHashCode()
 		{
 			return R * 10000 + C;
@@ -96,6 +104,10 @@ class PlayerKirk
 
 		public bool IsAWall(Coordinates coord)
 		{
+			if (coord.C >= room.GetLongLength (1) || coord.C < 0)
+				return true;
+			else if (coord.R >= room.GetLength (0) || coord.R < 0)
+				return true;
 			return room [coord.R, coord.C] == '#';
 		}
 
@@ -165,6 +177,7 @@ class PlayerKirk
 					}
 				}
 			}
+
 			// find the path;
 			var scan = to;
 			Log ("Unwinding path from {0}, ", to);
@@ -185,11 +198,7 @@ class PlayerKirk
 
 			if (scan != null) {
 				LogLine ("Moving to {0}", scan);
-				if (from.C == scan.C) {
-					result = from.R > scan.R ? Direction.Up : Direction.Down;
-				} else {
-					result = from.C > scan.C ? Direction.Left : Direction.Right;
-				}
+				result = from.FindDirection (scan);
 			}
 			return result;
 		}
@@ -203,50 +212,87 @@ class PlayerKirk
 			return Direction.None;
 		}
 
-		private Direction MaximizeDiscovery(Coordinates start, List<Coordinates> path, ref int minLength)
-		{
-			if (path.Where((x) => x.Equals(start)).Any()|| path.Count == minLength) {
-				return Direction.None;
-			}
-
-			if (IsUnknonw(start)) {
-				Console.Error.WriteLine ("Found unknown cell at {0}", start.R, start.C);
-				minLength = path.Count;
-				return Direction.Up;
-			}
-			Console.Error.Write("{0}.{1}, ", start.R, start.C);
-			var updatedPath = new List<Coordinates> (path);
-			updatedPath.Add (start);
-
-			Direction result = Direction.None;
-
-			foreach (Direction value in typeof(Direction).GetEnumValues()) {
-				int length = minLength;
-				var next = start.Move (value);
-				if (next == null || IsAWall (next)) {
-					continue;
-				}
-
-				var tempresult = MaximizeDiscovery (next, updatedPath, ref length);
-				if (tempresult != Direction.None && length<minLength) {
-					Console.Error.WriteLine ("Found path going {0} (l:{1})", value, length);
-					minLength = length;
-					result = value;
-				}
-			}
-			return result;
-		}
-
 		public Direction MaximizeDiscovery(Coordinates start)
 		{
-			// start looking for a unknown room
-			Console.Error.WriteLine ("Start Scan for unknown.");
-			var path = new List<Coordinates> ();
-			int length = int.MaxValue;
-			var result = MaximizeDiscovery (start, path, ref length);
-			Console.Error.WriteLine("Path length is {0}.", length);
-			return result;
+			LogLine ("Looking for uknown from {0}.", start);
 
+			var distances = new Dictionary<Coordinates, int> (room.Length);
+			var nodesToScan = new List<Coordinates> (room.Length);
+			var previous = new Dictionary<Coordinates, Coordinates> (room.Length);
+
+			for(int i=0; i<room.GetLength(0); i++) {
+				for (int j = 0; j < room.GetLength (1); j++) {
+					var cell = new Coordinates (i, j);
+					if (!IsAWall (cell)) {
+						nodesToScan.Add (cell);
+					}
+				}
+			}
+			distances [start] = 0;
+	
+			while (nodesToScan.Count > 0) {
+				// find closest node to source
+				Coordinates closest = null;
+				var minLength = int.MaxValue;
+				foreach (var node in nodesToScan) {
+					int dist;
+					if (distances.TryGetValue (node, out dist)) {
+						if (dist < minLength) {
+							minLength = dist;
+							closest = node;
+						}
+					}
+				}
+				if (closest == null) {
+					break;
+				}
+
+				PlayerKirk.LogLine("Closest Node : {0}", closest);
+				nodesToScan.Remove (closest);
+
+				// scan neighbours
+				foreach (Direction value in typeof(Direction).GetEnumValues()) {
+					var neighbor = closest.Move (value);
+					if (neighbor != null && !IsAWall (neighbor) && (CanGoThrough(closest) || CanGoThrough(neighbor) )) {
+						var newdist = minLength +1;
+						int oldDist;
+						if (!distances.TryGetValue(neighbor, out oldDist) || oldDist > newdist){
+							distances[neighbor] = newdist;
+							previous [neighbor] = closest;
+						}
+					}
+				}
+			}
+			Coordinates to = null;
+			int closestDist = int.MaxValue;
+			// look for the closes unknown
+			foreach (var entry in distances) {
+				if (IsUnknonw(entry.Key) && entry.Value< closestDist)
+				{
+					to = entry.Key;
+					closestDist = entry.Value;
+				}
+			}
+			// find the path;
+			var scan = to;
+			var result = Direction.None;
+			while(true) {
+				if (previous.ContainsKey (scan)) {
+					var prev = previous [scan];
+					if (prev.Equals(start)) {
+						break;
+					}
+					scan = prev;
+				} else {
+					break;
+				}
+			}
+
+			if (scan != null) {
+				LogLine ("Moving to {0}", scan);
+				result = start.FindDirection (scan);
+			}
+			return result;
 		}
 
 		public void Capture()
