@@ -46,6 +46,7 @@
     <Compile Include="Moyen\CalculMaya.cs" />
     <Compile Include="Difficile\PlayerSkynetHard.cs" />
     <Compile Include="Difficile\PlayerKirk.cs" />
+    <Compile Include="Difficile\Clones.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
