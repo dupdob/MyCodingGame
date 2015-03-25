@@ -12,6 +12,7 @@ using System.Collections.Generic;
 class ClonesHard
 {
 	static Dictionary<int, List<int> > elevatorPos;
+	static Dictionary<int, List<int> > blockerPos;
 
 	static void Log(string msg, params object[] pars)
 	{
@@ -27,7 +28,7 @@ class ClonesHard
 	{
 		Console.Error.WriteLine ();
 	}
-		
+
 	static void AddElevator(int elevatorFloor, int elevatorPosX)
 	{
 		LogLine("Elevator at {0} {1}", elevatorFloor, elevatorPosX);
@@ -46,11 +47,12 @@ class ClonesHard
 
 		var list = elevatorPos [floor];
 		foreach (var val in elevatorPos[floor]) {
-			if (val >= x) {
+			if (val > x) {
 				break;
 			}
-			result = x;
+			result = val;
 		}
+		LogLine ("Elevator on left at {0}", result);
 		return result;
 	}
 
@@ -62,11 +64,12 @@ class ClonesHard
 
 		var list = elevatorPos [floor];
 		foreach (var val in elevatorPos[floor]) {
-			result = x;
 			if (val >= x) {
+				result = val;
 				break;
 			}
 		}
+		LogLine ("Elevator on right at {0}", result);
 		return result;
 	}
 
@@ -76,22 +79,19 @@ class ClonesHard
 		int right = FirstElevatorOnRight (floor, x);
 
 		if (left == -1 && right == -1) {
-			Elevator ();
+			Elevator (floor, x);
 			return;
 		}
-		if (left == -1) {
-			if (direction == "LEFT")
-				Block ();
+		if (direction == "RIGHT") {
+			if (right == -1 || (left>=0 && x - left  < right - x))
+				Block (floor, x);
 			else
 				Wait ();
-			return;
-		}
-		if (right == -1) {
-			if (direction == "RIGHT")
-				Block ();
+		} else {
+			if (left == -1 || (right >=0 && x - left  > right - x ) )
+				Block (floor, x);
 			else
 				Wait ();
-			return;
 		}
 
 	}
@@ -113,6 +113,7 @@ class ClonesHard
 		LogLine ("Nb Clones: {0}", nbTotalClones);
 		LogLine ("Nb Extra Lifts :{0}", nbAdditionalElevators);
 
+		blockerPos = new Dictionary<int, List<int>> (nbFloors);
 		elevatorPos = new Dictionary<int, List<int>> (nbFloors);
 		for (int i = 0; i < nbElevators; i++)
 		{
@@ -131,28 +132,29 @@ class ClonesHard
 			int clonePos = int.Parse(inputs[1]); // position of the leading clone on its floor
 			string direction = inputs[2]; // direction of the leading clone: LEFT or RIGHT
 
-			Console.Error.WriteLine("Clone at {0} {1}", cloneFloor, clonePos);
+			Console.Error.WriteLine("Clone at {0} {1} toward {2}", cloneFloor, clonePos, direction);
 			// Write an action using Console.WriteLine()
 			// To debug: Console.Error.WriteLine("Debug messages...");
 			// stop at edge of screen
 			if (cloneFloor < 0 || clonePos < 0)
 				Wait ();
-			else if ((clonePos == 0 && direction == "LEFT") || (clonePos == width - 1 && direction == "RIGHT")) {
-				Block ();
-			} else if (elevatorPos.ContainsKey (cloneFloor)) {
-				if ((direction == "LEFT" && elevatorPos [cloneFloor] > clonePos) || (direction == "RIGHT" && elevatorPos [cloneFloor] < clonePos))
-					Block ();
-				else
-					// waiting to reach the elevator
-					Wait (); // action: WAIT or BLOCK
-			} else {
-				Elevator (cloneFloor, clonePos);
-			}
+			else
+				MoveToClosestLift (cloneFloor, clonePos, direction);
 		}
 	}
 
-	static void Block()
+	static void Block(int blockerFloor, int blockerPosX)
 	{
+		if (!blockerPos.ContainsKey (blockerFloor)) {
+			blockerPos [blockerFloor] = new List<int> (2);
+		} else if (blockerPos [blockerFloor].Contains (blockerPosX)) {
+			Wait ();
+			return;
+		}
+		LogLine("Blocker at {0} {1}", blockerFloor, blockerPosX);
+		blockerPos [blockerFloor].Add(blockerPosX);
+		blockerPos [blockerFloor].Sort ();
+
 		Console.WriteLine("BLOCK"); // action: WAIT or BLOCK
 	}
 
@@ -166,5 +168,5 @@ class ClonesHard
 		AddElevator (level, x);
 		Console.WriteLine("ELEVATOR"); // action: WAIT or BLOCK
 	}
-		
+
 }
