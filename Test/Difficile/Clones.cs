@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 /**
@@ -11,9 +7,7 @@ using System.Collections.Generic;
  **/
 class ClonesHard
 {
-    static Dictionary<int, List<int>> elevatorPos;
-    static Dictionary<int, List<int>> blockerPos;
-
+ 
     static void Log(string msg, params object[] pars)
     {
         Console.Error.Write(msg, pars);
@@ -29,148 +23,181 @@ class ClonesHard
         Console.Error.WriteLine();
     }
 
-    static void AddElevator(int elevatorFloor, int elevatorPosX)
-    {
-        LogLine("Elevator at {0} {1}", elevatorFloor, elevatorPosX);
-        if (!elevatorPos.ContainsKey(elevatorFloor))
-        {
-            elevatorPos[elevatorFloor] = new List<int>(2);
-        }
-        elevatorPos[elevatorFloor].Add(elevatorPosX);
-        elevatorPos[elevatorFloor].Sort();
-    }
-
-    static int FirstElevatorOnLeft(int floor, int x)
-    {
-        int result = -1;
-        if (!elevatorPos.ContainsKey(floor))
-            return result;
-
-        var list = elevatorPos[floor];
-        foreach (var val in elevatorPos[floor])
-        {
-            if (val > x)
-            {
-                break;
-            }
-            result = val;
-        }
-        LogLine("Elevator on left at {0}", result);
-        return result;
-    }
-
-    static int FirstElevatorOnRight(int floor, int x)
-    {
-        int result = -1;
-        if (!elevatorPos.ContainsKey(floor))
-            return result;
-
-        var list = elevatorPos[floor];
-        foreach (var val in elevatorPos[floor])
-        {
-            if (val >= x)
-            {
-                result = val;
-                break;
-            }
-        }
-        LogLine("Elevator on right at {0}", result);
-        return result;
-    }
-
-    static void MoveToClosestLift(int floor, int x, string direction, Context context)
-    {
-        int left = FirstElevatorOnLeft(floor, x);
-        int right = FirstElevatorOnRight(floor, x);
-
-        if (left == -1 && right == -1)
-        {
-            context.Elevator(floor, x);
-            return;
-        }
-        if (direction == "RIGHT")
-        {
-            if (right == -1 || (left >= 0 && x - left < right - x))
-                context.Block(floor, x);
-            else
-                context.Wait();
-        }
-        else
-        {
-            if (left == -1 || (right >= 0 && x - left > right - x))
-                context.Block(floor, x);
-            else
-                context.Wait();
-        }
-
-    }
 
     class Context
     {
+        private Dictionary<int, List<int>> elevatorPos;
+        private Dictionary<int, List<int>> blockerPos;
+
         public int nbTotalClones; // number of generated clones
         public int nbRounds;
+        public int nbLifts;
+        private int freeLifts;
+        private int nbFloors;
+
+        public Context(int nbFloors)
+        {
+            this.nbFloors = nbFloors;
+            blockerPos = new Dictionary<int, List<int>>(nbFloors);
+            elevatorPos = new Dictionary<int, List<int>>(nbFloors);
+        }
+
+        public void Init()
+        {
+            this.freeLifts = this.nbLifts;
+            // compute nb of 'free lifts' to shorten pah
+            for (int i = 0; i < this.nbFloors; i++)
+            {
+                if (!this.elevatorPos.ContainsKey(i) || this.elevatorPos[i].Count == 0)
+                {
+                    this.freeLifts--;
+                }
+            }
+            LogLine("Free Lifts: {0} ", this.freeLifts);
+        }
 
         public void Wait()
         {
             Console.WriteLine("WAIT"); // action: WAIT or BLOCK
         }
 
-        public void Block(int blockerFloor, int blockerPosX)
+        public void AddElevator(int elevatorFloor, int elevatorPosX)
         {
-            if (!blockerPos.ContainsKey(blockerFloor))
+            LogLine("Elevator at {0} {1}", elevatorFloor, elevatorPosX);
+            if (!elevatorPos.ContainsKey(elevatorFloor))
             {
-                blockerPos[blockerFloor] = new List<int>(2);
+                elevatorPos[elevatorFloor] = new List<int>(2);
             }
-            else if (blockerPos[blockerFloor].Contains(blockerPosX))
+            elevatorPos[elevatorFloor].Add(elevatorPosX);
+            elevatorPos[elevatorFloor].Sort();
+        }
+
+        private int FirstElevatorOnLeft(int floor, int x)
+        {
+            int result = -1;
+            if (!elevatorPos.ContainsKey(floor))
+                return result;
+
+            foreach (var val in elevatorPos[floor])
+            {
+                if (val > x)
+                {
+                    break;
+                }
+                result = val;
+            }
+            LogLine("Elevator on left at {0}", result);
+            return result;
+        }
+
+        private int FirstElevatorOnRight(int floor, int x)
+        {
+            int result = -1;
+            if (!elevatorPos.ContainsKey(floor))
+                return result;
+
+            foreach (var val in elevatorPos[floor])
+            {
+                if (val >= x)
+                {
+                    result = val;
+                    break;
+                }
+            }
+            LogLine("Elevator on right at {0}", result);
+            return result;
+        }
+
+        public void MoveToClosestLift(int floor, int x, string direction)
+        {
+            int left = FirstElevatorOnLeft(floor, x);
+            int right = FirstElevatorOnRight(floor, x);
+
+            if (left == -1 && right == -1)
+            {
+                Elevator(floor, x);
+                return;
+            }
+
+            if (this.freeLifts > 0)
+            {
+                LogLine("Let's build a free lift.");
+                this.freeLifts--;
+                Elevator(floor, x);
+                return;
+            }
+            if (direction == "RIGHT")
+            {
+                if (right == -1 || (left >= 0 && x - left < right - x))
+                    Block(floor, x);
+                else
+                    Wait();
+            }
+            else
+            {
+                if (left == -1 || (right >= 0 && x - left > right - x))
+                    Block(floor, x);
+                else
+                    Wait();
+            }
+        }
+
+        private void Block(int blockerFloor, int blockerPosX)
+        {
+            if (!this.blockerPos.ContainsKey(blockerFloor))
+            {
+                this.blockerPos[blockerFloor] = new List<int>(2);
+            }
+            else if (this.blockerPos[blockerFloor].Contains(blockerPosX))
             {
                 this.Wait();
                 return;
             }
             LogLine("Blocker at {0} {1}", blockerFloor, blockerPosX);
-            blockerPos[blockerFloor].Add(blockerPosX);
-            blockerPos[blockerFloor].Sort();
+            this.blockerPos[blockerFloor].Add(blockerPosX);
+            this.blockerPos[blockerFloor].Sort();
 
             this.nbTotalClones--;
 
             Console.WriteLine("BLOCK"); // action: WAIT or BLOCK
         }
-        public void Elevator(int level, int x)
+
+        private void Elevator(int level, int x)
         {
             AddElevator(level, x);
+            this.nbLifts--;
             Console.WriteLine("ELEVATOR"); // action: WAIT or BLOCK
         }
-
     }
 
     static void Main(string[] args)
     {
         string[] inputs;
-        var context = new Context();
         inputs = Console.ReadLine().Split(' ');
         int nbFloors = int.Parse(inputs[0]); // number of floors
         int width = int.Parse(inputs[1]); // width of the area
+        var context = new Context(nbFloors);
         context.nbRounds = int.Parse(inputs[2]); // maximum number of rounds
         int exitFloor = int.Parse(inputs[3]); // floor on which the exit is found
         int exitPos = int.Parse(inputs[4]); // position of the exit on its floor
         context.nbTotalClones = int.Parse(inputs[5]); // number of generated clones
-        int nbAdditionalElevators = int.Parse(inputs[6]); // ignore (always zero)
+        context.nbLifts = int.Parse(inputs[6]); // ignore (always zero)
         int nbElevators = int.Parse(inputs[7]); // number of elevators
 
         LogLine("Nb Rounds: {0}", context.nbRounds);
         LogLine("Nb Clones: {0}", context.nbTotalClones);
-        LogLine("Nb Extra Lifts :{0}", nbAdditionalElevators);
+        LogLine("Nb Extra Lifts :{0}", context.nbLifts);
 
-        blockerPos = new Dictionary<int, List<int>>(nbFloors);
-        elevatorPos = new Dictionary<int, List<int>>(nbFloors);
         for (int i = 0; i < nbElevators; i++)
         {
             inputs = Console.ReadLine().Split(' ');
             int elevatorFloor = int.Parse(inputs[0]); // floor on which this elevator is found
             int elevatorPosX = int.Parse(inputs[1]); // position of the elevator on its floor
-            AddElevator(elevatorFloor, elevatorPosX);
+            context.AddElevator(elevatorFloor, elevatorPosX);
         }
-        AddElevator(exitFloor, exitPos);
+        context.AddElevator(exitFloor, exitPos);
 
+        context.Init();
         // game loop
         while (true)
         {
@@ -187,7 +214,7 @@ class ClonesHard
                 context.Wait();
             else
             {
-                MoveToClosestLift(cloneFloor, clonePos, direction, context);
+                context.MoveToClosestLift(cloneFloor, clonePos, direction);
             }
             context.nbRounds--;
         }
