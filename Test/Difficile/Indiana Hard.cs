@@ -14,7 +14,8 @@ class PlayerIndy
     {
         Wait,
         Left,
-        Right
+		Right,
+		DoubleLeft
     };
 
     private static int ExitX;
@@ -66,14 +67,14 @@ class PlayerIndy
             // Write an action using Console.WriteLine()
             // To debug: Console.Error.WriteLine("Debug messages...");
             var room = array[YI][XI];
-            Console.Error.WriteLine("Room type:{0}, from {1}", room, direction);
-
             Action action;
             int X, Y;
-            ComputePath(array, XI, YI, direction, out action, out X, out Y);
+
+			ComputePath(array, XI, YI, direction, true, out action, out X, out Y);
             switch (action)
             {
                 case Action.Left:
+				case Action.DoubleLeft:
                     Console.WriteLine("{0} {1} LEFT", X, Y);
                     Console.Error.WriteLine("Room {0} at {1}:{2} must rotate", array[Y][X], X, Y);
                     array[Y][X] = RotateLeft(array[Y][X]);
@@ -111,7 +112,7 @@ class PlayerIndy
         return Direction.Blocked;
     }
 
-    private static Direction ComputePath(List<List<int>> map, int x, int y, Direction dir, out Action action, out int X, out int Y)
+	private static Direction ComputePath(List<List<int>> map, int x, int y, Direction dir, bool direct, out Action action, out int X, out int Y)
     {
         action = Action.Wait;
         X = Y = 0;
@@ -125,76 +126,75 @@ class PlayerIndy
             Console.Error.WriteLine("Found Exit");
             return Direction.Down;
         }
+		if (x < 0 || x >= map [0].Count) {
+			Console.Error.WriteLine("Dead end ");
+			return Direction.Blocked;
+		}
         // try the next one
         var room = map[y][x];
-        Console.Error.Write("({2}){0}:{1} ==>", x, y, room);
-        var next = IdentifyNext(room, dir);
-//        Console.Error.WriteLine("Moving from {0} through {1} to {2}", dir, room, next);
-        next = Convert(next);
-        var possible = IdentifyNextWithRotations(room, next);
-        var ret = TryPath(map, x, y, next, out action, out X, out Y);
-        if (ret != Direction.Blocked || room < 2)
-            return ret;
-//        Console.Error.Write("Room {0} at {1}:{2} must be rotated ", room, x, y);
-        // rotate left
-        var newRoom = RotateLeft(room);
-        next = IdentifyNext(newRoom, dir);
-//        Console.Error.WriteLine("Moving from {0} through {1} to {2}", dir, newRoom, next);
-        next = Convert(next);
-        ret = TryPath(map, x, y, next, out action, out X, out Y);
-        if (ret!= Direction.Blocked)
-        {
-            X = x;
-            Y = y;
-            action = Action.Left;
-            return ret;
-        }
-        // rotate right
-        newRoom = RotateRight(room);
-        next = IdentifyNext(newRoom, dir);
-//        Console.Error.WriteLine("Moving from {0} through {1} to {2}", dir, newRoom, next);
-        next = Convert(next);
-        ret = TryPath(map, x, y, next, out action, out X, out Y);
-        if (ret !=Direction.Blocked)
-        {
-            X = x;
-            Y = y;
-            action = Action.Right;
-            return ret;
-        }
+        var possible = IdentifyNextWithRotations(room, dir);
+		if (possible.Count > 1) {
+			Console.Error.Write ("Fork possible");
+			// no longer a direct path, possible alternatives
+			direct = false;
+		}
+		foreach (var move in possible) {
+			Console.Error.Write("({2}){0}:{1} from {3} ==>", x, y, room, dir);
+			if (move.Value == Direction.Blocked)
+				continue;
+			Console.Error.WriteLine ("evaluating {2}, {3}", room, dir, move.Key, move.Value);
+			if (move.Key == Action.Left) {
+				Console.Error.Write("Room  can be rotated left");
+			} else if (move.Key == Action.Right) {
+				Console.Error.Write("Room can be rotated right");
+			}else if (move.Key == Action.DoubleLeft) {
+				Console.Error.Write("Room can be rotated left twice");
+			}
+			var nextDirection = Convert(move.Value);
+			var nx = x;
+			var ny = y;
+			X = x;
+			Y = y;
+			switch (nextDirection)
+			{
+			case Direction.Top:
+				ny = y + 1;
+				break;
+			case Direction.Down:
+				ny = y - 1;
+				break;
+			case Direction.Right:
+				nx = x - 1;
+				break;
+			case Direction.Left:
+				nx = x + 1;
+				break;
+			}
+			// check if everything is ok
+			var ret = ComputePath(map, nx, ny, nextDirection, direct, out action, out X, out Y);
+
+			if (direct && move.Key != Action.Wait) {
+				X = x;
+				Y = y;
+				action = move.Key;
+				Console.Error.Write ("Force action as {0} for {1}:{2}", action, X, Y);
+				return Direction.Down;
+			}
+			if (ret != Direction.Blocked)
+			{
+				if (move.Key != Action.Wait) {
+					X = x;
+					Y = y;
+					action = move.Key;
+					Console.Error.Write ("Force action as {0} for {1}:{2}", action, X, Y);
+				}
+				return Direction.Down;
+			}
+		}
+		Console.Error.Write ("!");
         return Direction.Blocked;
     }
-
-    private static Direction TryPath(List<List<int>> map, int x, int y, Direction next, out Action act, out int X, out int Y)
-    {
-        var nx = x;
-        var ny = y;
-        X = x;
-        Y = y;
-        act = Action.Wait;
-        switch (next)
-        {
-            case Direction.Top:
-                ny = y + 1;
-                break;
-            case Direction.Down:
-                ny = y - 1;
-                break;
-            case Direction.Right:
-                nx = x - 1;
-                break;
-            case Direction.Left:
-                nx = x + 1;
-                break;
-            case Direction.Blocked:
-                return next;
-        }
-        // check if everything is ok
-        var ret = ComputePath(map, nx, ny, next, out act, out X, out Y);
-        return ret != Direction.Blocked ? next : ret;
-
-    }
-
+		
     private static int RotateLeft(int room)
     {
         switch (room)
@@ -333,12 +333,12 @@ class PlayerIndy
         }
         return Direction.Blocked;
     }
+
     private static Dictionary<Action, Direction> IdentifyNextWithRotations(int roomType, Direction incoming)
     {
         var ret = new Dictionary<Action, Direction>();
         if (roomType < 0)
             roomType = -roomType;
-        ret[Action.Wait] = Direction.Blocked;
         switch (roomType)
         {
             case 0:
@@ -412,13 +412,18 @@ class PlayerIndy
                     ret[Action.Left] = Direction.Right;
                 }
                 break;
-            case 8:
-                if (incoming == Direction.Top)
-                    ret[Action.Left] = Direction.Down;
-                if (incoming == Direction.Right)
-                    ret[Action.Wait] = Direction.Down;
+			case 8:
+				if (incoming == Direction.Top)
+					ret [Action.Left] = Direction.Down;
+				if (incoming == Direction.Right) {
+					ret [Action.Wait] = Direction.Down;
+					ret [Action.DoubleLeft] = Direction.Left;
+				}
                 if (incoming == Direction.Left)
+				{
                     ret[Action.Right] = Direction.Down;
+					ret [Action.DoubleLeft] = Direction.Right;
+				}
                 break;
             case 9:
                 if (incoming == Direction.Top)
@@ -435,28 +440,44 @@ class PlayerIndy
                 }
                 break;
             case 10:
-                if (incoming == Direction.Top)
-                    ret[Action.Wait] = Direction.Left;
+                if (incoming == Direction.Top){
+					ret [Action.Wait] = Direction.Left;
+					ret [Action.Right] = Direction.Right;
+				}
                 if (incoming == Direction.Left)
                     ret[Action.Left] = Direction.Down;
+				if (incoming == Direction.Right)
+					ret[Action.DoubleLeft] = Direction.Down;
                 break;
-            case 11:
-                if (incoming == Direction.Top)
-                    ret[Action.Wait] = Direction.Right;
+			case 11:
+				if (incoming == Direction.Top) {
+					ret [Action.Wait] = Direction.Right;
+					ret [Action.Left] = Direction.Left;
+				}
                 if (incoming == Direction.Right)
                     ret[Action.Right] = Direction.Down;
+				if (incoming == Direction.Left)
+					ret[Action.DoubleLeft] = Direction.Down;
                 break;
-            case 12:
-                if (incoming == Direction.Top)
-                    ret[Action.Left] = Direction.Right;
-                if (incoming == Direction.Right)
-                    ret[Action.Wait] = Direction.Down;
+			case 12:
+				if (incoming == Direction.Top) {
+					ret [Action.Left] = Direction.Right;
+					ret [Action.DoubleLeft] = Direction.Left;
+				}
+				if (incoming == Direction.Right)
+					ret [Action.Wait] = Direction.Down;
+				if (incoming == Direction.Left)
+					ret [Action.Right] = Direction.Down;
                 break;
-            case 13:
-                if (incoming == Direction.Top)
-                    ret[Action.Right] = Direction.Left;
+			case 13:
+				if (incoming == Direction.Top) {
+					ret [Action.Right] = Direction.Left;
+					ret [Action.DoubleLeft] = Direction.Right;
+				}
                 if (incoming == Direction.Left)
                     ret[Action.Wait] = Direction.Down;
+				if (incoming == Direction.Right)
+					ret [Action.Left] = Direction.Down;
                 break;
         }
         return ret;
