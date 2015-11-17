@@ -94,14 +94,16 @@ class PlayerIndy
 				Console.Error.WriteLine ("Evaluate rock {0} at {1}:{2}, dir {3}", i, rockX, rockY, rockDir);
 				int rockXAction, rockYAction, rockDist = 0;
 				Action rockAction;
-				ComputeRockPath (array, rockX, rockY, rockDir, out rockAction, out rockXAction, out rockYAction, ref rockDist, 0);
+				ComputeRockPath (array, rockX, rockY, rockDir, XI, YI, out rockAction, out rockXAction, out rockYAction, ref rockDist, 0);
 
-				if (rockDist < dist && rockAction!=Action.Wait) {
+				if (action == Action.Wait || (rockDist < dist && rockAction != Action.Wait)) {
 					dist = rockDist;
 					X = rockXAction;
 					Y = rockYAction;
 					action = rockAction;
 					Console.Error.WriteLine ("Act on Rock {0}.", i);
+				} else {
+					Console.Error.WriteLine ("Skip Rock {0} ({1}:{2} {3}).", i, rockXAction, rockYAction, rockAction);
 				}
 			}
 
@@ -231,7 +233,7 @@ class PlayerIndy
 		return Direction.Blocked;
 	}
 
-	private static Direction ComputeRockPath(List<List<int>> map, int x, int y, Direction dir
+	private static Direction ComputeRockPath(List<List<int>> map, int x, int y, Direction dir, int playerX, int playerY
 		, out Action action, out int X, out int Y, ref int dist, int depth)
 	{
 		action = Action.Wait;
@@ -245,6 +247,12 @@ class PlayerIndy
 			}
 			Console.Error.WriteLine("Found Exit");
 			return Direction.Down;
+		}
+		if (x == playerX && y == playerY) {
+			Console.Error.WriteLine ("Rock is behind player, no need to change.");
+			action = Action.Wait;
+			X = Y = 0;
+			return Direction.Blocked;
 		}
 		if (x < 0 || x >= map [0].Count) {
 			// Console.Error.WriteLine("Dead end ");
@@ -287,8 +295,7 @@ class PlayerIndy
 				break;
 			}
 			// check if everything is ok
-
-			var ret = ComputeRockPath(map, nx, ny, nextDirection, out action, out X, out Y, ref dist, depth+1);
+			var ret = ComputeRockPath(map, nx, ny, nextDirection, playerX, playerY, out action, out X, out Y, ref dist, depth+1);
 
 			if (ret == Direction.Blocked)
 			{
