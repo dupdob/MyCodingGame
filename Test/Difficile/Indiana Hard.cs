@@ -3,8 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 /**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
+Support very hard
  **/
 class PlayerIndy
 {
@@ -17,6 +16,38 @@ class PlayerIndy
 		Right,
 		DoubleLeft
 	};
+
+	private struct Point{
+		public int X;
+		public int Y;
+
+		public Point(int x, int y)
+		{
+			X = x;
+			Y = y;
+		}
+
+		public Point Move(Direction dir)
+		{
+			switch (dir) {
+			case Direction.Top:
+				return new Point(X, Y -1);
+			case Direction.Down:
+				return new Point (X, Y + 1);
+			case Direction.Left:
+				return new Point (X - 1, Y);
+			case Direction.Right:
+				return new Point (X + 1, Y);
+			default:
+				return this;
+			}
+		}
+
+		public override string ToString()
+		{
+			return string.Format("{0}:{1}", X, Y);
+		}
+	}
 
 	private static int ExitX;
 
@@ -36,19 +67,20 @@ class PlayerIndy
 
 		ExitX = int.Parse(Console.ReadLine()); // the coordinate along the X axis of the exit (not useful for this first mission, but must be read).
 
-		var direction = Direction.Top;
+		Direction direction ;
 		// game loop
-		while (true)
+		for (;;)
 		{
 			var line = Console.ReadLine();
 			Console.Error.WriteLine(line);
 			inputs = line.Split(' ');
 			int XI = int.Parse(inputs[0]);
 			int YI = int.Parse(inputs[1]);
-			string POS = inputs[2];
+			var POS = inputs[2];
 			switch (POS)
 			{
 			case "TOP":
+			default:
 				direction = Direction.Top;
 				break;
 			case "LEFT":
@@ -63,9 +95,11 @@ class PlayerIndy
 			// To debug: Console.Error.WriteLine("Debug messages...");
 			var room = array[YI][XI];
 			Action action;
-			int X, Y, dist = 0;
+			Point next;
+			int dist = 0;
 
-			ComputePath(array, XI, YI, direction, true, out action, out X, out Y, ref dist, 0);
+			Point current = new Point (XI, YI);
+			ComputePath(array, current, direction, true, out action, out next, ref dist, 0);
 
 			var rocks = int.Parse(Console.ReadLine());
 			for (var i = 0; i < rocks; i++)
@@ -73,8 +107,9 @@ class PlayerIndy
 				var rock = Console.ReadLine();
 				Console.Error.WriteLine(rock);
 				inputs = rock.Split(' ');
-				int rockX = int.Parse(inputs[0]);
-				int rockY = int.Parse(inputs[1]);
+				Point rockPoint = new Point ();
+				rockPoint.X = int.Parse(inputs[0]);
+				rockPoint.Y = int.Parse(inputs[1]);
 				Direction rockDir;
 				POS = inputs[2];
 				rockDir = Direction.Top;
@@ -91,20 +126,20 @@ class PlayerIndy
 					break;
 				}
 				Console.Error.WriteLine ();
-				Console.Error.WriteLine ("Evaluate rock {0} at {1}:{2}, dir {3}", i, rockX, rockY, rockDir);
-				int rockXAction, rockYAction, rockDist = 0;
+				Console.Error.WriteLine ("Evaluate rock {0} at {1}, dir {2}", i, rockPoint, rockDir);
+				int rockDist = 0;
+				Point rockActionPoint;
 				Action rockAction;
-				ComputeRockPath (array, rockX, rockY, rockDir, XI, YI, out rockAction, out rockXAction, out rockYAction, ref rockDist, 0);
+				ComputeRockPath (array, rockPoint, rockDir, current, out rockAction, out rockActionPoint, ref rockDist, 0);
 
 				if (action == Action.Wait || (rockDist < dist && rockAction != Action.Wait)) {
 					dist = rockDist;
-					X = rockXAction;
-					Y = rockYAction;
+					next = rockActionPoint;
 					action = rockAction;
 					Console.Error.WriteLine ("Act on Rock {0}.", i);
 				} else {
-					Console.Error.WriteLine ("Skip Rock {0} ({1}:{2} {3}).", i, rockXAction, rockYAction, rockAction);
-				}
+					Console.Error.WriteLine ("Skip Rock {0} ({1} {2}).", i, rockActionPoint, rockAction);
+				}	
 			}
 
 
@@ -112,14 +147,14 @@ class PlayerIndy
 			{
 			case Action.Left:
 			case Action.DoubleLeft:
-				array[Y][X] = RotateLeft(array[Y][X]);
-				Console.Error.WriteLine("Room {0} at {1}:{2} rotated (dist: {3})", array[Y][X], X, Y, dist);
-				Console.WriteLine("{0} {1} LEFT", X, Y);
+				array[next.Y][next.X] = RotateLeft(array[next.Y][next.X]);
+				Console.Error.WriteLine("Room {0} at {1} rotated (dist: {2})", array[next.Y][next.X], next, dist);
+				Console.WriteLine("{0} {1} LEFT", next.X, next.Y);
 				break;
 			case Action.Right:
-				array[Y][X] = RotateRight(array[Y][X]);
-				Console.Error.WriteLine("Room {0} at {1}:{2} rotated (dist: {3})", array[Y][X], X, Y, dist);
-				Console.WriteLine("{0} {1} RIGHT", X, Y);
+				array[next.Y][next.X] = RotateRight(array[next.Y][next.X]);
+				Console.Error.WriteLine("Room {0} at {1} rotated (dist: {2})", array[next.Y][next.X], next, dist);
+				Console.WriteLine("{0} {1} RIGHT", next.X, next.Y);
 				break;
 			case Action.Wait:
 				Console.WriteLine("WAIT");
@@ -146,14 +181,14 @@ class PlayerIndy
 		return Direction.Blocked;
 	}
 
-	private static Direction ComputePath(List<List<int>> map, int x, int y, Direction dir
-		, bool direct, out Action action, out int X, out int Y, ref int dist, int depth)
+	private static Direction ComputePath(List<List<int>> map, Point current, Direction dir
+		, bool direct, out Action action, out Point actionPoint, ref int dist, int depth)
 	{
 		action = Action.Wait;
-		X = Y = 0;
-		if (y >= map.Count)
+		actionPoint = new Point (0, 0);
+		if (current.Y >= map.Count)
 		{
-			if (x != ExitX)
+			if (current.X != ExitX)
 			{
 				//                Console.Error.WriteLine("Wrong Exit");
 				return Direction.Blocked;
@@ -161,12 +196,12 @@ class PlayerIndy
 			Console.Error.WriteLine("Found Exit");
 			return Direction.Down;
 		}
-		if (x < 0 || x >= map [0].Count) {
+		if (current.X < 0 || current.X >= map [0].Count) {
 			//			Console.Error.WriteLine("Dead end ");
 			return Direction.Blocked;
 		}
 		// try the next one
-		var room = map[y][x];
+		var room = map[current.Y][current.X];
 		var possible = IdentifyNextWithRotations(room, dir);
 		if (possible.Count > 1) {
 			Console.Error.Write ("Fork possible");
@@ -174,7 +209,7 @@ class PlayerIndy
 			direct = false;
 		}
 		foreach (var move in possible) {
-			Console.Error.Write("({2}){0}:{1} from {3} ==>", x, y, room, dir);
+			Console.Error.Write("({1}){0} from {2} ==>", current, room, dir);
 			if (move.Value == Direction.Blocked)
 				continue;
 			Console.Error.WriteLine ("evaluating {2}, {3}", room, dir, move.Key, move.Value);
@@ -185,46 +220,26 @@ class PlayerIndy
 			}else if (move.Key == Action.DoubleLeft) {
 				Console.Error.Write("Room can be rotated left twice");
 			}
+			Point next = current.Move(move.Value);
 			var nextDirection = Convert(move.Value);
-			var nx = x;
-			var ny = y;
-			X = x;
-			Y = y;
-			switch (nextDirection)
-			{
-			case Direction.Top:
-				ny = y + 1;
-				break;
-			case Direction.Down:
-				ny = y - 1;
-				break;
-			case Direction.Right:
-				nx = x - 1;
-				break;
-			case Direction.Left:
-				nx = x + 1;
-				break;
-			}
 			// check if everything is ok
 
-			var ret = ComputePath(map, nx, ny, nextDirection, direct, out action, out X, out Y, ref dist, depth+1);
+			var ret = ComputePath(map, next, nextDirection, direct, out action, out actionPoint, ref dist, depth+1);
 
 			if (direct && move.Key != Action.Wait) {
-				X = x;
-				Y = y;
+				actionPoint = current;
 				action = move.Key;
 				dist = depth;
-				Console.Error.Write ("Force action as {0} for {1}:{2}", action, X, Y);
+				Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
 				return Direction.Down;
 			}
 			if (ret != Direction.Blocked)
 			{
 				if (move.Key != Action.Wait) {
-					X = x;
-					Y = y;
 					action = move.Key;
+					actionPoint = current;
 					dist = depth;
-					Console.Error.Write ("Force action as {0} for {1}:{2}", action, X, Y);
+					Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
 				}
 				return Direction.Down;
 			}
@@ -233,14 +248,15 @@ class PlayerIndy
 		return Direction.Blocked;
 	}
 
-	private static Direction ComputeRockPath(List<List<int>> map, int x, int y, Direction dir, int playerX, int playerY
-		, out Action action, out int X, out int Y, ref int dist, int depth)
+	private static Direction ComputeRockPath(List<List<int>> map, Point current, Direction dir, Point player
+		, out Action action, out Point next, ref int dist, int depth)
 	{
 		action = Action.Wait;
-		X = Y = 0;
-		if (y >= map.Count)
+		next = new Point ();
+
+		if (current.Y >= map.Count)
 		{
-			if (x != ExitX)
+			if (current.X != ExitX)
 			{
 				// Console.Error.WriteLine("Wrong Exit");
 				return Direction.Blocked;
@@ -248,63 +264,41 @@ class PlayerIndy
 			Console.Error.WriteLine("Found Exit");
 			return Direction.Down;
 		}
-		if (x == playerX && y == playerY) {
+		if (current.X == player.X && current.Y == player.Y) {
 			Console.Error.WriteLine ("Rock is behind player, no need to change.");
 			action = Action.Wait;
-			X = Y = 0;
 			return Direction.Blocked;
 		}
-		if (x < 0 || x >= map [0].Count) {
+		if (current.X < 0 || current.X >= map [0].Count) {
 			// Console.Error.WriteLine("Dead end ");
 			return Direction.Blocked;
 		}
 		// try the next one
-		var room = map[y][x];
+		var room = map[current.Y][current.X];
 		var possible = BlockNextWithRotations(depth == 0 ? -Math.Abs(room) : room, dir);
 
 		foreach (var move in possible) {
-			Console.Error.Write("({2}){0}:{1} from {3} ==>", x, y, room, dir);
+			Console.Error.Write("({1}){0} from {2} ==>", current, room, dir);
 			if (move.Value == Direction.Blocked) {
 				dist = depth;
 				if (move.Key != Action.Wait) {
 					action = move.Key;
-					X = x;
-					Y = y;
+					next = current;
 				}
 				return Direction.Blocked;
 			}
 			Console.Error.WriteLine ("evaluating {2}, {3}", room, dir, move.Key, move.Value);
-			var nextDirection = Convert(move.Value);
-			var nx = x;
-			var ny = y;
-			X = x;
-			Y = y;
-			switch (nextDirection)
-			{
-			case Direction.Top:
-				ny = y + 1;
-				break;
-			case Direction.Down:
-				ny = y - 1;
-				break;
-			case Direction.Right:
-				nx = x - 1;
-				break;
-			case Direction.Left:
-				nx = x + 1;
-				break;
-			}
+			var moved = current.Move (move.Value);
 			// check if everything is ok
-			var ret = ComputeRockPath(map, nx, ny, nextDirection, playerX, playerY, out action, out X, out Y, ref dist, depth+1);
+			var ret = ComputeRockPath(map, moved, Convert(move.Value), player, out action, out next, ref dist, depth+1);
 
 			if (ret == Direction.Blocked)
 			{
 				if (move.Key != Action.Wait) {
-					X = x;
-					Y = y;
+					next = current;
 					action = move.Key;
 					dist = depth;
-					Console.Error.Write ("Force action as {0} for {1}:{2}", action, X, Y);
+					Console.Error.Write ("Force action as {0} for {1}", action, next);
 				}
 				return Direction.Blocked;
 			}
@@ -509,7 +503,7 @@ class PlayerIndy
 				ret [Action.Left] = Direction.Right;
 				ret [Action.DoubleLeft] = Direction.Left;
 			}
-			if (incoming == Direction.Right)
+			if (incoming == Direction .Right)
 				ret [Action.Wait] = Direction.Down;
 			if (incoming == Direction.Left)
 				ret [Action.Right] = Direction.Down;
@@ -556,8 +550,11 @@ class PlayerIndy
 			}
 			break;
 		case 3:
-			if (incoming == Direction.Top)
-				ret[Action.Left] = Direction.Blocked;
+			if (incoming == Direction.Top) {
+				ret [Action.Left] = Direction.Blocked;
+				if (roomType < 0)
+					ret [Action.Wait] = Direction.Down;
+			}
 			break;
 		case 4:
 			if (incoming == Direction.Top)
@@ -614,12 +611,18 @@ class PlayerIndy
 			break;
 		case 10:
 			if (incoming == Direction.Top){
-				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Right] = Direction.Blocked;
+				if (roomType < 0) {
+					ret [Action.Wait] = Direction.Left;
+				}
 			}
 			break;
 		case 11:
 			if (incoming == Direction.Top) {
 				ret [Action.Right] = Direction.Blocked;
+				if (roomType < 0) {
+					ret [Action.Wait] = Direction.Right;
+				}
 			}
 			break;
 		case 12:
