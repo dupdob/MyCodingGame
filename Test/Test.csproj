@@ -50,6 +50,7 @@
     <Compile Include="Difficile\PlayerKirk.cs" />
     <Compile Include="Difficile\Clones.cs" />
     <Compile Include="Temp.cs" />
+    <Compile Include="Difficile\APU Improve.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />
