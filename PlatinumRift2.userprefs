@@ -1,8 +1,8 @@
 ﻿<Properties GitUserInfo="UsingGIT" StartupItem="Test/Test.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/Indiana Hard.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/Clones.cs">
     <Files>
-      <File FileName="Test/Difficile/Indiana Hard.cs" Line="103" Column="4" />
+      <File FileName="Test/Difficile/Clones.cs" Line="154" Column="17" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

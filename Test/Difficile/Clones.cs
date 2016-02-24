@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 /**
@@ -41,7 +41,7 @@ class ClonesHard
         public int ExitPos;
         private int freeLifts;
         private readonly int nbFloors;
-        private readonly int CloneFrequency = 3;
+        //private readonly int CloneFrequency ;
 
         public Context(int nbFloors)
         {
@@ -266,7 +266,7 @@ class ClonesHard
         }
     }
 
-    static void Main2(string[] args)
+    static void Main(string[] args)
     {
         var inputs = Console.ReadLine().Split(' ');
         var nbFloors = int.Parse(inputs[0]); // number of floors
