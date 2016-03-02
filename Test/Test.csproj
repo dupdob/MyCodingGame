@@ -51,7 +51,11 @@
     <Compile Include="Difficile\Clones.cs" />
     <Compile Include="Temp.cs" />
     <Compile Include="Difficile\APU Improve.cs" />
+    <Compile Include="UserDefined\MinimumSwaps.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="UserDefined\" />
+  </ItemGroup>
 </Project>

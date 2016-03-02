@@ -1,8 +1,8 @@
-﻿<Properties GitUserInfo="UsingGIT" StartupItem="Test/Test.csproj">
+﻿<Properties GitUserInfo="UsingGIT" StartupItem="Test/Test.csproj" RefactoringSettings.EnableRefactorings="True">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/Clones.cs">
     <Files>
-      <File FileName="Test/Difficile/Clones.cs" Line="154" Column="17" />
+      <File FileName="Test/Difficile/Clones.cs" Line="232" Column="18" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

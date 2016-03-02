@@ -96,44 +96,32 @@ class ClonesHard
         private int FirstElevatorOnLeft(int floor, int x)
         {
             var result = -1;
-            if (floor == this.ExitFloor)
-            {
-                if (this.ExitPos <= x)
-                    result = this.ExitPos;
-            }
             // no lift at this level
-            if (!this.elevatorPos.ContainsKey(floor))
-                return result;
+			if (this.elevatorPos.ContainsKey (floor)) {
+				foreach (var val in this.elevatorPos[floor])
+				{
+					if (val > x)
+						break;
+					result = val;
+				}
+			}
 
-            foreach (var val in this.elevatorPos[floor])
-            {
-                if (val > x)
-                {
-                    break;
-                }
-                result = val;
-            }
             return result;
         }
 
         private int FirstElevatorOnRight(int floor, int x)
         {
             var result = -1;
-            if (floor == this.ExitFloor)
-            {
-                if (this.ExitPos >= x)
-                    result = this.ExitPos;
-            }
-            if (!this.elevatorPos.ContainsKey(floor))
-                return result;
+			if (this.elevatorPos.ContainsKey (floor)) {
+				var lifts = this.elevatorPos[floor];
+				for(var i = lifts.Count-1; i >= 0; i--)
+				{
+					var val = lifts[i];
+					if (val < x) break;
+					result = val;	
+				}
+			}
 
-            var lifts = this.elevatorPos[floor];
-            for(var i = lifts.Count-1; i >= 0; i--)
-            {
-                var val = lifts[i];
-                if (val < x) break;
-                result = val;
-            }
             return result;
         }
 
@@ -146,17 +134,56 @@ class ClonesHard
         {
             var left = this.FirstElevatorOnLeft(floor, x);
             var right = this.FirstElevatorOnRight(floor, x);
-            var leftDist = (int)(Math.Pow(10, this.nbFloors - floor) * 1000);
+			var leftDist = int.MaxValue;
             var rightDist = leftDist;
             Actions leftAction = Actions.Wait, rightAction = Actions.Wait;
             Actions dump;
-            // if on a lift, do nothing
-            if (left != -1 && !(floor == this.ExitFloor && left != this.ExitPos))
+
+			if (floor == this.ExitFloor) {
+				if (floor == refFloor)
+					LogLine ("Reached last level");
+				if (x == this.ExitPos) {
+					action = Actions.Wait;
+					return 0;
+				}
+				if (x < this.ExitPos) {
+					// exit is on right
+					if (right < this.ExitPos) {
+						action = Actions.Wait;
+						// there is a lift on front, we can't reach exist
+						return leftDist;
+					}
+					rightDist = this.ExitPos - x;
+					if (direction == "LEFT") {
+						action = Actions.Block;
+						rightDist += 3;
+					} else
+						action = Actions.Wait;
+					return rightDist;
+				} else {
+					// exit is on left
+					if (left > this.ExitPos) {
+						// there is a lift on front, we can't reach exit
+						action = Actions.Block;
+						return leftDist;
+					}
+					leftDist = this.ExitPos - x;
+					if (direction == "RIGHT") {
+						action = Actions.Block;
+						leftDist += 3;
+					} else
+						action = Actions.Wait;
+					return leftDist;
+				}
+			}
+			// if there is a lift on left
+            if (left != -1)
             {
                 string nextDir;
                 leftDist = x - left;
                 if (direction == "RIGHT" && leftDist > 0)
                 {
+					// adjust left distance if we need a blocker clone
                     nextDir = "LEFT";
                     leftAction = Actions.Block;
                     leftDist += 3;
@@ -166,19 +193,25 @@ class ClonesHard
                     nextDir = direction;
                 }
                 // we can try the left lift
-                if (floor < this.ExitFloor)
-                    leftDist += this.iShortestPath(floor + 1, refFloor, left, nextDir, out dump);
+				if (floor < this.ExitFloor) {
+					var next = this.iShortestPath (floor + 1, refFloor, left, nextDir, out dump);
+					leftDist = (next==int.MaxValue) ? next : leftDist + next;
+				}
             }
-            else if (this.freeLifts > 0 && floor < this.ExitFloor)
+			else if ((this.freeLifts > 0 || right ==-1) && floor < this.ExitFloor)
             {
+				// no lift on left, we can try and build one here
                 var tmpFreeLifts = this.freeLifts;
-                this.freeLifts--;
+				if (right!=-1)
+                	this.freeLifts--;
                 leftAction = Actions.Lift;
-                leftDist = this.iShortestPath(floor + 1, refFloor, x, direction, out dump) + 3;
+				var next = this.iShortestPath (floor + 1, refFloor, x, direction, out dump);
+				leftDist = (next==int.MaxValue) ? next: next+3;
                 this.freeLifts = tmpFreeLifts;
                 left = 0;
             }
-            if (right != -1 && !(floor == this.ExitFloor && right != this.ExitPos))
+			// lift on right
+            if (right != -1)
             {
                 string nextDir;
                 // we can try the right lift
@@ -193,23 +226,24 @@ class ClonesHard
                 {
                     nextDir = direction;
                 }
-                if (floor < this.ExitFloor)
-                    rightDist += this.iShortestPath(floor + 1, refFloor, right, nextDir, out dump);
+				if (floor < this.ExitFloor) {
+					var next = this.iShortestPath (floor + 1, refFloor, right, nextDir, out dump);
+					rightDist = (next==int.MaxValue) ? next: rightDist + next;
+				}
             }
-            else if (this.freeLifts > 0 && floor<this.ExitFloor)
+			else if ((this.freeLifts > 0 || left==-1) && floor<this.ExitFloor)
             {
+				// no lift on right, we can try and build one here
                 var tmpFreeLifts = this.freeLifts;
-                this.freeLifts--;
+				if (left !=-1)
+                	this.freeLifts--;
                 rightAction = Actions.Lift;
-                rightDist = this.iShortestPath(floor + 1, refFloor, x, direction, out dump) + 3;
+				var next = this.iShortestPath (floor + 1, refFloor, x, direction, out dump);
+				rightDist = (next==int.MaxValue) ? next: 3 + next;
                 this.freeLifts = tmpFreeLifts;
                 right = 0;
             }
-            else if (left == -1 && floor < this.ExitFloor)
-            {
-                action = Actions.Lift;
-                return rightDist;
-            }
+
             if (floor == refFloor)
             {
                 LogLine("left: {0}, right : {1}", leftDist, rightDist);
