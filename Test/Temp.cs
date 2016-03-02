@@ -11,7 +11,7 @@ using System.Collections.Generic;
  **/
 class Solution
 {
-    static void Main(string[] args)
+    static void Main4(string[] args)
     {
         string S = Console.ReadLine();
 
