@@ -65,7 +65,7 @@ class ClonesHard
         {
             this.freeLifts = this.NbLifts;
             // compute nb of 'free lifts' to shorten pah
-            for (var i = 0; i < this.nbFloors; i++)
+			for (var i = 0; i < Math.Min(this.nbFloors, this.ExitFloor-1); i++)
             {
                 if (i == this.ExitFloor)
                     continue;
@@ -84,7 +84,7 @@ class ClonesHard
 
         public void AddElevator(int elevatorFloor, int elevatorPosX)
         {
-            LogLine("Elevator at {0} {1}", elevatorFloor, elevatorPosX);
+//            LogLine("Elevator at {0} {1}", elevatorFloor, elevatorPosX);
             if (!this.elevatorPos.ContainsKey(elevatorFloor))
             {
                 this.elevatorPos[elevatorFloor] = new List<int>(2);
@@ -163,7 +163,7 @@ class ClonesHard
 						action = Actions.Block;
 						return leftDist;
 					}
-					leftDist = this.ExitPos - x;
+					leftDist = x-this.ExitPos;
 					if (direction == "RIGHT") {
 						action = Actions.Block;
 						leftDist += 3;
@@ -176,20 +176,24 @@ class ClonesHard
 			}
 
 			bool noLift = (right == -1) && (left == -1);
-			// if there is a lift on left
             if (left != -1)
             {
+				// lift on left
                 string nextDir;
 				var nbClones = this.NbTotalClones;
                 leftDist = x - left;
                 if (direction == "RIGHT")
                 {
 					// adjust left distance if we need a blocker clone
-
-                    nextDir = "LEFT";
-                    leftAction = Actions.Block;
-                    leftDist += 3;
-					this.NbTotalClones--;
+					if (NbTotalClones > 1) {
+						nextDir = "LEFT";
+						leftAction = Actions.Block;
+						leftDist += 3;
+						this.NbTotalClones--;
+					} else {
+						leftDist = int.MaxValue;
+						nextDir = direction;
+					}
                 }
                 else
                 {
@@ -200,25 +204,26 @@ class ClonesHard
 				this.NbTotalClones = nbClones;
 				leftDist = (next==int.MaxValue) ? next : leftDist + next;
             }
-
-			if ((this.freeLifts > 0 || noLift))
-            {
-				// no lift on left, we can try and build one here
-                var tmpFreeLifts = this.freeLifts;
+			if (NbTotalClones>1 && (this.freeLifts > 0 || noLift))
+			{
+				var tmpFreeLifts = this.freeLifts;
 				var nbClones = this.NbTotalClones;
 				if (!noLift)
-                	this.freeLifts--;
+					this.freeLifts--;
+				this.NbTotalClones--;
 				var next = this.iShortestPath (floor + 1, refFloor, x, direction, out dump);
 				next = (next==int.MaxValue) ? next : next + 3;
-                this.freeLifts = tmpFreeLifts;
+				if (floor == refFloor) {
+					LogLine ("If we build a lift at {0}:{1}, path is {2}", x, refFloor, next);
+				}
 				if (next < leftDist) {
 					leftDist = next;
 					leftAction = Actions.Lift;
-					this.NbTotalClones--;
 					left = 0;
 				}
+				this.freeLifts = tmpFreeLifts;
 				this.NbTotalClones = nbClones;
-            }
+			}
 			// lift on right
             if (right != -1)
             {
@@ -226,12 +231,17 @@ class ClonesHard
 				var nbClones = this.NbTotalClones;
                 // we can try the right lift
                 rightDist = right - x;
-                if (direction == "LEFT" && rightDist > 0 && nbClones>1)
+                if (direction == "LEFT" && rightDist > 0)
                 {
-                    nextDir = "RIGHT";
-                    rightAction = Actions.Block;
-					this.NbTotalClones--;
-                    rightDist += 3;
+					if (this.NbTotalClones > 1) {
+						nextDir = "RIGHT";
+						rightAction = Actions.Block;
+						this.NbTotalClones--;
+						rightDist += 3;
+					} else {
+						nextDir = direction;
+						rightDist = int.MaxValue;
+					}
                 }
                 else
                 {
@@ -242,7 +252,7 @@ class ClonesHard
 				this.NbTotalClones = nbClones;
             }
 
-			if (Math.Min (rightDist, leftDist) == int.MaxValue && (floor == this.ExitFloor - 1)) {
+			if (Math.Min (rightDist, leftDist) == int.MaxValue && (floor == this.ExitFloor - 1) && this.NbTotalClones > 1 && this.freeLifts>0) {
 				// exit cannot be reached, there is a trap
 				if (x == this.ExitPos) {
 					rightAction = Actions.Lift;
@@ -253,7 +263,11 @@ class ClonesHard
 					rightDist = 3 + this.ExitPos - x;
 					if (direction == "LEFT") {
 						rightAction = Actions.Block;
-						rightDist += 3;
+						if (this.NbTotalClones > 2) {
+							rightDist += 3;
+						} else {
+							rightDist = int.MaxValue;
+						}
 					} else {
 						rightAction = Actions.Wait;
 					}
@@ -263,16 +277,20 @@ class ClonesHard
 					leftDist = 3 + x - this.ExitPos;
 					if (direction == "RIGHT") {
 						leftAction = Actions.Block;
-						leftDist += 3;
+						if (this.NbTotalClones > 2) {
+							leftDist += 3;
+						} else {
+							leftDist = int.MaxValue;
+						}
 					} else {
 						leftAction = Actions.Wait;
 					}
 				}
 			}
-            if (floor == refFloor)
-            {
-                LogLine("left: {0}, right : {1}", leftDist, rightDist);
-            }
+			var retDist = int.MaxValue;
+			if (floor == refFloor) {
+				LogLine ("left: {0}, right : {1}", leftDist, rightDist);
+			}
             if ((leftDist < rightDist) || (leftDist == rightDist && leftAction == Actions.Wait))
             {
                 if (floor == refFloor)
@@ -280,7 +298,7 @@ class ClonesHard
                     LogLine("Shortest path is left");
                 }
                 action = leftAction;
-                return leftDist;
+                retDist= leftDist;
             }
             else
             {
@@ -289,8 +307,9 @@ class ClonesHard
                     LogLine("Shortest path is right");
                 }
                 action = rightAction;
-                return rightDist;
+                retDist = rightDist;
             }
+			return retDist;
         }
 
         public void Block(int blockerFloor, int blockerPosX)
@@ -315,10 +334,12 @@ class ClonesHard
 
         public void Elevator(int level, int x)
         {
-            if (this.elevatorPos.ContainsKey(level))
-            {
-                this.freeLifts--;
-            }
+			if (this.elevatorPos.ContainsKey (level)) {
+				this.freeLifts--;
+				LogLine("Free Lift at {0} {1}", level, x);
+			} else {
+				LogLine("Lift at {0} {1}", level, x);
+			}
             this.AddElevator(level, x);
             this.NbLifts--;
 			this.NbTotalClones--;
@@ -343,7 +364,7 @@ class ClonesHard
 
         LogLine("Nb Rounds: {0}", context.NbRounds);
         LogLine("Nb Clones: {0}", context.NbTotalClones);
-        LogLine("Nb Extra Lifts :{0}", context.NbLifts);
+        LogLine("Nb Lifts allowed :{0}", context.NbLifts);
 
         for (int i = 0; i < nbElevators; i++)
         {
