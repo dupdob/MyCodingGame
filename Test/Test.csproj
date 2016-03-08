@@ -52,10 +52,12 @@
     <Compile Include="Temp.cs" />
     <Compile Include="Difficile\APU Improve.cs" />
     <Compile Include="UserDefined\MinimumSwaps.cs" />
+    <Compile Include="Challenges\CodinGame.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />
   <ItemGroup>
     <Folder Include="UserDefined\" />
+    <Folder Include="Challenges\" />
   </ItemGroup>
 </Project>
