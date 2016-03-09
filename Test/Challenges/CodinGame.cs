@@ -26,7 +26,7 @@ using System.Collections.Generic;
  
  Actions:
  A : move right (first coord +1)
- B : move left (first coord -1)
+ B : bottom
  C : move top (second coord -1)
  D : move down (second coord +1)
  E : move left (first coord -1)
@@ -35,10 +35,48 @@ using System.Collections.Generic;
 static class  CodinGame
 {
 	private enum Direction{L, U, R, D, N};
+	private static char[,] gamearea;
+
 	private class Coord
 	{
 		public int X;
 		public int Y;
+
+		public int MaxX;
+		public int MaxY;
+
+		public Coord Move(Direction dir)
+		{
+			Coord ret = new Coord ();
+			ret.MaxX = this.MaxX;
+			ret.MaxY = this.MaxY;
+
+			switch (dir) {
+			case Direction.D:
+				ret.X = this.X;
+				ret.Y = (this.Y + 1) % this.MaxY;
+				break;
+			case Direction.U:
+				ret.X = this.X;
+				ret.Y = (this.Y  -1 + this.MaxY) % this.MaxY;
+				break;
+			case Direction.L:
+				ret.X = (this.X + this.MaxX - 1) % this.MaxX;
+				ret.Y = this.Y;
+				break;
+			case Direction.R:
+				ret.X = (this.X + 1) % this.MaxX;
+				ret.Y = this.Y;
+				break;
+			case Direction.N:
+			default:
+				ret.X = this.X;
+				ret.Y = this.Y;
+				break;
+			}
+			return ret;
+		}
+
 	}
 
 	static void Main(string[] args)
@@ -51,7 +89,10 @@ static class  CodinGame
 		Console.Error.WriteLine(thirdInitInput);
 
 		Coord player = new Coord ();
-		char[,] gamearea = new char[secondInitInput, firstInitInput];
+		player.MaxX = secondInitInput;
+		player.MaxY = firstInitInput;
+
+		gamearea = new char[secondInitInput, firstInitInput];
 		int [,] visited = new int[secondInitInput, firstInitInput];
 		for (int x = 0; x < gamearea.GetLength (0); x++)
 			for (int y = 0; y < gamearea.GetLength (1); y++) {
@@ -84,17 +125,17 @@ static class  CodinGame
 			}
 			Console.Error.WriteLine ("Player @ {0}:{1}", player.X, player.Y);
 			// we discover some room
-			gamearea[player.X, player.Y] = '*';
 			visited [player.X, player.Y]++;
-			gamearea[player.X, player.Y-1] = firstInput[0];
-			gamearea[player.X+1, player.Y] = secondInput[0];
-			gamearea[player.X, player.Y+1] = thirdInput[0];
-			gamearea[player.X-1, player.Y] = fourthInput[0];
+			SetRoom(player, '*');
+			SetRoom(player.Move(Direction.U), firstInput[0]);
+			SetRoom(player.Move(Direction.R), secondInput[0]);
+			SetRoom(player.Move(Direction.D), thirdInput[0]);
+			SetRoom(player.Move(Direction.L), fourthInput[0]);
 
-			DumpArea (gamearea);
-			gamearea[player.X, player.Y] = '_';
+			DumpArea ();
+			SetRoom(player, '_');
 
-			Direction dir = PathDiscovery (gamearea, visited, player);
+			Direction dir = PathDiscovery (visited, player);
 			string command;
 			switch (dir) {
 			case Direction.D:
@@ -118,33 +159,37 @@ static class  CodinGame
 		}
 	}
 	// basic pathdiscovery	
-	static Direction PathDiscovery(char[,] area, int[,] visited, Coord c)
+	static Direction PathDiscovery(int[,] visited, Coord c)
 	{
 		int score = int.MaxValue;
 		Direction dir = Direction.N;
-		if (area [c.X + 1, c.Y].IsEmpty()) {
-			var upScore = visited [c.X + 1, c.Y];
+		Coord next = c.Move (Direction.R);
+		if (GetRoom(next).IsEmpty()) {
+			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
 				dir = Direction.R;
 			}
 		}
-		if (area [c.X , c.Y - 1].IsEmpty()) {
-			var upScore = visited [c.X , c.Y-1];
+		next = c.Move (Direction.U);
+		if (GetRoom(next).IsEmpty()) {
+			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
 				dir = Direction.U;
 			}
 		}
-		if (area [c.X - 1, c.Y].IsEmpty()) {
-			var upScore = visited [c.X-1 , c.Y];
+		next = c.Move (Direction.L);
+		if (GetRoom(next).IsEmpty()) {
+			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
 				dir = Direction.L;
 			}
 		}
-		if (area [c.X , c.Y + 1].IsEmpty()) {
-			var upScore = visited [c.X , c.Y+1];
+		next = c.Move (Direction.D);
+		if (GetRoom(next).IsEmpty()) {
+			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
 				dir = Direction.D;
@@ -153,16 +198,26 @@ static class  CodinGame
 		return dir;
 	}
 
+	static private void SetRoom(Coord coord, char car)
+	{
+		gamearea [coord.X, coord.Y] = car;
+	}
+
+	static private char GetRoom(Coord coord)
+	{
+		return gamearea [coord.X, coord.Y];
+	}
+
 	static private bool IsEmpty(this char car)
 	{
 		return car == '_';
 	}
 
-	static void DumpArea(char[,] area)
+	static void DumpArea()
 	{
-		for (int x = 0; x < area.GetLength (1); x++) {
-			for (int y = 0; y < area.GetLength (0); y++)
-				Console.Error.Write (area [y, x]);
+		for (int x = 0; x < gamearea.GetLength (1); x++) {
+			for (int y = 0; y < gamearea.GetLength (0); y++)
+				Console.Error.Write (gamearea [y, x]);
 			Console.Error.WriteLine ();
 		}
 	}
