@@ -33,7 +33,6 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -47,17 +46,19 @@
     <Compile Include="Moyen\Cadeau.cs" />
     <Compile Include="Moyen\CalculMaya.cs" />
     <Compile Include="Difficile\PlayerSkynetHard.cs" />
-    <Compile Include="Difficile\PlayerKirk.cs" />
     <Compile Include="Difficile\Clones.cs" />
     <Compile Include="Temp.cs" />
     <Compile Include="Difficile\APU Improve.cs" />
     <Compile Include="UserDefined\MinimumSwaps.cs" />
     <Compile Include="Challenges\CodinGame.cs" />
+    <Compile Include="Difficile\PlayerKirk.cs" />
+    <Compile Include="Très difficile\Indiana Hard.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />
   <ItemGroup>
     <Folder Include="UserDefined\" />
     <Folder Include="Challenges\" />
+    <Folder Include="Très difficile\" />
   </ItemGroup>
 </Project>

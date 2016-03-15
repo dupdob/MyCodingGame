@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -149,7 +149,7 @@ class PlayerIndy
 	private static int Width;
 	private static int Height;
 
-	private static void MainIndy(string[] args)
+	private static void Main(string[] args)
 	{
 		var array = new Dictionary<Point, int>();
 		var inputs = Console.ReadLine().Split(' ');
@@ -180,17 +180,23 @@ class PlayerIndy
 			Action action;
 			Point next;
 			int dist = 0;
-
-			ComputePath(array, player, true, out action, out next, ref dist, 0);
-
 			var rocks = int.Parse(Console.ReadLine());
-			for (var i = 0; i < rocks; i++)
-			{
-				var rock = Console.ReadLine();
-				Console.Error.WriteLine(rock);
-				Point rockPoint = new Point ();;
+			var rockList = new List<Point> (rocks);
+			int i=0;
+			for (i = 0; i < rocks; i++) {
+				var rock = Console.ReadLine ();
+				Console.Error.WriteLine (rock);
+				Point rockPoint = new Point ();
 				rockPoint.ParseString (rock);
-				Console.Error.WriteLine ();
+				rockList.Add (rockPoint);
+			}
+
+			ComputePath(array, player, rockList, true, out action, out next, ref dist, 0);
+
+			/*
+			i = 0;
+			foreach (var rockPoint in rockList)
+			{
 				Console.Error.WriteLine ("Evaluate rock {0} at {1}", i, rockPoint);
 				int rockDist = 0;
 				Point rockActionPoint;
@@ -204,8 +210,10 @@ class PlayerIndy
 					Console.Error.WriteLine ("Act on Rock {0}.", i);
 				} else {
 					Console.Error.WriteLine ("Skip Rock {0} ({1} {2}).", i, rockActionPoint, rockAction);
-				}	
+				}
+				i++;
 			}
+			*/
 
 
 			switch (action)
@@ -246,9 +254,10 @@ class PlayerIndy
 		return Direction.Blocked;
 	}
 
-	private static Direction ComputePath(Dictionary<Point, int> map, Point current
-		, bool direct, out Action action, out Point actionPoint, ref int dist, int depth)
+	private static Direction ComputePath(Dictionary<Point, int> map, Point current, 
+		List<Point> rocks, bool direct, out Action action, out Point actionPoint, ref int dist, int depth)
 	{
+		var prefix = new string (' ', depth);
 		action = Action.Wait;
 		actionPoint = new Point (0, 0, Direction.Top);
 		if (current.Y >= Height)
@@ -257,43 +266,177 @@ class PlayerIndy
 			{
 				return Direction.Blocked;
 			}
-			Console.Error.WriteLine("Found Exit");
+			Console.Error.WriteLine(prefix+"Found Exit");
 			return Direction.Down;
 		}
-
+		Console.Error.Write(prefix+"Indy @{0} ", current);
+		// do we reach the border?
 		if (current.X < 0 || current.X >= Width) {
+			Console.Error.WriteLine("Leaving map.");
 			return Direction.Blocked;
 		}
 		// try the next one
 		var room = map[current];
 		var possible = IdentifyNextWithRotations(room, current.Dir);
-		if (possible.Count > 1) {
-			Console.Error.Write ("Fork possible");
+		int checks = possible.Count;
+		if (checks == 0) {
+			Console.Error.Write("Dead end.\n\t");
+			return Direction.Blocked;
+		}
+		if (checks > 1) {
 			// no longer a direct path, possible alternatives
 			direct = false;
 		}
+		// we store actions for this turn
+		var possibleActions = new Dictionary<Point, Dictionary<Action, Direction>> ();
+		possibleActions.Add (current, possible);
+		foreach (var rock in rocks) {
+			int roomType;
+			if (map.TryGetValue (rock, out roomType)) {
+				possible = BlockNextWithRotations (roomType, rock.Dir);
+				checks += possible.Count;
+				possibleActions.Add (rock,  possible);
+			}
+		}
+			
+//		Console.Error.WriteLine("({1} checks) ", current, checks);
+		foreach(var plays in possibleActions)
+		{
+			var tryRoom = map [plays.Key];
+			bool collision = false;
+
+//			Console.Error.Write("{1}{0}:", plays.Key, prefix);
+			foreach (var move in plays.Value) {
+				switch (move.Key) {
+				case Action.Left:
+					Console.Error.Write("{0}RL, ", prefix);
+					map[plays.Key] = RotateLeft(tryRoom);
+					break;
+				case Action.DoubleLeft:
+					Console.Error.Write("{0}RLL, ", prefix);
+					map[plays.Key] = RotateLeft(RotateLeft(tryRoom));
+					break;
+				case Action.Right:
+					Console.Error.Write("{0}RR, ", prefix);
+					map[plays.Key] = RotateRight(tryRoom);
+						break;
+				default:
+					Console.Error.Write(prefix);
+					map [plays.Key] = tryRoom;
+					break;
+				}
+				// now see what happens
+				Direction nextDir = Traverse(map[current], current.Dir);
+				Point next = current.Move (nextDir);
+				if (nextDir == Direction.Blocked) {
+					// can't move
+					Console.Error.WriteLine("Indy Blocked");
+					Console.Error.Write(prefix);
+					map [plays.Key] = tryRoom;
+					continue;
+				}
+				var newRocks = new List<Point> ();
+				foreach (var curRock in rocks) {
+					nextDir = Traverse (map [curRock], curRock.Dir);
+					if (nextDir == Direction.Blocked) {
+						map[plays.Key] = tryRoom;
+						// block destroyed
+						continue;
+					}
+					Point nextRock = curRock.Move(nextDir);
+					// do we reach the border?
+					if (nextRock.X < 0 || nextRock.X >= Width) {
+						// block destroyed
+						continue;
+					}
+					if (nextRock.X == next.X && nextRock.Y == next.Y) {
+						// collision
+						collision = true;
+						break;
+					}
+					newRocks.Add (nextRock);
+				}
+				if (collision) {
+					map [plays.Key] = tryRoom;
+					Console.Error.WriteLine("collision");
+					continue;
+				}
+				// check if everything is ok
+				var ret = ComputePath(map, next, newRocks, direct, out action, out actionPoint, ref dist, depth+1);
+				map [plays.Key] = tryRoom;
+				if (direct && move.Key != Action.Wait) {
+					actionPoint = plays.Key;
+					action = move.Key;
+					dist = depth;
+					if (!direct)
+						Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint);
+					return Direction.Down;
+				}
+				if (ret != Direction.Blocked)
+				{
+					if (move.Key != Action.Wait) {
+						action = move.Key;
+						actionPoint = plays.Key;
+						dist = depth;
+						if (!direct)
+							Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint);
+					}
+					return Direction.Down;
+				}
+				Console.Error.WriteLine("#");
+			}
+		}
+/*
 		foreach (var move in possible) {
 			Console.Error.Write("({1}){0}  ==>", current, room);
 			if (move.Value == Direction.Blocked)
 				continue;
-			Console.Error.WriteLine ("evaluating {0}, {1}", move.Value, move.Value);
-			if (move.Key == Action.Left) {
-				Console.Error.Write("Room  can be rotated left");
-			} else if (move.Key == Action.Right) {
-				Console.Error.Write("Room can be rotated right");
-			}else if (move.Key == Action.DoubleLeft) {
-				Console.Error.Write("Room can be rotated left twice");
-			}
+			if (!direct) {
+				Console.Error.WriteLine ("evaluating {0}, {1}", move.Value, move.Value);
+				if (move.Key == Action.Left) {
+					Console.Error.Write ("Room  can be rotated left");
+				} else if (move.Key == Action.Right) {
+					Console.Error.Write ("Room can be rotated right");
+				} else if (move.Key == Action.DoubleLeft) {
+					Console.Error.Write ("Room can be rotated left twice");
+				}
+			} else
+				Console.Error.WriteLine ();
+			
 			Point next = current.Move(move.Value);
+			var newRocks = new List<Point> ();
+			bool collision = false;
+			// move the rocks and see if a collision happens
+			foreach (var rock in rocks) {
+				int roomType;
+				if (map.TryGetValue (rock, out roomType)) {
+					var possibleForRock = IdentifyNextWithRotations (roomType, rock.Dir);
+					if (possibleForRock.ContainsKey (Action.Wait)) {
+						var newPos = rock.Move (possibleForRock [Action.Wait]);
+						if (newPos.X == next.X && newPos.Y == next.Y) {
+							// collision!
+							collision = true;
+							break;
+						}
+						newRocks.Add (newPos);
+					}
+				} else {
+					// rock destroyed
+				}
+			}
+			if (collision) {
+				Console.Error.Write ("Collision possible @{0}.{1}",next.X, next.Y );
+				continue;
+			}
 			// check if everything is ok
-
-			var ret = ComputePath(map, next, direct, out action, out actionPoint, ref dist, depth+1);
+			var ret = ComputePath(map, next, newRocks, direct, out action, out actionPoint, ref dist, depth+1);
 
 			if (direct && move.Key != Action.Wait) {
 				actionPoint = current;
 				action = move.Key;
 				dist = depth;
-				Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
+				if (!direct)
+					Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
 				return Direction.Down;
 			}
 			if (ret != Direction.Blocked)
@@ -302,12 +445,13 @@ class PlayerIndy
 					action = move.Key;
 					actionPoint = current;
 					dist = depth;
-					Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
+					if (!direct)
+						Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
 				}
 				return Direction.Down;
 			}
 		}
-		Console.Error.Write ("!");
+		*/
 		return Direction.Blocked;
 	}
 
@@ -436,6 +580,79 @@ class PlayerIndy
 			return 10;
 		}
 		return 0;
+	}
+
+	private static Direction Traverse(int roomType, Direction incoming)
+	{
+		switch (Math.Abs(roomType))
+		{
+		case 0:
+			break;
+		case 1:
+			return Direction.Down;
+			break;
+		case 2:
+			if (incoming == Direction.Left)
+				return Direction.Right;
+			if (incoming == Direction.Right)
+				return Direction.Left;
+			break;
+		case 3:
+			if (incoming == Direction.Top)
+				return Direction.Down;
+			break;
+		case 4:
+			if (incoming == Direction.Top)
+				return Direction.Left;
+			if (incoming == Direction.Right)
+				return Direction.Down;
+			break;
+		case 5:
+			if (incoming == Direction.Top)
+				return Direction.Right;
+			if (incoming == Direction.Left)
+				return Direction.Down;
+			break;
+		case 6:
+			if (incoming == Direction.Right)
+				return Direction.Left;
+			if (incoming == Direction.Left)
+				return Direction.Right;
+			break;
+		case 7:
+			if (incoming == Direction.Top)
+				return Direction.Down;
+			if (incoming == Direction.Right)
+				return Direction.Down;
+			break;
+		case 8:
+			if (incoming == Direction.Right)
+				return Direction.Down;
+			break;
+		case 9:
+			if (incoming == Direction.Top)
+				return Direction.Down;
+			if (incoming == Direction.Left)
+				return Direction.Down;
+			break;
+		case 10:
+			if (incoming == Direction.Top)
+				return Direction.Left;
+			break;
+		case 11:
+			if (incoming == Direction.Top)
+				return Direction.Right;
+			break;
+		case 12:
+			if (incoming == Direction .Right)
+				return Direction.Down;
+			break;
+		case 13:
+			if (incoming == Direction.Left)
+				return Direction.Down;
+			break;
+		}
+		return Direction.Blocked;
 	}
 
 	private static Dictionary<Action, Direction> IdentifyNextWithRotations(int roomType, Direction incoming)

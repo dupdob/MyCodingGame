@@ -1,9 +1,8 @@
 ﻿<Properties GitUserInfo="UsingGIT" StartupItem="Test/Test.csproj" RefactoringSettings.EnableRefactorings="True">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/PlayerSkynetHard.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Très difficile/Indiana Hard.cs">
     <Files>
-      <File FileName="Test/Difficile/Clones.cs" Line="251" Column="20" />
-      <File FileName="Test/Difficile/PlayerSkynetHard.cs" Line="79" Column="3" />
+      <File FileName="Test/Très difficile/Indiana Hard.cs" Line="365" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
