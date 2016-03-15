@@ -79,7 +79,7 @@ static class  CodinGame
 
 	}
 
-	static void Main(string[] args)
+	static void MainCodinGame(string[] args)
 	{
 		int firstInitInput = int.Parse(Console.ReadLine());
 		int secondInitInput = int.Parse(Console.ReadLine());
@@ -89,11 +89,11 @@ static class  CodinGame
 		Console.Error.WriteLine(thirdInitInput);
 
 		Coord player = new Coord ();
-		player.MaxX = secondInitInput;
-		player.MaxY = firstInitInput;
+		player.MaxX = firstInitInput;
+		player.MaxY = secondInitInput;
 
-		gamearea = new char[secondInitInput, firstInitInput];
-		int [,] visited = new int[secondInitInput, firstInitInput];
+		gamearea = new char[firstInitInput, secondInitInput];
+		int [,] visited = new int[firstInitInput, secondInitInput];
 		for (int x = 0; x < gamearea.GetLength (0); x++)
 			for (int y = 0; y < gamearea.GetLength (1); y++) {
 				gamearea [x, y] = ' ';
@@ -110,45 +110,58 @@ static class  CodinGame
 //			Console.Error.WriteLine(secondInput);
 //			Console.Error.WriteLine(thirdInput);
 //			Console.Error.WriteLine(fourthInput);
+			var ghosts = new List<Coord>(thirdInitInput);
 			for (int i = 0; i < thirdInitInput; i++)
 			{
 				string[] inputs = Console.ReadLine().Split(' ');
 				int fifthInput = int.Parse(inputs[0]);
 				int sixthInput = int.Parse(inputs[1]);
 ///				Console.Error.Write("#{0}=X{1}.Y{2},", i, fifthInput, sixthInput );
-				switch (i) {
-				case 4:
-					player.X = fifthInput;
-					player.Y = sixthInput;
-					break;
+				if (i == thirdInitInput - 1) {
+					player.X = sixthInput % firstInitInput;
+					player.Y = fifthInput % secondInitInput;
+					player.MaxX = firstInitInput;
+					player.MaxY = secondInitInput;
+        			Console.Error.WriteLine ("Player @ {0}:{1}", fifthInput, sixthInput);
+				} else {
+					var ghost = new Coord ();
+					ghost.X = sixthInput;
+					ghost.Y = fifthInput;
+					ghost.MaxX = firstInitInput;
+					ghost.MaxY = secondInitInput;
+					ghosts.Add (ghost);
+       			    Console.Error.WriteLine ("Ghost @ {0}:{1}", fifthInput, sixthInput);
 				}
 			}
-			Console.Error.WriteLine ("Player @ {0}:{1}", player.X, player.Y);
 			// we discover some room
 			visited [player.X, player.Y]++;
 			SetRoom(player, '*');
-			SetRoom(player.Move(Direction.U), firstInput[0]);
-			SetRoom(player.Move(Direction.R), secondInput[0]);
-			SetRoom(player.Move(Direction.D), thirdInput[0]);
-			SetRoom(player.Move(Direction.L), fourthInput[0]);
+			foreach (var ghost in ghosts)
+				SetRoom (ghost, '@');
+			SetRoom(player.Move(Direction.L), firstInput[0]);
+			SetRoom(player.Move(Direction.D), secondInput[0]);
+			SetRoom(player.Move(Direction.R), thirdInput[0]);
+			SetRoom(player.Move(Direction.U), fourthInput[0]);
 
 			DumpArea ();
-			SetRoom(player, '_');
 
 			Direction dir = PathDiscovery (visited, player);
+			SetRoom(player, '_');
+			foreach (var ghost in ghosts)
+				SetRoom (ghost, '_');
 			string command;
 			switch (dir) {
 			case Direction.D:
-				command = "D";
+				command = "A";
 				break;
 			case Direction.U:
-				command = "C";
-				break;
-			case Direction.L:
 				command = "E";
 				break;
+			case Direction.L:
+				command = "C";
+				break;
 			case Direction.R:
-				command = "A";
+				command = "D";
 				break;
 			case Direction.N:
 			default:
@@ -164,7 +177,7 @@ static class  CodinGame
 		int score = int.MaxValue;
 		Direction dir = Direction.N;
 		Coord next = c.Move (Direction.R);
-		if (GetRoom(next).IsEmpty()) {
+		if (GetRoom(next).IsEmpty() && !NextToGhost(next)) {
 			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
@@ -172,7 +185,7 @@ static class  CodinGame
 			}
 		}
 		next = c.Move (Direction.U);
-		if (GetRoom(next).IsEmpty()) {
+		if (GetRoom(next).IsEmpty() && !NextToGhost(next)) {
 			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
@@ -180,7 +193,7 @@ static class  CodinGame
 			}
 		}
 		next = c.Move (Direction.L);
-		if (GetRoom(next).IsEmpty()) {
+		if (GetRoom(next).IsEmpty() && !NextToGhost(next)) {
 			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
@@ -188,7 +201,7 @@ static class  CodinGame
 			}
 		}
 		next = c.Move (Direction.D);
-		if (GetRoom(next).IsEmpty()) {
+		if (GetRoom(next).IsEmpty() && !NextToGhost(next)) {
 			var upScore = visited [next.X, next.Y];
 			if (score > upScore) {
 				score = upScore;
@@ -213,11 +226,22 @@ static class  CodinGame
 		return car == '_';
 	}
 
+	static private bool NextToGhost(Coord pos)
+	{
+		if (GetRoom(pos.Move(Direction.U)) =='@' ||
+			GetRoom(pos.Move(Direction.D)) =='@' ||
+			GetRoom(pos.Move(Direction.L)) =='@' ||
+			GetRoom(pos.Move(Direction.R)) =='@')
+					return true;
+		return false;
+	}
+
 	static void DumpArea()
 	{
-		for (int x = 0; x < gamearea.GetLength (1); x++) {
-			for (int y = 0; y < gamearea.GetLength (0); y++)
-				Console.Error.Write (gamearea [y, x]);
+		for (int y = 0; y < gamearea.GetLength (1); y++) {
+			for (int x = 0; x < gamearea.GetLength (0); x++) {
+				Console.Error.Write (gamearea [x, y]);
+			}
 			Console.Error.WriteLine ();
 		}
 	}
