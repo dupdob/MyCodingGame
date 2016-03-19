@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -19,28 +20,30 @@ class PlayerIndy
 
 
 	private struct Point{
+		public string Name;
 		public int X;
 		public int Y;
 		public Direction Dir;
 
-		public Point(int x, int y, Direction dir = Direction.Blocked)
+		public Point(int x, int y, Direction dir = Direction.Blocked, string name = "")
 		{
 			X = x;
 			Y = y;
 			Dir = dir;
+			Name = name;
 		}
 
 		public Point Move(Direction dir)
 		{
 			switch (dir) {
 			case Direction.Top:
-				return new Point(X, Y -1, Convert(dir));
+				return new Point(X, Y -1, Convert(dir), Name);
 			case Direction.Down:
-				return new Point (X, Y + 1, Convert(dir));
+				return new Point (X, Y + 1, Convert(dir), Name);
 			case Direction.Left:
-				return new Point (X - 1, Y, Convert(dir));
+				return new Point (X - 1, Y, Convert(dir), Name);
 			case Direction.Right:
-				return new Point (X + 1, Y, Convert(dir));
+				return new Point (X + 1, Y, Convert(dir), Name);
 			default:
 				return this;
 			}
@@ -72,12 +75,21 @@ class PlayerIndy
 
 		public override string ToString()
 		{
-			return string.Format("{0}:{1} ({2})", X, Y, Dir);
+			return string.Format("{3} @{0}:{1}", X, Y, Dir, Name);
+		}
+
+		public string ToStringShort()
+		{
+			return string.Format("{0}:{1}", X, Y);
 		}
 
 		public override int GetHashCode ()
 		{
 			return X + 1000 * Y;
+		}
+		public bool IsSamePosThan(Point b)
+		{
+			return this.X == b.X && this.Y == b.Y;
 		}
 
 		public static bool operator==(Point a, Point b)
@@ -87,7 +99,7 @@ class PlayerIndy
 
 		public static bool operator!=(Point a, Point b)
 		{
-			return a.X != b.X || a.Y != b.Y;
+			return !(a==b);
 		}
 
 		public override bool Equals (object obj)
@@ -170,10 +182,9 @@ class PlayerIndy
 		for (;;)
 		{
 			var line = Console.ReadLine();
-			Console.Error.WriteLine(line);
 			Point player = new Point();
 			player.ParseString (line);
-
+			player.Name = "Indy";
 			// Write an action using Console.WriteLine()
 			// To debug: Console.Error.WriteLine("Debug messages...");
 			var room = array[player];
@@ -185,48 +196,23 @@ class PlayerIndy
 			int i=0;
 			for (i = 0; i < rocks; i++) {
 				var rock = Console.ReadLine ();
-				Console.Error.WriteLine (rock);
 				Point rockPoint = new Point ();
 				rockPoint.ParseString (rock);
+				rockPoint.Name = string.Format ("Rock#{0}", i);
 				rockList.Add (rockPoint);
 			}
 
 			ComputePath(array, player, rockList, true, out action, out next, ref dist, 0);
-
-			/*
-			i = 0;
-			foreach (var rockPoint in rockList)
-			{
-				Console.Error.WriteLine ("Evaluate rock {0} at {1}", i, rockPoint);
-				int rockDist = 0;
-				Point rockActionPoint;
-				Action rockAction;
-				ComputeRockPath (array, rockPoint, player, out rockAction, out rockActionPoint, ref rockDist, 0);
-
-				if (action == Action.Wait || (rockDist < dist && rockAction != Action.Wait)) {
-					dist = rockDist;
-					next = rockActionPoint;
-					action = rockAction;
-					Console.Error.WriteLine ("Act on Rock {0}.", i);
-				} else {
-					Console.Error.WriteLine ("Skip Rock {0} ({1} {2}).", i, rockActionPoint, rockAction);
-				}
-				i++;
-			}
-			*/
-
 
 			switch (action)
 			{
 			case Action.Left:
 			case Action.DoubleLeft:
 				array[next] = RotateLeft(array[next]);
-				Console.Error.WriteLine("Room {0} at {1} rotated (dist: {2})", array[next], next, dist);
 				Console.WriteLine("{0} {1} LEFT", next.X, next.Y);
 				break;
 			case Action.Right:
 				array[next] = RotateRight(array[next]);
-				Console.Error.WriteLine("Room {0} at {1} rotated (dist: {2})", array[next], next, dist);
 				Console.WriteLine("{0} {1} RIGHT", next.X, next.Y);
 				break;
 			case Action.Wait:
@@ -260,27 +246,31 @@ class PlayerIndy
 		var prefix = new string (' ', depth);
 		action = Action.Wait;
 		actionPoint = new Point (0, 0, Direction.Top);
-		if (current.Y >= Height)
+		// we move to the next pos
+		var scanPoint = current.Move(Traverse(map[current], current.Dir));
+		if (scanPoint.Y >= Height)
 		{
-			if (current.X != ExitX)
+			if (scanPoint.X != ExitX)
 			{
 				return Direction.Blocked;
 			}
 			Console.Error.WriteLine(prefix+"Found Exit");
 			return Direction.Down;
 		}
-		Console.Error.Write(prefix+"Indy @{0} ", current);
+		var rockMessage = new StringBuilder (current.ToString());
 		// do we reach the border?
-		if (current.X < 0 || current.X >= Width) {
-			Console.Error.WriteLine("Leaving map.");
+		if (scanPoint.X < 0 || scanPoint.X >= Width) {
+			if (depth <3)
+				Console.Error.WriteLine("Leaving map.");
 			return Direction.Blocked;
 		}
 		// try the next one
-		var room = map[current];
-		var possible = IdentifyNextWithRotations(room, current.Dir);
+		var room = map[scanPoint];
+		var possible = IdentifyNextWithRotations(room, scanPoint.Dir);
 		int checks = possible.Count;
 		if (checks == 0) {
-			Console.Error.Write("Dead end.\n\t");
+			if (depth <3)
+				Console.Error.Write("Dead end.");
 			return Direction.Blocked;
 		}
 		if (checks > 1) {
@@ -289,39 +279,71 @@ class PlayerIndy
 		}
 		// we store actions for this turn
 		var possibleActions = new Dictionary<Point, Dictionary<Action, Direction>> ();
-		possibleActions.Add (current, possible);
+		possibleActions.Add (scanPoint, possible);
 		foreach (var rock in rocks) {
 			int roomType;
-			if (map.TryGetValue (rock, out roomType)) {
-				possible = BlockNextWithRotations (roomType, rock.Dir);
+			if (rock.X < 0 || rock.X >= Width || rock.Y>= Height) {
+				// rock out of map
+				continue;
+			}
+			var rockPoint = rock.Move(Traverse(map[rock], rock.Dir));
+			if (rockPoint == scanPoint)
+			{
+			    // collision
+			    return Direction.Blocked;
+			}
+			if (map.TryGetValue (rockPoint, out roomType)) {
+				rockMessage.AppendFormat("{0}, ", rockPoint);
+				possible = BlockNextWithRotations (roomType, rockPoint.Dir);
 				checks += possible.Count;
-				possibleActions.Add (rock,  possible);
+				if (!possibleActions.ContainsKey (rockPoint))
+					possibleActions.Add (rockPoint, possible);
+				else {
+					// rocks collide
+					possibleActions.Remove(rockPoint);
+				}
 			}
 		}
-			
-//		Console.Error.WriteLine("({1} checks) ", current, checks);
+	
+		Console.Error.Write(rockMessage.ToString());
+//		Console.Error.WriteLine(" {0} possible moves", checks);
+		Console.Error.Write (prefix);
 		foreach(var plays in possibleActions)
 		{
 			var tryRoom = map [plays.Key];
 			bool collision = false;
-
+			bool roomOccupied = false;
+			if (current.IsSamePosThan(plays.Key)) {
+				roomOccupied = true;
+			}
+			foreach (var rock in rocks) {
+				if (rock.IsSamePosThan (plays.Key)) {
+					roomOccupied = true;
+					break;
+				}
+			}
 //			Console.Error.Write("{1}{0}:", plays.Key, prefix);
+		
 			foreach (var move in plays.Value) {
+				if (roomOccupied && move.Key != Action.Wait) {
+					Console.Error.WriteLine ("object in room {0}, can't rotate", plays.Key.ToStringShort());
+					continue;
+				}
 				switch (move.Key) {
 				case Action.Left:
-					Console.Error.Write("{0}RL, ", prefix);
+					Console.Error.WriteLine("{0} {1}:RL ", prefix, plays.Key);
 					map[plays.Key] = RotateLeft(tryRoom);
 					break;
 				case Action.DoubleLeft:
-					Console.Error.Write("{0}RLL, ", prefix);
+					Console.Error.WriteLine("{0} {1}:RLL ", prefix, plays.Key);
 					map[plays.Key] = RotateLeft(RotateLeft(tryRoom));
 					break;
 				case Action.Right:
-					Console.Error.Write("{0}RR, ", prefix);
+					Console.Error.WriteLine("{0} {1}:RR ", prefix, plays.Key);
 					map[plays.Key] = RotateRight(tryRoom);
 						break;
 				default:
-					Console.Error.Write(prefix);
+//					Console.Error.Write("wait ");
 					map [plays.Key] = tryRoom;
 					break;
 				}
@@ -330,8 +352,8 @@ class PlayerIndy
 				Point next = current.Move (nextDir);
 				if (nextDir == Direction.Blocked) {
 					// can't move
-					Console.Error.WriteLine("Indy Blocked");
-					Console.Error.Write(prefix);
+//					Console.Error.WriteLine("Indy Blocked");
+//					Console.Error.Write(prefix);
 					map [plays.Key] = tryRoom;
 					continue;
 				}
@@ -341,178 +363,62 @@ class PlayerIndy
 					if (nextDir == Direction.Blocked) {
 						map[plays.Key] = tryRoom;
 						// block destroyed
+						Console.Error.WriteLine("{0} crashes", curRock);
 						continue;
 					}
 					Point nextRock = curRock.Move(nextDir);
 					// do we reach the border?
 					if (nextRock.X < 0 || nextRock.X >= Width) {
 						// block destroyed
+						Console.Error.WriteLine("{0} leaves area", nextRock);
 						continue;
 					}
-					if (nextRock.X == next.X && nextRock.Y == next.Y) {
+					if (nextRock.IsSamePosThan(next)) {
 						// collision
+						Console.Error.WriteLine("collision with {0}", nextRock);
 						collision = true;
 						break;
 					}
-					newRocks.Add (nextRock);
+					if (!newRocks.Contains (nextRock))
+						newRocks.Add (nextRock);
+					else {
+						Console.Error.WriteLine ("Collision between two rocks");
+						newRocks.Remove (nextRock);
+					}
 				}
 				if (collision) {
 					map [plays.Key] = tryRoom;
-					Console.Error.WriteLine("collision");
 					continue;
 				}
 				// check if everything is ok
+//				Console.Error.WriteLine();
 				var ret = ComputePath(map, next, newRocks, direct, out action, out actionPoint, ref dist, depth+1);
 				map [plays.Key] = tryRoom;
+				/*
 				if (direct && move.Key != Action.Wait) {
 					actionPoint = plays.Key;
 					action = move.Key;
 					dist = depth;
-					if (!direct)
-						Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint);
+					Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint.ToStringShort());
 					return Direction.Down;
-				}
+				}*/
 				if (ret != Direction.Blocked)
 				{
 					if (move.Key != Action.Wait) {
 						action = move.Key;
 						actionPoint = plays.Key;
 						dist = depth;
-						if (!direct)
-							Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint);
+						Console.Error.WriteLine ("Force action as {0} for {1}", action, actionPoint.ToStringShort());
 					}
 					return Direction.Down;
 				}
-				Console.Error.WriteLine("#");
+				map [plays.Key] = tryRoom;
 			}
 		}
-/*
-		foreach (var move in possible) {
-			Console.Error.Write("({1}){0}  ==>", current, room);
-			if (move.Value == Direction.Blocked)
-				continue;
-			if (!direct) {
-				Console.Error.WriteLine ("evaluating {0}, {1}", move.Value, move.Value);
-				if (move.Key == Action.Left) {
-					Console.Error.Write ("Room  can be rotated left");
-				} else if (move.Key == Action.Right) {
-					Console.Error.Write ("Room can be rotated right");
-				} else if (move.Key == Action.DoubleLeft) {
-					Console.Error.Write ("Room can be rotated left twice");
-				}
-			} else
-				Console.Error.WriteLine ();
-			
-			Point next = current.Move(move.Value);
-			var newRocks = new List<Point> ();
-			bool collision = false;
-			// move the rocks and see if a collision happens
-			foreach (var rock in rocks) {
-				int roomType;
-				if (map.TryGetValue (rock, out roomType)) {
-					var possibleForRock = IdentifyNextWithRotations (roomType, rock.Dir);
-					if (possibleForRock.ContainsKey (Action.Wait)) {
-						var newPos = rock.Move (possibleForRock [Action.Wait]);
-						if (newPos.X == next.X && newPos.Y == next.Y) {
-							// collision!
-							collision = true;
-							break;
-						}
-						newRocks.Add (newPos);
-					}
-				} else {
-					// rock destroyed
-				}
-			}
-			if (collision) {
-				Console.Error.Write ("Collision possible @{0}.{1}",next.X, next.Y );
-				continue;
-			}
-			// check if everything is ok
-			var ret = ComputePath(map, next, newRocks, direct, out action, out actionPoint, ref dist, depth+1);
-
-			if (direct && move.Key != Action.Wait) {
-				actionPoint = current;
-				action = move.Key;
-				dist = depth;
-				if (!direct)
-					Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
-				return Direction.Down;
-			}
-			if (ret != Direction.Blocked)
-			{
-				if (move.Key != Action.Wait) {
-					action = move.Key;
-					actionPoint = current;
-					dist = depth;
-					if (!direct)
-						Console.Error.Write ("Force action as {0} for {1}", action, actionPoint);
-				}
-				return Direction.Down;
-			}
-		}
-		*/
+		Console.Error.WriteLine(prefix+"No cigar!");
 		return Direction.Blocked;
 	}
-
-	private static Direction ComputeRockPath(Dictionary<Point, int> map, Point current, Point player
-		, out Action action, out Point next, ref int dist, int depth)
-	{
-		action = Action.Wait;
-		next = new Point ();
-
-		if (current.Y >= Height)
-		{
-			if (current.X != ExitX)
-			{
-				// Console.Error.WriteLine("Wrong Exit");
-				return Direction.Blocked;
-			}
-			Console.Error.WriteLine("Found Exit");
-			return Direction.Down;
-		}
-		if (current == player) {
-			Console.Error.WriteLine ("Rock is behind player, no need to change.");
-			action = Action.Wait;
-			return Direction.Blocked;
-		}
-		if (current.X < 0 || current.X >= Width) {
-			// Console.Error.WriteLine("Dead end ");
-			return Direction.Blocked;
-		}
-		// try the next one
-		var room = map[current];
-		var possible = BlockNextWithRotations(depth == 0 ? -Math.Abs(room) : room, current.Dir);
-
-		foreach (var move in possible) {
-			Console.Error.Write("({1}){0} ==>", current, room);
-			if (move.Value == Direction.Blocked) {
-				dist = depth;
-				if (move.Key != Action.Wait) {
-					action = move.Key;
-					next = current;
-				}
-				return Direction.Blocked;
-			}
-			Console.Error.WriteLine ("evaluating {0}, {1}", move.Key, move.Value);
-			var moved = current.Move (move.Value);
-			// check if everything is ok
-			var ret = ComputeRockPath(map, moved, player, out action, out next, ref dist, depth+1);
-
-			if (ret == Direction.Blocked)
-			{
-				if (move.Key != Action.Wait) {
-					next = current;
-					action = move.Key;
-					dist = depth;
-					Console.Error.Write ("Force action as {0} for {1}", action, next);
-				}
-				return Direction.Blocked;
-			}
-		}
-		return Direction.Blocked;
-	}
-
+		
 	private static int RotateLeft(int room)
 	{
 		switch (room)
@@ -626,7 +532,7 @@ class PlayerIndy
 				return Direction.Down;
 			break;
 		case 8:
-			if (incoming == Direction.Right)
+			if (incoming == Direction.Right || incoming == Direction.Left)
 				return Direction.Down;
 			break;
 		case 9:
@@ -820,98 +726,184 @@ class PlayerIndy
 		case 2:
 			if (incoming == Direction.Left) {
 				ret [Action.Left] = Direction.Blocked;
-				if (roomType < 0)
-					ret [Action.Wait] = Direction.Right;
+				ret [Action.Wait] = Direction.Right;
 			}
 			if (incoming == Direction.Right) {
 				ret [Action.Left] = Direction.Blocked;
-				if (roomType < 0)
-					ret [Action.Wait] = Direction.Left;
+				ret [Action.Wait] = Direction.Left;
+			}
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
 			}
 			break;
 		case 3:
 			if (incoming == Direction.Top) {
 				ret [Action.Left] = Direction.Blocked;
-				if (roomType < 0)
-					ret [Action.Wait] = Direction.Down;
+				ret [Action.Wait] = Direction.Down;
+			}
+			if (incoming == Direction.Right){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Left;
+			}
+			if (incoming == Direction.Left) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Right;
 			}
 			break;
 		case 4:
-			if (incoming == Direction.Top)
-			{
-				ret[Action.Wait] = Direction.Left;
-				ret[Action.Left] = Direction.Right;
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Left;
+				ret [Action.Left] = Direction.Right;
 			}
-			if (incoming == Direction.Right)
-				ret[Action.Right] = Direction.Blocked;
+			if (incoming == Direction.Right) {
+				ret [Action.Right] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
+			if (incoming == Direction.Left) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
+			}
 			break;
 		case 5:
-			if (incoming == Direction.Top)
-			{
-				ret[Action.Wait] = Direction.Right;
-				ret[Action.Left] = Direction.Left;
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Right;
+				ret [Action.Left] = Direction.Left;
 			}
-			if (incoming == Direction.Left)
-				ret[Action.Right] = Direction.Blocked;
+			if (incoming == Direction.Left) {
+				ret [Action.Right] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
+			if (incoming == Direction.Right) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
+			}
 			break;
 		case 6:
+			if (incoming == Direction.Top)
+			{
+				ret[Action.Wait] = Direction.Blocked;
+				ret[Action.Right] = Direction.Down;
+			}
 			if (incoming == Direction.Right)
 			{
 				ret[Action.Left] = Direction.Blocked;
+				ret[Action.Wait] = Direction.Left;
+				ret[Action.Right] = Direction.Down;
 			}
 			if (incoming == Direction.Left)
 			{
-				ret[Action.Right] = Direction.Down;
+				ret[Action.Right] = Direction.Blocked;
+				ret[Action.Wait] = Direction.Right;
+				ret[Action.Left] = Direction.Down;
 			}
 			break;
 		case 7:
-			if (incoming == Direction.Top)
-				ret[Action.Left] = Direction.Blocked;
+			if (incoming == Direction.Top) {
+				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
 			if (incoming == Direction.Right)
 			{
 				ret[Action.DoubleLeft] = Direction.Blocked;
+				ret[Action.Left] = Direction.Left;
+				ret[Action.Wait] = Direction.Down;
+			}
+			if (incoming == Direction.Left)
+			{
+				ret [Action.Wait] = Direction.Blocked;
+				ret[Action.DoubleLeft] = Direction.Down;
+				ret [Action.Right] = Direction.Right;
 			}
 			break;
 		case 8:
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
+			}
 			if (incoming == Direction.Right) {
 				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
 			}
-			if (incoming == Direction.Left)
-			{
-				ret[Action.Right] = Direction.Blocked;
+			if (incoming == Direction.Left) {
+				ret [Action.Right] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
 			}
 			break;
 		case 9:
-			if (incoming == Direction.Top)
-				ret[Action.Left] = Direction.Blocked;
+			if (incoming == Direction.Top) {
+				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
 			if (incoming == Direction.Left)
 			{
 				ret[Action.DoubleLeft] = Direction.Blocked;
+				ret[Action.Wait] = Direction.Down;
+				ret[Action.Right] = Direction.Right;
+			}
+			if (incoming == Direction.Right)
+			{
+				ret[Action.Wait] = Direction.Blocked;
+				ret[Action.Right] = Direction.Left;
+				ret[Action.DoubleLeft] = Direction.Down;
 			}
 			break;
 		case 10:
 			if (incoming == Direction.Top){
-				ret [Action.Right] = Direction.Blocked;
-				if (roomType < 0) {
-					ret [Action.Wait] = Direction.Left;
-				}
+				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Right] = Direction.Right;
+				ret [Action.Wait] = Direction.Left;
+			}
+			if (incoming == Direction.Left){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
+			}
+			if (incoming == Direction.Right){
+				ret [Action.Wait] = Direction.Blocked;
+				ret[Action.DoubleLeft] = Direction.Down;
 			}
 			break;
 		case 11:
 			if (incoming == Direction.Top) {
 				ret [Action.Right] = Direction.Blocked;
-				if (roomType < 0) {
-					ret [Action.Wait] = Direction.Right;
-				}
+				ret [Action.Wait] = Direction.Right;
+			}
+			if (incoming == Direction.Left){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.DoubleLeft] = Direction.Down;
+			}
+			if (incoming == Direction.Right){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Right] = Direction.Down;
 			}
 			break;
 		case 12:
-			if (incoming == Direction.Right)
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Right;
+			}
+			if (incoming == Direction.Left){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Right] = Direction.Down;
+			}
+			if (incoming == Direction.Right){
 				ret [Action.Left] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
 			break;
 		case 13:
-			if (incoming == Direction.Left)
-				ret[Action.Right] = Direction.Blocked;
+			if (incoming == Direction.Top) {
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Right] = Direction.Left;
+			}
+			if (incoming == Direction.Left){
+				ret [Action.Right] = Direction.Blocked;
+				ret [Action.Wait] = Direction.Down;
+			}
+			if (incoming == Direction.Right){
+				ret [Action.Wait] = Direction.Blocked;
+				ret [Action.Left] = Direction.Down;
+			}
 			break;
 		}
 		if (roomType < 0) {
