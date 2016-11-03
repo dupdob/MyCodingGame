@@ -33,7 +33,7 @@ will become
  **/
 class ZerglingRush
 {
-    static void Main(string[] args)
+    static void Main2(string[] args)
     {
         var inputs = Console.ReadLine().Split(' ');
         var W = int.Parse(inputs[0]);

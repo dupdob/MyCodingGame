@@ -36,6 +36,7 @@
     <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
+    <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
