@@ -9,7 +9,7 @@ using System.Text;
  **/
 class BracketsEnhanced
 {
-    static void Main(string[] args)
+    static void MainBrackets(string[] args)
     {
         int N = int.Parse(Console.ReadLine());
         string[] expressions = new string[N];

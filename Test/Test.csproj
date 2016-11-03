@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Community\BracketsEnhanced.cs" />
+    <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="Program.cs" />
