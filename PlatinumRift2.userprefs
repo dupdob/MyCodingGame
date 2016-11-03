@@ -1,9 +1,8 @@
-﻿<Properties GitUserInfo="UsingGIT" StartupItem="PlatinumRift2/PlatinumRift2.csproj">
+﻿<Properties GitUserInfo="UsingGIT" StartupItem="Test/Test.csproj" RefactoringSettings.EnableRefactorings="True">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Difficile/Clones.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Test/Moyen/PlayerMars.cs">
     <Files>
-      <File FileName="Test/Difficile/PlayerKirk.cs" Line="1" Column="1" />
-      <File FileName="Test/Difficile/Clones.cs" Line="155" Column="11" />
+      <File FileName="Test/Moyen/PlayerMars.cs" Line="181" Column="15" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
