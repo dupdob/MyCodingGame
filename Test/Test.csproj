@@ -33,6 +33,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="Program.cs" />
@@ -50,6 +51,11 @@
     <Compile Include="Difficile\PlayerKirk.cs" />
     <Compile Include="Difficile\Clones.cs" />
     <Compile Include="Temp.cs" />
+    <Compile Include="Community\TwoEgg.cs" />
+    <Compile Include="TestRunner.cs" />
+    <Compile Include="Tooling\ContextProgram.cs" />
+    <Compile Include="Tooling\InFromFile.cs" />
+    <Compile Include="Tooling\OutToFile.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

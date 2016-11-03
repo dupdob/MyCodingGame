@@ -19,7 +19,7 @@ class PlayerIndy
 
     private static int ExitX;
 
-    private static void Main(string[] args)
+    private static void MainIndy(string[] args)
     {
         var array = new List<List<int>>();
         var inputs = Console.ReadLine().Split(' ');
