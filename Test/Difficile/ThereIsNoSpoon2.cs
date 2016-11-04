@@ -19,7 +19,7 @@ class NoSpoon2
         {
             string line = Console.ReadLine(); // width characters, each either 0 or .
             Console.Error.WriteLine(line);
-            for (var j=0; j<line.Length; j++)
+            for (var j = 0; j < line.Length; j++)
             {
                 var car = line[j];
                 if (car == '.')
@@ -52,15 +52,15 @@ class NoSpoon2
                 {
                     if (map[x, j] != null)
                     {
-                        node.AddNeighbour(map[x,j]);
+                        node.AddNeighbour(map[x, j]);
                         break;
                     }
                 }
-                for (var x = i+1; x <width; x++)
+                for (var x = i + 1; x < width; x++)
                 {
                     if (map[x, j] != null)
                     {
-                        node.AddNeighbour(map[x,j]);
+                        node.AddNeighbour(map[x, j]);
                         break;
                     }
                 }
@@ -68,7 +68,7 @@ class NoSpoon2
                 {
                     if (map[i, y] != null)
                     {
-                        node.AddNeighbour(map[i,y]);
+                        node.AddNeighbour(map[i, y]);
                         break;
                     }
                 }
@@ -76,11 +76,11 @@ class NoSpoon2
                 {
                     if (map[i, y] != null)
                     {
-                        node.AddNeighbour(map[i,y]);
+                        node.AddNeighbour(map[i, y]);
                         break;
                     }
                 }
-                nodes.Add(map[i,j]);
+                nodes.Add(map[i, j]);
             }
         }
         var links = new List<Links>();
@@ -112,13 +112,12 @@ class NoSpoon2
             if (scan.Priority < minPriority)
             {
                 minPriority = scan.Priority;
-                node=scan;
+                node = scan;
             }
         }
         if (node.NeedeedLinks > 0)
         {
             node.SortNeighbours();
-            Console.Error.WriteLine("Analyzing node {0}:{1}", node.X, node.Y);
             foreach (var nodeNeighBour in node.NeighBours)
             {
                 if (!node.CanLinkToo(nodeNeighBour))
@@ -131,10 +130,23 @@ class NoSpoon2
                     From = node,
                     To = nodeNeighBour
                 };
+                var crossing = false;
+                foreach (var existing in links)
+                {
+                    if (link.Crosses(existing))
+                    {
+                        crossing = true;
+                        break;
+                    }
+                }
+                if (crossing)
+                {
+                    continue;
+                }
                 node.LinkTo(nodeNeighBour);
                 nodeNeighBour.LinkTo(node);
                 links.Add(link);
-                Console.Error.WriteLine("Add link {0}:{1} => {2}:{3}", link.From.X, link.From.Y, link.To.X, link.To.Y);
+                Console.Error.WriteLine("Add link {0}", link);
                 addedLink = true;
                 if (node.MissingLinks == 0)
                 {
@@ -145,14 +157,13 @@ class NoSpoon2
         if (node.NeedeedLinks == 0)
         {
             addedLink = true;
-            Console.Error.WriteLine("Node {0}:{1} saturated.", node.X, node.Y);
             nodes.RemoveAt(0);
         }
         return addedLink;
     }
 
 
-    class Node:IComparable
+    class Node : IComparable
     {
         public int X;
         public int Y;
@@ -162,16 +173,16 @@ class NoSpoon2
         private int linkUsed = 0;
 
         // number of links that must be set to this node
-        public int MissingLinks { get { return this.NeedeedLinks-this.linkUsed ; } }
+        public int MissingLinks { get { return this.NeedeedLinks - this.linkUsed; } }
 
-        public int Priority {  get { return this.FlexibleLinks * 10000 + this.Y * 100 + this.X; } }
+        public int Priority { get { return this.FlexibleLinks * 10000 + this.Y * 100 + this.X; } }
         // number of links freely allocable(i.e for which multiple options are possible
 
-        public int FlexibleLinks { get { return  this.MissingLinks>0 ? this.FreeNeighboursLinks - this.MissingLinks : 100;  } }
+        public int FlexibleLinks { get { return this.MissingLinks > 0 ? this.FreeNeighboursLinks - this.MissingLinks : 100; } }
 
         public bool CanLinkToo(Node other)
         {
-            return other.MissingLinks>0 && this.LinkedTo[other] < 2;
+            return other.MissingLinks > 0 && this.LinkedTo[other] < 2;
         }
 
         public void AddNeighbour(Node node)
@@ -236,17 +247,22 @@ class NoSpoon2
 
         public bool Crosses(Links other)
         {
-            if (this.From.X == this.To.X && other.From.X!=other.To.X)
+            if (this.From.X == this.To.X && other.From.X != other.To.X)
             {
-                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) < 0 &&
-                       (other.To.X - this.From.X) * (this.From.X - other.From.X) < 0;
+                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
+                       (other.To.X - this.To.X) * (this.From.X - other.From.X) > 0;
             }
             if (this.From.Y == this.To.Y && other.From.Y != other.To.Y)
             {
                 return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
-                       (other.To.X - this.From.X) * (this.From.X - other.From.X) > 0;
+                       (other.To.X - this.To.X) * (this.From.X - other.From.X) > 0;
             }
             return false;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}<=>{2}:{3}", this.From.X, this.From.Y, this.To.X, this.To.Y);
         }
     }
 }
