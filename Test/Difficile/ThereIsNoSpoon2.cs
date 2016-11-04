@@ -38,63 +38,60 @@ class NoSpoon2
         }
         var nodes = new List<Node>();
         // build a graph
-        for (int i = 0; i < width; i++)
+        for (var i = 0; i < width; i++)
         {
-            for (int j = 0; j < height; j++)
+            for (var j = 0; j < height; j++)
             {
                 var node = map[i, j];
-                if (node !=null)
+                if (node == null)
                 {
-                    /// look for node going up
-                    for (var x = i - 1; x >= 0; x--)
-                    {
-                        if (map[x, j] != null)
-                        {
-                            node.NeighBours.Add(map[x,j]);
-                            break;
-                        }
-                    }
-                    for (var x = i+1; x <width; x++)
-                    {
-                        if (map[x, j] != null)
-                        {
-                            node.NeighBours.Add(map[x,j]);
-                            break;
-                        }
-                    }
-                    for (var y = j - 1; y >= 0; y--)
-                    {
-                        if (map[i, y] != null)
-                        {
-                            node.NeighBours.Add(map[i,y]);
-                            break;
-                        }
-                    }
-                    for (var y = j + 1; y < height; y++)
-                    {
-                        if (map[i, y] != null)
-                        {
-                            node.NeighBours.Add(map[i,y]);
-                            break;
-                        }
-                    }
-                    nodes.Add(map[i,j]);
+                    continue;
                 }
+                // look for node going up
+                for (var x = i - 1; x >= 0; x--)
+                {
+                    if (map[x, j] != null)
+                    {
+                        node.AddNeighbour(map[x,j]);
+                        break;
+                    }
+                }
+                for (var x = i+1; x <width; x++)
+                {
+                    if (map[x, j] != null)
+                    {
+                        node.AddNeighbour(map[x,j]);
+                        break;
+                    }
+                }
+                for (var y = j - 1; y >= 0; y--)
+                {
+                    if (map[i, y] != null)
+                    {
+                        node.AddNeighbour(map[i,y]);
+                        break;
+                    }
+                }
+                for (var y = j + 1; y < height; y++)
+                {
+                    if (map[i, y] != null)
+                    {
+                        node.AddNeighbour(map[i,y]);
+                        break;
+                    }
+                }
+                nodes.Add(map[i,j]);
             }
-        }
-        // sort the nodes
-        nodes.Sort();
-        foreach (var node in nodes)
-        {
-            Console.Error.Write("{0}:{1}:{2} =>{3} Nextto:", node.X, node.Y, node.NeedeedLinks, node.Priority);
-            foreach (var nodeNeighBour in node.NeighBours)
-            {
-                Console.Error.Write("{0}:{1}  ", nodeNeighBour.X, nodeNeighBour.Y);
-            }
-            Console.Error.WriteLine();
         }
         var links = new List<Links>();
-        NoSpoon2.BuildGraph(nodes, links);
+        while (nodes.Count > 0)
+        {
+            if (!NoSpoon2.BuildGraph(nodes, links))
+            {
+                Console.Error.WriteLine("Algo is in a dead end.");
+                break;
+            }
+        }
         // Write an action using Console.WriteLine()
         // To debug: Console.Error.WriteLine("Debug messages...");
         foreach (var link in links)
@@ -104,35 +101,54 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static void BuildGraph(List<Node> nodes, List<Links> links)
+    private static bool BuildGraph(List<Node> nodes, List<Links> links)
     {
-        foreach (var node in nodes)
+        var addedLink = false;
+        // we need to add a link
+        Node node = null;
+        var minPriority = int.MaxValue;
+        foreach (var scan in nodes)
         {
-            if (node.NeedeedLinks > 0)
+            if (scan.Priority < minPriority)
             {
-                // we need to add a link
-                node.SortNeighbours();
-                foreach (var nodeNeighBour in node.NeighBours)
+                minPriority = scan.Priority;
+                node=scan;
+            }
+        }
+        if (node.NeedeedLinks > 0)
+        {
+            node.SortNeighbours();
+            Console.Error.WriteLine("Analyzing node {0}:{1}", node.X, node.Y);
+            foreach (var nodeNeighBour in node.NeighBours)
+            {
+                if (!node.CanLinkToo(nodeNeighBour))
                 {
-                    // try to add a link between those two
-                    var link = new Links
-                    {
-                        From = node,
-                        To = nodeNeighBour
-                    };
-                    if (nodeNeighBour.NeedeedLinks > 0)
-                    {
-                        node.NeedeedLinks--;
-                        nodeNeighBour.NeedeedLinks--;
-                        links.Add(link);
-                        if (node.NeedeedLinks == 0)
-                        {
-                            break;
-                        }
-                    }
+                    continue;
+                }
+                // try to add a link between those two
+                var link = new Links
+                {
+                    From = node,
+                    To = nodeNeighBour
+                };
+                node.LinkTo(nodeNeighBour);
+                nodeNeighBour.LinkTo(node);
+                links.Add(link);
+                Console.Error.WriteLine("Add link {0}:{1} => {2}:{3}", link.From.X, link.From.Y, link.To.X, link.To.Y);
+                addedLink = true;
+                if (node.MissingLinks == 0)
+                {
+                    break;
                 }
             }
         }
+        if (node.NeedeedLinks == 0)
+        {
+            addedLink = true;
+            Console.Error.WriteLine("Node {0}:{1} saturated.", node.X, node.Y);
+            nodes.RemoveAt(0);
+        }
+        return addedLink;
     }
 
 
@@ -142,11 +158,53 @@ class NoSpoon2
         public int Y;
         public int NeedeedLinks;
         public List<Node> NeighBours = new List<Node>();
+        public Dictionary<Node, int> LinkedTo = new Dictionary<Node, int>();
+        private int linkUsed = 0;
 
-        public int FreeLinks { get { return this.NeighBours.Count*2 - this.NeedeedLinks; } }
+        // number of links that must be set to this node
+        public int MissingLinks { get { return this.NeedeedLinks-this.linkUsed ; } }
 
-        public int Priority {  get { return this.FreeLinks * 10000 + this.Y * 100 + this.X; } }
+        public int Priority {  get { return this.FlexibleLinks * 10000 + this.Y * 100 + this.X; } }
+        // number of links freely allocable(i.e for which multiple options are possible
 
+        public int FlexibleLinks { get { return  this.MissingLinks>0 ? this.FreeNeighboursLinks - this.MissingLinks : 100;  } }
+
+        public bool CanLinkToo(Node other)
+        {
+            return other.MissingLinks>0 && this.LinkedTo[other] < 2;
+        }
+
+        public void AddNeighbour(Node node)
+        {
+            this.NeighBours.Add(node);
+            this.LinkedTo[node] = 0;
+        }
+
+        public bool LinkTo(Node other)
+        {
+            if (this.LinkedTo[other] > 1)
+                // link saturated
+                return false;
+            this.linkUsed++;
+            this.LinkedTo[other]++;
+            return true;
+        }
+
+        public int FreeNeighboursLinks
+        {
+            get
+            {
+                var res = 0;
+                foreach (var neighBour in this.NeighBours)
+                {
+                    if (neighBour.MissingLinks > 0)
+                    {
+                        res += Math.Min(neighBour.MissingLinks, 2 - this.LinkedTo[neighBour]);
+                    }
+                }
+                return res;
+            }
+        }
         public int CompareTo(object obj)
         {
             var other = obj as Node;
@@ -175,5 +233,20 @@ class NoSpoon2
     {
         public Node From;
         public Node To;
+
+        public bool Crosses(Links other)
+        {
+            if (this.From.X == this.To.X && other.From.X!=other.To.X)
+            {
+                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) < 0 &&
+                       (other.To.X - this.From.X) * (this.From.X - other.From.X) < 0;
+            }
+            if (this.From.Y == this.To.Y && other.From.Y != other.To.Y)
+            {
+                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
+                       (other.To.X - this.From.X) * (this.From.X - other.From.X) > 0;
+            }
+            return false;
+        }
     }
 }
