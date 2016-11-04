@@ -117,7 +117,7 @@ class NoSpoon2
         }
         if (node.NeedeedLinks > 0)
         {
-            node.SortNeighbours();
+ ///           node.SortNeighbours();
             foreach (var nodeNeighBour in node.NeighBours)
             {
                 if (!node.CanLinkToo(nodeNeighBour))
@@ -148,16 +148,22 @@ class NoSpoon2
                 links.Add(link);
                 Console.Error.WriteLine("Add link {0}", link);
                 addedLink = true;
+                if (!BuildGraph(nodes, links))
+                {
+                    links.Remove(link);
+                    node.RemoveLink(nodeNeighBour);
+                    nodeNeighBour.RemoveLink(node);
+                }
                 if (node.MissingLinks == 0)
                 {
                     break;
                 }
             }
         }
-        if (node.NeedeedLinks == 0)
+        if (node.MissingLinks == 0)
         {
             addedLink = true;
-            nodes.RemoveAt(0);
+            nodes.Remove(node);
         }
         return addedLink;
     }
@@ -168,40 +174,19 @@ class NoSpoon2
         public int X;
         public int Y;
         public int NeedeedLinks;
-        public List<Node> NeighBours = new List<Node>();
-        public Dictionary<Node, int> LinkedTo = new Dictionary<Node, int>();
+        public readonly List<Node> NeighBours = new List<Node>();
+        private readonly Dictionary<Node, int> linkedTo = new Dictionary<Node, int>();
         private int linkUsed = 0;
 
         // number of links that must be set to this node
-        public int MissingLinks { get { return this.NeedeedLinks - this.linkUsed; } }
+        public int MissingLinks => this.NeedeedLinks - this.linkUsed;
 
-        public int Priority { get { return this.FlexibleLinks * 10000 + this.Y * 100 + this.X; } }
+        public int Priority => this.FlexibleLinks * 10000 + this.Y * 100 + this.X;
         // number of links freely allocable(i.e for which multiple options are possible
 
-        public int FlexibleLinks { get { return this.MissingLinks > 0 ? this.FreeNeighboursLinks - this.MissingLinks : 100; } }
+        private int FlexibleLinks => this.MissingLinks > 0 ? this.FreeNeighboursLinks - this.MissingLinks : 100;
 
-        public bool CanLinkToo(Node other)
-        {
-            return other.MissingLinks > 0 && this.LinkedTo[other] < 2;
-        }
-
-        public void AddNeighbour(Node node)
-        {
-            this.NeighBours.Add(node);
-            this.LinkedTo[node] = 0;
-        }
-
-        public bool LinkTo(Node other)
-        {
-            if (this.LinkedTo[other] > 1)
-                // link saturated
-                return false;
-            this.linkUsed++;
-            this.LinkedTo[other]++;
-            return true;
-        }
-
-        public int FreeNeighboursLinks
+        private int FreeNeighboursLinks
         {
             get
             {
@@ -210,12 +195,45 @@ class NoSpoon2
                 {
                     if (neighBour.MissingLinks > 0)
                     {
-                        res += Math.Min(neighBour.MissingLinks, 2 - this.LinkedTo[neighBour]);
+                        res += Math.Min(neighBour.MissingLinks, 2 - this.linkedTo[neighBour]);
                     }
                 }
                 return res;
             }
         }
+
+        public bool CanLinkToo(Node other)
+        {
+            return other.MissingLinks > 0 && this.linkedTo[other] < 2;
+        }
+
+        public void AddNeighbour(Node node)
+        {
+            this.NeighBours.Add(node);
+            this.linkedTo[node] = 0;
+        }
+
+        public bool LinkTo(Node other)
+        {
+            if (this.linkedTo[other] > 1)
+                // link saturated
+            {
+                return false;
+            }
+            this.linkUsed++;
+            this.linkedTo[other]++;
+            return true;
+        }
+
+        public bool RemoveLink(Node other)
+        {
+            if (!this.NeighBours.Contains(other))
+                return false;
+            this.linkedTo[other]--;
+            this.linkUsed--;
+            return true;
+        }
+
         public int CompareTo(object obj)
         {
             var other = obj as Node;
