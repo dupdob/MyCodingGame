@@ -117,8 +117,9 @@ class NoSpoon2
         }
         if (node.NeedeedLinks > 0)
         {
- ///           node.SortNeighbours();
-            foreach (var nodeNeighBour in node.NeighBours)
+            var copy = new List<Node>(node.NeighBours);
+            copy.Sort();
+            foreach (var nodeNeighBour in copy)
             {
                 if (!node.CanLinkToo(nodeNeighBour))
                 {
