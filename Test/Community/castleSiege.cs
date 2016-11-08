@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 /**
@@ -36,7 +32,7 @@ class CastleSiege
     {
         public int HP;
     }
-    static void Main(string[] args)
+    static void MainCastle(string[] args)
     {
         var inputs = Console.ReadLine().Split(' ');
         var W = int.Parse(inputs[0]);
@@ -62,10 +58,145 @@ class CastleSiege
                 }
             }
         }
-
+        //
+        int turn=1;
+        bool partyended = false;
+        while (enemies.Count > 0)
+        {
+            // identify targets
+            var arrows = new List<int>();
+            foreach (var tower in towers)
+            {
+                var target = FindNearest(tower, enemies);
+                if (target >= 0)
+                {
+                    arrows.Add(target);
+                }
+            }
+            // fire arrows
+            foreach (var arrow in arrows)
+            {
+                Console.Error.WriteLine("Shoot on {0}:{1}", enemies[arrow].X, enemies[arrow].Y);
+                enemies[arrow].HP--;
+            }
+            // identify deads
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                if (enemies[i].HP <= 0)
+                {
+                    enemies.RemoveAt(i);
+                    i--;
+                }
+            }
+            if (enemies.Count == 0)
+            {
+                // winning
+                break;
+            }
+            // enmies move
+            for (var index = 0; index < enemies.Count; index++)
+            {
+                var enemy = enemies[index];
+                enemy.Y--;
+                if (enemy.Y < 0)
+                {
+                    partyended = true;
+                    break;
+                }
+                foreach (var tower in towers)
+                {
+                    if (tower.X == enemy.X && tower.Y == enemy.Y)
+                    {
+                        // enemy distroyed
+                        enemies.RemoveAt(index--);
+                    }
+                }
+            }
+            if (partyended)
+            {
+                break;
+            }
+            turn++;
+        }
         // Write an action using Console.WriteLine()
         // To debug: Console.Error.WriteLine("Debug messages...");
 
-        Console.WriteLine("answer");
+        Console.WriteLine("{0} {1}", enemies.Count==0 ? "WIN" : "LOSE", turn);
+    }
+
+    static int FindNearest(Coord tower, IList<Enemy> enemies)
+    {
+        var ids = new List<int>();
+        int northernLine = int.MaxValue;
+        // find norther enemy
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            var enemy = enemies[i];
+            if (Math.Abs(tower.X - enemy.X) > 2 || Math.Abs(tower.Y - enemy.Y) > 2 || enemy.Y > northernLine)
+            {
+                continue;
+            }
+            else
+            {
+                if (enemy.Y < northernLine)
+                {
+                    // this enemye is further north than others
+                    northernLine = enemy.Y;
+                    ids.Clear();
+                }
+                ids.Add(i);
+            }
+        }
+        if (ids.Count > 1)
+        {
+            var list = new List<int>(ids);
+            int mindist = int.MaxValue;
+            ids.Clear();
+            // we need to look for closest enemy
+            foreach (var id in list)
+            {
+                var enemy = enemies[id];
+                var dist = (tower.X - enemy.X) * (tower.X - enemy.X) + (tower.Y - enemy.Y) * (tower.Y - enemy.Y);
+                if (dist > mindist)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (dist < mindist)
+                    {
+                        ids.Clear();
+                        mindist = dist;
+                    }
+                    ids.Add(id);
+                }
+            }
+        }
+        if (ids.Count > 1)
+        {
+            var list = new List<int>(ids);
+            int maxEast = int.MinValue;
+            ids.Clear();
+            // we need to look for enemy further east
+            foreach (var id in list)
+            {
+                var enemy = enemies[id];
+                if (enemy.X < maxEast)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (enemy.X > maxEast)
+                    {
+                        ids.Clear();
+                        maxEast = enemy.X;
+                    }
+                    ids.Add(id);
+                }
+            }
+            // there should be only one id here
+        }
+        return ids.Count == 0 ? -1 : ids[0];
     }
 }
