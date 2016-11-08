@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 /**
 You must determine whether a given expression's bracketing can be made valid by flipping them in-place. An expression has a valid bracketing when all the parentheses (), square brackets [], curly braces {} and angle brackets <> are correctly paired and nested.
@@ -31,158 +32,49 @@ class BracketsEnhanced
         }
         for (var i = 0; i < N; i++)
         {
-            var simplified = new List<Bracket>();
-            var nbParenth = 0;
-            var nbBrack = 0;
-            var nbCurly = 0;
-            var nbAngle = 0;
-            var next = expressions[i];
-            var counts = new Dictionary<char, int>
+            StringBuilder builder = new StringBuilder();
+            foreach (var car in expressions[i])
             {
-                ['<'] = 0,
-                ['('] = 0,
-                ['{'] = 0,
-                ['['] = 0
-            };
-            Bracket lastBracket = null;
-            foreach (var car in next)
-            {
-                char nextChar = (char)0;
+                char nextChar = (char) 0;
                 switch (car)
                 {
                     case '<':
                     case '>':
                         nextChar = '<';
-                        nbAngle++;
                         break;
                     case '(':
                     case ')':
                         nextChar = '(';
-                        nbParenth++;
                         break;
                     case '{':
                     case '}':
                         nextChar = '{';
-                        nbCurly++;
                         break;
                     case '[':
                     case ']':
                         nextChar = '[';
-                        nbBrack++;
                         break;
                     default:
                         continue;
                 }
-                counts[nextChar]++;
-                if (lastBracket!=null && lastBracket.Marker==nextChar)
-                {
-                    lastBracket.Count++;
-                }
-                else
-                {
-                    lastBracket = new Bracket
-                    {
-                        Marker = nextChar,
-                        Count = 1
-                    };
-                    simplified.Add(lastBracket);
-                }
+                builder.Append(nextChar);
             }
 
-            // fast check. no need to parse if trivially not possible
-            if (nbAngle % 2 == 1 || nbParenth % 2 == 1 || nbCurly % 2 == 1 || nbBrack % 2 == 1)
-            {
-                Console.WriteLine("false");
-            }
-            else
-            {
-                // text
-                var brackets = new Stack<Bracket>();
-                var current = new Dictionary<char, int>(4)
-                {
-                    ['<'] = 0,
-                    ['('] = 0,
-                    ['{'] = 0,
-                    ['['] = 0
-                };
-                var j = 0;
-
-                Console.WriteLine(BracketsEnhanced.ScanBrackets(j, simplified, brackets, current, counts) ? "true" : "false");
-            }
+            // text
+            Console.WriteLine(BracketsEnhanced.SimpleScan(builder.ToString()) ? "true" : "false");
         }
     }
 
-    private static bool ScanBrackets(int j, IReadOnlyList<Bracket> next, Stack<Bracket> brackets, IDictionary<char, int> current, IDictionary<char, int> counts)
+    private static bool SimpleScan(string list)
     {
-        if (j >= next.Count)
+        var stack = new Stack<char>();
+        foreach (var bracket in list)
         {
-            return brackets.Count == 0;
-        }
-        if (DateTime.Now.TimeOfDay > BracketsEnhanced.start)
-            return false;
-        var nextBrackets = next[j];
-        var curBracket = 0;
-        j++;
-        var marker = nextBrackets.Marker;
-        counts[marker] -= nextBrackets.Count;
-        var sameasCurrent = brackets.Count > 0 && (brackets.Peek().Marker == marker);
-        if (sameasCurrent)
-        {
-            curBracket = brackets.Peek().Count;
-        }
-        var currentDepth = current[marker];
-        bool popped = false, pushed = false;
-        var init = Math.Max((curBracket+nextBrackets.Count) % 2, curBracket-nextBrackets.Count);
-
-        for (var i = init; i <= curBracket + nextBrackets.Count; i += 2)
-        {
-            current[marker] = currentDepth - curBracket + i;
-            if (current[marker] > counts[marker])
-            {
-                // not enought marker left
-
-                break;
-            }
-            if (i == 0)
-            {
-                if (sameasCurrent)
-                {
-                    // remove all brackes
-                    brackets.Pop();
-                    popped = true;
-                }
-            }
+            if (stack.Count == 0 || stack.Peek() != bracket)
+                stack.Push(bracket);
             else
-            {
-                if (brackets.Count == 0 || (brackets.Peek().Marker != marker))
-                {
-                    var temp = new Bracket {Marker = marker};
-                    brackets.Push(temp);
-                    popped = false;
-                    pushed = true;
-                }
-                brackets.Peek().Count = i;
-            }
-            if (BracketsEnhanced.ScanBrackets(j, next, brackets, current, counts))
-            {
-                return true;
-            }
+                stack.Pop();
         }
-        if (pushed && !sameasCurrent)
-        {
-            brackets.Pop();
-        }
-        else if (popped)
-        {
-            var restore = new Bracket {Marker = marker, Count = curBracket};
-            brackets.Push(restore);
-        }
-        else if (sameasCurrent)
-        {
-            brackets.Peek().Count = curBracket;
-        }
-        counts[marker] += nextBrackets.Count;
-        current[marker] = currentDepth;
-        return false;
+        return stack.Count == 0;
     }
 }
