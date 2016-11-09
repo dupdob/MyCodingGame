@@ -10,7 +10,7 @@ using System.Collections.Generic;
  **/
 class NoSpoon2
 {
-    static void MainSpoon(string[] args)
+    static void Main(string[] args)
     {
         var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
         var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
@@ -147,13 +147,14 @@ class NoSpoon2
                 node.LinkTo(nodeNeighBour);
                 nodeNeighBour.LinkTo(node);
                 links.Add(link);
-                Console.Error.WriteLine("Add link {0}", link);
+                //               Console.Error.WriteLine("Add link {0}", link);
                 addedLink = true;
                 if (!BuildGraph(nodes, links))
                 {
                     links.Remove(link);
                     node.RemoveLink(nodeNeighBour);
                     nodeNeighBour.RemoveLink(node);
+                    addedLink = false;
                 }
                 if (node.MissingLinks == 0)
                 {
@@ -217,7 +218,7 @@ class NoSpoon2
         public bool LinkTo(Node other)
         {
             if (this.linkedTo[other] > 1)
-                // link saturated
+            // link saturated
             {
                 return false;
             }

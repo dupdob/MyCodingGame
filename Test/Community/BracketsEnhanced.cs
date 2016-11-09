@@ -21,7 +21,7 @@ class BracketsEnhanced
         public char Marker;
         public int Count;
     }
-    static void Main(string[] args)
+    static void MainBrackets(string[] args)
     {
         BracketsEnhanced.start = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMilliseconds(200));
         var N = int.Parse(Console.ReadLine());
