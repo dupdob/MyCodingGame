@@ -10,7 +10,7 @@ using System.Collections.Generic;
  **/
 class NoSpoon2
 {
-    static void Main(string[] args)
+    static void MainSpoon(string[] args)
     {
         var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
         var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
