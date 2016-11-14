@@ -36,6 +36,7 @@
     <Compile Include="Community\AdvancedTree.cs" />
     <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Community\castleSiege.cs" />
+    <Compile Include="Community\SquareOrder.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />

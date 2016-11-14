@@ -101,7 +101,7 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static bool BuildGraph(List<Node> nodes, List<Links> links)
+    private static bool BuildGraph(ICollection<Node> nodes, ICollection<Links> links)
     {
         var addedLink = false;
         // we need to add a link
@@ -117,20 +117,17 @@ class NoSpoon2
         }
         if (node.NeedeedLinks > 0)
         {
-            var copy = new List<Node>(node.NeighBours);
-            copy.Sort();
-            foreach (var nodeNeighBour in copy)
+            Console.Error.WriteLine("Linking {0}", node);
+            var possibleLinks = new List<Links>(node.NeighBours.Count);
+            foreach (var nodeNeighBour in node.NeighBours)
             {
                 if (!node.CanLinkToo(nodeNeighBour))
-                {
                     continue;
-                }
-                // try to add a link between those two
-                var link = new Links
-                {
-                    From = node,
-                    To = nodeNeighBour
-                };
+                possibleLinks.Add(new Links {From = node, To = nodeNeighBour});
+            }
+            possibleLinks.Sort();
+            foreach (var link in possibleLinks)
+            {
                 var crossing = false;
                 foreach (var existing in links)
                 {
@@ -144,16 +141,15 @@ class NoSpoon2
                 {
                     continue;
                 }
-                node.LinkTo(nodeNeighBour);
-                nodeNeighBour.LinkTo(node);
+                Console.Error.WriteLine("Establishing link {0} ({1})", link, link.Priority);
+                node.EstablishLink(link.To);
                 links.Add(link);
                 //               Console.Error.WriteLine("Add link {0}", link);
                 addedLink = true;
                 if (!BuildGraph(nodes, links))
                 {
                     links.Remove(link);
-                    node.RemoveLink(nodeNeighBour);
-                    nodeNeighBour.RemoveLink(node);
+                    node.DestroyLink(link.To);
                     addedLink = false;
                 }
                 if (node.MissingLinks == 0)
@@ -183,7 +179,7 @@ class NoSpoon2
         // number of links that must be set to this node
         public int MissingLinks => this.NeedeedLinks - this.linkUsed;
 
-        public int Priority => this.FlexibleLinks * 10000 + this.Y * 100 + this.X;
+        public int Priority => this.FlexibleLinks * 10000 + this.Y * 50 + this.X;
         // number of links freely allocable(i.e for which multiple options are possible
 
         private int FlexibleLinks => this.MissingLinks > 0 ? this.FreeNeighboursLinks - this.MissingLinks : 100;
@@ -209,13 +205,28 @@ class NoSpoon2
             return other.MissingLinks > 0 && this.linkedTo[other] < 2;
         }
 
+        public bool IsLinkedTo(Node other)
+        {
+            return this.linkedTo[other] > 0;
+        }
+
         public void AddNeighbour(Node node)
         {
             this.NeighBours.Add(node);
             this.linkedTo[node] = 0;
         }
 
-        public bool LinkTo(Node other)
+        public bool EstablishLink(Node other)
+        {
+            if (!this.LinkTo(other))
+            {
+                return false;
+            }
+            other.LinkTo(this);
+            return true;
+        }
+
+        private bool LinkTo(Node other)
         {
             if (this.linkedTo[other] > 1)
             // link saturated
@@ -227,7 +238,15 @@ class NoSpoon2
             return true;
         }
 
-        public bool RemoveLink(Node other)
+        public bool DestroyLink(Node other)
+        {
+            if (!this.RemoveLink(other))
+                return false;
+            other.RemoveLink(this);
+            return true;
+        }
+
+        private bool RemoveLink(Node other)
         {
             if (!this.NeighBours.Contains(other))
                 return false;
@@ -254,13 +273,13 @@ class NoSpoon2
             return 0;
         }
 
-        public void SortNeighbours()
+        public override string ToString()
         {
-            this.NeighBours.Sort();
+            return string.Format("{0}:{1} ({2})", this.X, this.Y, this.Priority);
         }
     }
 
-    class Links
+    class Links : IComparable
     {
         public Node From;
         public Node To;
@@ -280,9 +299,45 @@ class NoSpoon2
             return false;
         }
 
+        public int Priority
+        {
+            get
+            {
+                if (this.From.NeedeedLinks == 1 && this.To.NeedeedLinks == 1)
+                {
+                    return this.To.Priority + 100000;
+                }
+                if (this.From.IsLinkedTo(this.To))
+                {
+                    return this.To.Priority + 100000;
+                }
+                int lenght =
+                    (int) Math.Sqrt(Math.Pow(this.From.X - this.To.X, 2) + Math.Pow(this.From.Y - this.To.Y, 2));
+                return this.To.Priority + lenght * 100;
+            }
+        }
+    
+        public int CompareTo(object obj)
+        {
+            var other = obj as Node;
+            if (other == null)
+            {
+                return 1;
+            }
+            if (this.Priority < other.Priority)
+            {
+                return -1;
+            }
+            if (this.Priority > other.Priority)
+            {
+                return 1;
+            }
+            return 0;
+        }
+
         public override string ToString()
         {
-            return string.Format("{0}:{1}<=>{2}:{3}", this.From.X, this.From.Y, this.To.X, this.To.Y);
+            return string.Format("{0}:{1}<=>{2}:{3}", From.X, From.Y, this.To.X, this.To.Y);
         }
     }
 }
