@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 /**
 Squares have been drawn in ASCII characters in a grid.
@@ -56,13 +52,14 @@ class SolutionSquare
             }
         }
 
-        public List<Square> IdentifyPotentialSquares()
+        public List<Square> IdentifyPotentialSquares(int widht, int height)
         {
             // confirm edges
             bool confirmLeft = false;
             bool confirmRight = false;
             bool confirmTop = false;
             bool confirmBottom = false;
+            // confirm edges
             foreach (var point in this.points)
             {
                 if (point.Item1 == this.MinX && point.Item2 != this.MinY && point.Item2 != this.MaxY)
@@ -85,29 +82,18 @@ class SolutionSquare
             int minDim = Math.Max(this.MaxX - this.MinX + 1, this.MaxY - this.MinY);
             var result = new List<Square>();
             // if all edges are sure, no questions
-            if (confirmBottom && confirmLeft && confirmLeft && confirmRight)
+            if (confirmBottom && confirmLeft && confirmTop && confirmRight)
             {
                 result.Add(this);
             }
-            else if (confirmRight && confirmLeft && confirmBottom)
+            else
             {
-                Square altSquare = new Square();
-                altSquare.MaxX = this.MaxX;
-                altSquare.MinX = this.MaxX - minDim;
-                altSquare.MaxY = this.MaxY;
-                altSquare.MinY = this.MinY;
-                altSquare.points = this.points;
-                result.Add(altSquare);
-            }
-            else if (confirmLeft && confirmRight && confirmTop)
-            {
-                Square altSquare = new Square();
-                altSquare.MaxX = this.MinX + minDim;
-                altSquare.MinX = this.MinX;
-                altSquare.MaxY = this.MaxY;
-                altSquare.MinY = this.MinY;
-                altSquare.points = this.points;
-                result.Add(altSquare);
+                int minX = confirmLeft ? this.MinX : 0;
+                int maxX = confirmRight ? this.MaxX : widht-1;
+                int minY = confirmTop ? this.MinY : 0;
+                int maxY = confirmBottom ? this.MaxY : height-1;
+
+                int maxDim = Math.Min(maxX - minX + 1, maxY - minY + 1);
             }
             return result;
         }
