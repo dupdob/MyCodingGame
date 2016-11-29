@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 /**
 Squares have been drawn in ASCII characters in a grid.
@@ -64,18 +65,22 @@ class SolutionSquare
             {
                 if (point.Item1 == this.MinX && point.Item2 != this.MinY && point.Item2 != this.MaxY)
                 {
+                    Console.Error.WriteLine("Confirmed left at {0}", this.MinX);
                     confirmLeft = true;
                 }
                 if (point.Item1 == this.MaxX && point.Item2 != this.MinY && point.Item2 != this.MaxY)
                 {
+                    Console.Error.WriteLine("Confirmed right at {0}", this.MaxX);
                     confirmRight = true;
                 }
                 if (point.Item1 != this.MinX && point.Item2 == this.MinY && point.Item1 != this.MaxX)
                 {
+                    Console.Error.WriteLine("Confirmed top at {0}", this.MinY);
                     confirmTop = true;
                 }
                 if (point.Item1 != this.MaxX && point.Item2 == this.MaxY && point.Item1 != this.MinX)
                 {
+                    Console.Error.WriteLine("Confirmed bottom at {0}", this.MaxY);
                     confirmBottom = true;
                 }
             }
@@ -88,12 +93,45 @@ class SolutionSquare
             }
             else
             {
-                int minX = confirmLeft ? this.MinX : 0;
-                int maxX = confirmRight ? this.MaxX : widht-1;
-                int minY = confirmTop ? this.MinY : 0;
-                int maxY = confirmBottom ? this.MaxY : height-1;
+                var minX = confirmLeft ? this.MinX : 0;
+                var maxX = confirmRight ? this.MaxX : widht-1;
+                var minY = confirmTop ? this.MinY : 0;
+                var maxY = confirmBottom ? this.MaxY : height-1;
 
-                int maxDim = Math.Min(maxX - minX + 1, maxY - minY + 1);
+                var maxDim = Math.Min(maxX - minX + 1, maxY - minY + 1);
+                // try all possible dimensions
+                for (var size = minDim; size <= maxDim; size++)
+                {
+                    Console.Error.WriteLine("Trying size of {0}.", size);
+                    // try all possible top lines
+                    for (var ty = minY; ty <= this.MinY; ty++)
+                    {
+                        var by = ty + size-1;
+                        // check if bottom line is possible
+                        if (by < this.MaxY || by > maxY)
+                        {
+                            continue;
+                        }
+                        // check all left column
+                        for (var lx = minX; lx <= this.MinX; lx++)
+                        {
+                            var rx = lx + size-1;
+                            // check if right column is possible
+                            if ( rx< this.MaxX || rx > maxX)
+                            {
+                                continue;
+                            }
+                            var rect = new Square
+                            {
+                                MinX = lx,
+                                MaxX = rx,
+                                MinY = ty,
+                                MaxY = @by
+                            };
+                            result.Add(rect);
+                        }
+                    }
+                }
             }
             return result;
         }
@@ -108,9 +146,9 @@ class SolutionSquare
            return new BorderEnumerator(this);
         }
 
-        public class BorderEnumerator : IEnumerator<Tuple<int, int>>
+        private class BorderEnumerator : IEnumerator<Tuple<int, int>>
         {
-            private Square pathSquare;
+            private readonly Square pathSquare;
             private Tuple<int, int> current = new Tuple<int, int>(0, 0);
 
             public BorderEnumerator(Square square)
@@ -189,52 +227,72 @@ class SolutionSquare
 
     static void Main(string[] args)
     {
-        string[] inputs = Console.ReadLine().Split(' ');
-        int h = int.Parse(inputs[0]);
-        int w = int.Parse(inputs[1]);
-        int nb = int.Parse(Console.ReadLine());
-        List<string> map = new List<string>();
-        Dictionary<int, Square> squares = new Dictionary<int, Square>(nb);
+        var inputs = Console.ReadLine().Split(' ');
+        var h = int.Parse(inputs[0]);
+        var w = int.Parse(inputs[1]);
+        var nb = int.Parse(Console.ReadLine());
+        var map = new List<string>();
+        var squares = new Dictionary<int, Square>(nb);
         // we capture inputs and identify squares coordinates
-        for (int i = 0; i < h; i++)
+        for (var i = 0; i < h; i++)
         {
-            string line = Console.ReadLine();
+            var line = Console.ReadLine();
             map.Add(line);
             Console.Error.WriteLine(line);
-            for (int l = 0; l < line.Length; l++)
+            for (var l = 0; l < line.Length; l++)
             {
-                if (line[l] != '.')
+                if (line[l] == '.') continue;
+                var id = line[l] - '0';
+                if (!squares.ContainsKey(id))
                 {
-                    int id = line[l] - '0';
-                    if (!squares.ContainsKey(id))
-                    {
-                        squares[id] = new Square();
-                    }
-                    squares[id].UpdateCorners(l, i);
+                    squares[id] = new Square();
                 }
+                squares[id].UpdateCorners(l, i);
             }
         }
         // now we identify overlapping.
-        foreach (var square in squares)
+        foreach (var nextSquare in squares)
         {
-            Console.Error.WriteLine("scanning {0} = {1}:{2} - {3} {4}", square.Key, square.Value.MinX, square.Value.MinY,
-                square.Value.MaxX, square.Value.MaxY);
-            foreach (var coords in square.Value)
+            Console.Error.WriteLine("Sccaning square {0}.", nextSquare.Key);
+            var possibleSquares = nextSquare.Value.IdentifyPotentialSquares(w, h);
+            Square validSquare = null;
+            Console.Error.WriteLine("Found {0} variants for square {1}", possibleSquares.Count, nextSquare.Key);
+            foreach (var square in possibleSquares)
+            {
+                bool errorFound = false;
+                Console.Error.WriteLine("scanning {0} = {1}:{2} - {3} {4}", nextSquare.Key, square.MinX, square.MinY,
+                    square.MaxX, square.MaxY);
+                foreach (var coords in square)
+                {
+                    var car = map[coords.Item2][coords.Item1];
+                    if (car == '.')
+                    {
+                        Console.Error.WriteLine("Unexpected dot at {0}:{1}", coords.Item1, coords.Item2);
+                        errorFound = true;
+                        // rectangles was not properly identified
+                        break;
+                    }
+                }
+                if (!errorFound)
+                {
+                    validSquare = square;
+                    break;
+                }
+            }
+            nextSquare.Value.MinX = validSquare.MinX;
+            nextSquare.Value.MaxX = validSquare.MaxX;
+            nextSquare.Value.MinY = validSquare.MinY;
+            nextSquare.Value.MaxY = validSquare.MaxY;
+            foreach (var coords in validSquare)
             {
                 var car = map[coords.Item2][coords.Item1];
-                if (car == '.')
+                var id = car - '0';
+                if (id != nextSquare.Key)
                 {
-                    Console.Error.WriteLine("Unexpected dot at {0}:{1}", coords.Item1, coords.Item2);
-                    // rectangles was not properly identified
-                    return;
-                }
-                int id = car - '0';
-                if (id != square.Key)
-                {
-                    if (!square.Value.Overlays.Contains(id))
+                    if (!nextSquare.Value.Overlays.Contains(id))
                     {
-                        square.Value.Overlays.Add(id);
-                        Console.Error.WriteLine("Square {0} overlaps square {1}", id, square.Key);
+                        nextSquare.Value.Overlays.Add(id);
+                        Console.Error.WriteLine("Square {0} overlaps square {1}", id, nextSquare.Key);
                     }
                 }
             }
@@ -245,23 +303,13 @@ class SolutionSquare
         // we still have to identify the order
         while (squareList.Count != 0)
         {
-            for (int i=0;i<squareList.Count; i++)
+            for (var i=0;i<squareList.Count; i++)
             {
-                var overlaysFound = true;
+                var overlaysFound = squares[squareList[i]].Overlays.All(overlay => orderedSquares.Contains(overlay));
                 // we can add a square to the list if all the overlays are in the list
-                foreach (var overlay in squares[squareList[i]].Overlays)
-                {
-                    if (!orderedSquares.Contains(overlay))
-                    {
-                        overlaysFound = false;
-                        break;
-                    }
-                }
-                if (overlaysFound)
-                {
-                    orderedSquares.Push(squareList[i]);
-                    squareList.RemoveAt(i--);
-                }
+                if (!overlaysFound) continue;
+                orderedSquares.Push(squareList[i]);
+                squareList.RemoveAt(i--);
             }
         }
         // now we dump
