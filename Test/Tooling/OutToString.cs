@@ -1,41 +1,39 @@
-﻿// Redirection Utility
-// Author: Hai Vu (haivu2004 on Google mail)
+﻿using System;
+using System.IO;
+using System.Text;
 
 namespace Test.Tooling
 {
-    using System;
-    using System.IO;
-
     /// <summary>
-    /// OutToFile is an easy way to redirect console output to a file.
+    /// OutToFile is an easy way to redirect console output to a string.
     ///
     /// Usage:
     ///    Console.WriteLine("This text goes to the console by default");
-    ///    using (OutToFile redir = new OutToFile("out.txt"))
+    ///    using (OutToFile redir = new OutToString())
     ///    {
     /// 	   Console.WriteLine("Contents of out.txt");
     ///    }
     ///    Console.WriteLine("This text goes to console again");
     ///
     /// </summary>
-    public class OutToFile : IDisposable
+    public class OutToString : IDisposable
     {
-        private StreamWriter fileOutput;
-        private TextWriter oldOutput;
+        private readonly StreamWriter fileOutput;
+        private readonly TextWriter oldOutput;
+        private readonly MemoryStream buffer;
+
+        public string Text => Encoding.Unicode.GetString(this.buffer.ToArray());
 
         /// <summary>
         /// Create a new object to redirect the output
         /// </summary>
-        /// <param name="outFileName">
-        /// The name of the file to capture console output
-        /// </param>
-        public OutToFile(string outFileName)
+        public OutToString()
         {
             this.oldOutput = Console.Out;
+            this.buffer = new MemoryStream();
             this.fileOutput = new StreamWriter(
-                new FileStream(outFileName, FileMode.Create)
-                );
-            this.fileOutput.AutoFlush = true;
+                this.buffer
+            ) {AutoFlush = true};
             Console.SetOut(this.fileOutput);
         }
 

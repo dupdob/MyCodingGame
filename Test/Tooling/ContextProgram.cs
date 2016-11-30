@@ -1,8 +1,6 @@
 ﻿namespace CSharpContestProject
 {
     using System;
-    using System.IO;
-    using System.Runtime.InteropServices;
     using Test.Tooling;
     /// <summary>
     /// Helper bootstrap to have local testing environement
@@ -13,9 +11,11 @@
         {
             Console.WriteLine("Starting test");
             Console.WriteLine("________________");
-            using (new InFromFile("Input.txt"))
+            var input = new InFromText("");
+            var output = new OutToString();
+            using (input)
             {
-                using (new OutToFile("Outtest.txt"))
+                using (output)
                 {
                     //Program.Main2(args);
                 }
@@ -24,29 +24,23 @@
             Console.WriteLine("________________");
             Console.WriteLine("Finishing test");
 
-            var expected = File.OpenText("Output.txt");
-            var actual = File.OpenText("OutTest.txt");
-            string expectedLine;
-            var i = 0;
-            while((expectedLine = expected.ReadLine()) != null)
+            var expected = "";
+            var actual = output.Text.Split('\n');
+            var expectedLines = expected.Split('\n');
+            for (int i = 0; i < expectedLines.Length; i++)
             {
-                var actualLine = actual.ReadLine();
-
-                if (actualLine != expectedLine)
+                if (i >= actual.Length)
                 {
-                    Console.WriteLine("Error line {0} (actual/expected):", i);
-                    Console.WriteLine(actualLine);
-                    Console.WriteLine(expectedLine);
+                    Console.WriteLine("{0} lines are missing", expectedLines.Length - i);
                     Console.ReadKey();
                 }
-                i++;
-            }
-            var lastLine = actual.ReadLine();
-            if (lastLine != null)
-            {
-                Console.WriteLine("Extra line {0} actual", i);
-                Console.WriteLine(lastLine);
-                Console.ReadKey();
+                if (expectedLines[i] != actual[i])
+                {
+                    Console.WriteLine("Error line {0} (actual/expected):", i);
+                    Console.WriteLine(actual[i]);
+                    Console.WriteLine(expectedLines[i]);
+                    Console.ReadKey();
+                }
             }
         }
     }

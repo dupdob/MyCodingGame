@@ -36,12 +36,13 @@
     <Compile Include="Community\AdvancedTree.cs" />
     <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Community\castleSiege.cs" />
+    <Compile Include="Community\MicroAssembly.cs" />
     <Compile Include="Community\SquareOrder.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
     <Compile Include="Moyen\APU init.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="MarsLander.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Clones.cs" />
     <Compile Include="Facile\EmptyClass.cs" />
@@ -55,12 +56,12 @@
     <Compile Include="Difficile\PlayerSkynetHard.cs" />
     <Compile Include="Difficile\PlayerKirk.cs" />
     <Compile Include="Difficile\Clones.cs" />
-    <Compile Include="Temp.cs" />
     <Compile Include="Community\TwoEgg.cs" />
-    <Compile Include="TestRunner.cs" />
     <Compile Include="Tooling\ContextProgram.cs" />
     <Compile Include="Tooling\InFromFile.cs" />
+    <Compile Include="Tooling\InFromText.cs" />
     <Compile Include="Tooling\OutToFile.cs" />
+    <Compile Include="Tooling\OutToString.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

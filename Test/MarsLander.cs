@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
 
 /**
  * Auto-generated code below aims at helping you parse
@@ -14,7 +9,7 @@ class Player
 
 	static double g = 3.7111;
 
-	static void Main2(string[] args)
+	static void MainLander(string[] args)
 	{
 		string[] inputs;
 		int N = int.Parse(Console.ReadLine()); // the number of points used to draw the surface of Mars.

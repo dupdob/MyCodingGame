@@ -248,7 +248,7 @@ class SolutionSquare
         }
     }
 
-    static void Main(string[] args)
+    static void MainSquare(string[] args)
     {
         var inputs = Console.ReadLine().Split(' ');
         var h = int.Parse(inputs[0]);
