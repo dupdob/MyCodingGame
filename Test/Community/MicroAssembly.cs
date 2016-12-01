@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 /**
@@ -64,7 +60,7 @@ class MicroAssembly
 {
     private static Dictionary<string, int> _registers;
 
-    static void Main(string[] args)
+    static void MainMicroAssembly(string[] args)
     {
         string[] inputs = Console.ReadLine().Split(' ');
         _registers = new Dictionary<string, int>();
