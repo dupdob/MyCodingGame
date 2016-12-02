@@ -70,10 +70,11 @@ ZZZ
         // siez of manor
         var size = int.Parse(Console.ReadLine());
         // number of monsters seen from windows
-        var topWindows = Console.ReadLine().Split(' ').Select(x => int.Parse(x));
-        var bottomWindows = Console.ReadLine().Split(' ').Select(x => int.Parse(x));
-        var leftWindows = Console.ReadLine().Split(' ').Select(x => int.Parse(x));
-        var rightWindows = Console.ReadLine().Split(' ').Select(x => int.Parse(x));
+        var views = new List<int>();
+        views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
+        views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
+        views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
+        views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
         // mirror locations
         var manorFloor = new char[size, size];
         var roomWithMonsters = new List<Room>(size * size);
@@ -97,17 +98,17 @@ ZZZ
         {
             windows.Add(ViewFrom(0, 0, col, manorFloor));
         }
-        for (var row = 0; row < size; row++)
-        {
-            windows.Add(ViewFrom(1, row, size-1, manorFloor));
-        }
         for (var col = 0; col < size; col++)
         {
-            windows.Add(ViewFrom(2, size-1, col, manorFloor));
+            windows.Add(ViewFrom(2, size - 1, col, manorFloor));
         }
         for (var row = 0; row < size; row++)
         {
             windows.Add(ViewFrom(3, row, 0, manorFloor));
+        }
+        for (var row = 0; row < size; row++)
+        {
+            windows.Add(ViewFrom(1, row, size-1, manorFloor));
         }
         // dump room list
         foreach (var rooms in windows)
