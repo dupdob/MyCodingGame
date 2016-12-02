@@ -63,7 +63,7 @@ And the required output would be:
 GGZ
 ZZZ
      */
-    static void Main()
+    static void MainManor()
     {
         // monster distribution
         var monsters = Console.ReadLine().Split(' ').Select(x => int.Parse(x));

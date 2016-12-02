@@ -36,6 +36,7 @@
     <Compile Include="Community\AdvancedTree.cs" />
     <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Community\castleSiege.cs" />
+    <Compile Include="Community\GreatestNumber.cs" />
     <Compile Include="Community\HauntedManor.cs" />
     <Compile Include="Community\MicroAssembly.cs" />
     <Compile Include="Community\SquareOrder.cs" />
