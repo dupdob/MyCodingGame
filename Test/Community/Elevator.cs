@@ -43,50 +43,40 @@ class Evalator
         int gap = end - start;
 
         int factor = PGCD(up, down);
-        Console.Error.WriteLine("PGCD {0}", factor);
-        up /= factor;
-        down /= factor;
         if (gap%factor != 0)
             Console.WriteLine("IMPOSSIBLE");
         else
         {
-            gap /= factor;
             Console.Error.WriteLine("gap {0}", gap);
             var click = 0;
-            while (gap != 0)
+            var level = start;
+            while (level != end)
             {
-                var actualFloor = (end - gap) * factor;
-                if ((actualFloor+up*factor)>nbFloors)
+                if (level+up>nbFloors)
                 {
-                    if ((actualFloor - down*factor) < 0)
+                    if (level - down< 1)
                     {
                         Console.WriteLine("IMPOSSIBLE");
                         return;
                     }
-                    gap += down;
+                    level -= down;
                     click++;
                 }
-                else if ((actualFloor - down*factor) < 0)
+                else if (level-down <1)
                 {
-                    gap -= up;
+                    level += up;
                     click++;
                 }
-                else if (gap > 0 )
+                else if (level < end )
                 {
-                    gap -= up;
+                    level += up;
                     click++;
                 }
                 else
                 {
-                    gap += down;
+                    level -= down;
                     click++;
                 }
-                if (actualFloor > nbFloors || (actualFloor<0))
-                {
-                    Console.WriteLine("IMPOSSIBLE");
-                    return;
-                }
-
             }
             Console.WriteLine(click);
         }
