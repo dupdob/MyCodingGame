@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 
 /**
@@ -10,7 +6,7 @@ using System.Collections.Generic;
  **/
 class NoSpoon2
 {
-    static void MainSpoon(string[] args)
+    static void Main(string[] args)
     {
         var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
         var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
@@ -80,6 +76,7 @@ class NoSpoon2
                         break;
                     }
                 }
+                Console.Error.WriteLine("Added node {0}", node);
                 nodes.Add(map[i, j]);
             }
         }
@@ -133,6 +130,7 @@ class NoSpoon2
                 {
                     if (link.Crosses(existing))
                     {
+                        Console.Error.WriteLine("Skipping link {0} as it crosses {1}", link, existing);
                         crossing = true;
                         break;
                     }

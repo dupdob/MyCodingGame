@@ -32,7 +32,7 @@ class Evalator
         }
     }
 
-    static void Main(string[] args)
+    static void MainElevator(string[] args)
     {
         string[] inputs = Console.ReadLine().Split(' ');
         int nbFloors = int.Parse(inputs[0]);
