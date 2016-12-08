@@ -67,5 +67,7 @@
     <Compile Include="Tooling\OutToString.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="Community\FoldingPaper.cs" />
+  </ItemGroup>
 </Project>
