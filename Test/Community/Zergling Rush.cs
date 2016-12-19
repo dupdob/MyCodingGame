@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
 
 /**
  In the popular real-time strategy game called Starcraft, there are three races: Terran, Protoss, and Zerg. Many Zerg players use a "cheese" strategy called the "zergling rush", where very early in the game, they produce a couple of their basic combat unit called the "zergling", and immediately attack the enemy base.

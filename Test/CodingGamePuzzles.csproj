@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="Community\AdvancedTree.cs" />
     <Compile Include="Community\BracketsEnhanced.cs" />
+    <Compile Include="Community\CardCastle.cs" />
     <Compile Include="Community\castleSiege.cs" />
     <Compile Include="Community\Elevator.cs" />
     <Compile Include="Community\GreatestNumber.cs" />
