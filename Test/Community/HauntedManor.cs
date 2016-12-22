@@ -66,7 +66,7 @@ ZZZ
     static void MainManor()
     {
         // monster distribution
-        var monsters = Console.ReadLine().Split(' ').Select(x => int.Parse(x));
+        var monsters = Console.ReadLine().Split(' ').Select(x => int.Parse(x)).ToArray();
         // siez of manor
         var size = int.Parse(Console.ReadLine());
         // number of monsters seen from windows
@@ -122,6 +122,7 @@ ZZZ
         }
 
         // Todo: solve
+        Solve(monsters, roomWithMonsters, windows, views);
         for (var row = 0; row < size; row++)
         {
             for (int column = 0; column < size; column++)
@@ -132,11 +133,14 @@ ZZZ
         }
     }
 
+    private static void Solve(IReadOnlyList<int> monsters, List<Room> roomWithMonsters, List<List<Room>> windows, List<int> views)
+    {
+        var monstersList = new string('V', monsters[0]);
+    }
+
     private static List<Room> ViewFrom(int dir, int row, int col, char[,] map)
     {
         var result = new List<Room>();
-        var offsetX = 0;
-        var offsetY = 0;
         while (row < map.GetLength(0) && col < map.GetLength(1) && row>=0 && col >=0)
         {
             var room = map[row, col];
@@ -162,6 +166,7 @@ ZZZ
                         dir = room == '/' ? 2 : 0;
                         break;
                 }
+                result.Add(new Room(row, col));
             }
             // we move
             switch (dir)
