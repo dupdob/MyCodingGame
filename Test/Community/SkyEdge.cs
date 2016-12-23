@@ -44,25 +44,26 @@ class SkyEdge
 {
     static void Main(string[] args)
     {
-        int Y = int.Parse(Console.ReadLine());
-        int C = int.Parse(Console.ReadLine());
-        int N = int.Parse(Console.ReadLine());
+        var Y = int.Parse(Console.ReadLine());
+        var C = int.Parse(Console.ReadLine());
+        var N = int.Parse(Console.ReadLine());
         var crew = new Dictionary<int, int>();
         for (int i = 0; i < N; i++)
         {
-            string[] inputs = Console.ReadLine().Split(' ');
-            int AGE = int.Parse(inputs[0]);
-            int NUMBER = int.Parse(inputs[1]);
+            var inputs = Console.ReadLine().Split(' ');
+            var AGE = int.Parse(inputs[0]);
+            var NUMBER = int.Parse(inputs[1]);
             crew[AGE] = NUMBER;
         }
-        var max = 100;
+        var max = 150;
         var min = 20;
-        var trial = 0;
+        int trial;
         for (;;)
         {
             trial = (max + min)/2;
-            Console.Error.WriteLine("Trying {0}", trial);
+            Console.Error.Write("Trying {0}", trial);
             var result = Travel(Y, C, trial, crew);
+            Console.Error.WriteLine(":{0}", result);
             if (result == -1)
             {
                 // expectancy too high
@@ -85,9 +86,9 @@ class SkyEdge
         while (higher-lower>1)
         {
             var attempt = (higher + lower) / 2;
-            Console.Error.WriteLine("Searching lower trying {0} ({1} - {2})", attempt, higher, lower);
+            Console.Error.Write("Lower Trying {0}", attempt);
             var result = Travel(Y, C, attempt, crew);
-            if (result == -1)
+            Console.Error.WriteLine(":{0}", result); if (result == -1)
             {
                 Console.Error.WriteLine("unexpected failure at {0}", attempt);
             }
@@ -109,11 +110,12 @@ class SkyEdge
         while (higher-lower>1)
         {
             var attempt = (higher + lower) / 2;
-            Console.Error.WriteLine("Searching higher trying {0} ({1} - {2})", attempt, higher, lower);
+            Console.Error.Write("Higher Trying {0}", attempt);
             var result = Travel(Y, C, attempt, crew);
+            Console.Error.WriteLine(":{0}", result);
             if (result == -1)
             {
-                higher = trial;
+                higher = attempt;
             }
             else if (result < 200)
             {
@@ -134,27 +136,33 @@ class SkyEdge
 
     private static int Travel(int Y, int C, int expectancy, Dictionary<int, int> crew)
     {
+        var staff = 0;
         for(;Y > 0; Y--)
         {
-            var staff = crew.Values.Sum();
+            var newCrew = new Dictionary<int, int>(crew.Count);
+            var fertils = 0;
+            foreach (var crewKey in crew.Keys)
+            {
+                if (crewKey>=expectancy)
+                    // too old => dye
+                    continue;
+                // age one year
+                newCrew[crewKey + 1] = crew[crewKey];
+                if (crewKey + 1 >= 20 && crewKey + 1 <= expectancy/2)
+                {
+                    fertils += newCrew[crewKey + 1];
+                }
+            }
+            // newborns
+            newCrew[0] = fertils/10;
+            crew = newCrew;
+            staff = crew.Values.Sum();
             if (staff > C)
                 // overcrowded, revolt, failure
                 return -1;
-            if (staff == 10)
-                // everybody is dead, no need to go on
-                return 0;
-            var newCrew = new Dictionary<int, int>(crew.Count);
-            foreach (var crewKey in crew.Keys)
-            {
-                if (crewKey>expectancy)
-                    // too old
-                    continue;
-                newCrew[crewKey + 1] = crew[crewKey];
-            }
-            newCrew[0] = newCrew.Where(x => (x.Key >= 20 && x.Key <= expectancy/2)).Select(x => x.Value).Sum()/10;
-            crew = newCrew;
         }
 
-        return crew.Values.Sum();
+        staff = crew.Values.Sum();
+        return staff;
     }
 }
