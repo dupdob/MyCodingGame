@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 /*
 A generation starship is heading towards a new home for mankind : Sky's Edge. The exoplanet being distant of several light years,
@@ -42,7 +38,7 @@ The ship has 10 fifteen-year-old, 15 twenty-year-old, 5 fourty-year-old and 2 ei
 
 class SkyEdge
 {
-    static void Main(string[] args)
+    static void MainSkyEdge(string[] args)
     {
         var Y = int.Parse(Console.ReadLine());
         var C = int.Parse(Console.ReadLine());
