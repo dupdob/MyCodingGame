@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 static class HauntedManor
 {
@@ -63,7 +64,7 @@ And the required output would be:
 GGZ
 ZZZ
      */
-    static void MainManor()
+    static void MainHaunted()
     {
         // monster distribution
         var monsters = Console.ReadLine().Split(' ').Select(x => int.Parse(x)).ToArray();
@@ -86,7 +87,7 @@ ZZZ
                 manorFloor[row, column] = line[column];
                 if (line[column] == '.')
                 {
-                    roomWithMonsters.Add(new Room(row, column));
+                    roomWithMonsters.Add(new Room(row, column, manorFloor));
                 }
                 Console.Error.Write(line[column]);
             }
@@ -113,12 +114,12 @@ ZZZ
         // dump room list
         foreach (var rooms in windows)
         {
-            Console.Error.Write("View: ");
+//            Console.Error.Write("View: ");
             foreach (var room in rooms)
             {
-                Console.Error.Write("{0}, ", room);
+//                Console.Error.Write("{0}, ", room);
             }
-            Console.Error.WriteLine("end");
+//            Console.Error.WriteLine("end");
         }
 
         // Todo: solve
@@ -135,18 +136,103 @@ ZZZ
 
     private static void Solve(IReadOnlyList<int> monsters, List<Room> roomWithMonsters, List<List<Room>> windows, List<int> views)
     {
-        var monstersList = new string('V', monsters[0]);
+        var monstersList = new StringBuilder();
+        monstersList.Append('V', monsters[0]);
+        monstersList.Append('Z', monsters[1]);
+        monstersList.Append('G', monsters[2]);
+        var monsterCombos = GenerateCombination(monstersList.ToString());
+        Console.WriteLine("Found {0} combos.", monsterCombos.Count());
+        foreach (var monsterCombo in monsterCombos)
+        {
+//            Console.Error.WriteLine(monsterCombo);
+            // fill the manor with monsters
+            for (var index = 0; index < roomWithMonsters.Count; index++)
+            {
+                roomWithMonsters[index].Set(monsterCombo[index]);
+            }
+            var good = true;
+            // we check the windows
+            for (var index = 0; index < views.Count; index++)
+            {
+                var view = windows[index];
+                var seen = 0;
+                var mirror = false;
+                foreach (var room in view)
+                {
+                    if (room == null)
+                        mirror = true;
+                    else
+                    {
+                        switch (room.Get())
+                        {
+                            case 'V':
+                                if (!mirror)
+                                    seen++;
+                                break;
+                            case 'G':
+                                if (mirror)
+                                    seen++;
+                                break;
+                            case 'Z':
+                                seen++;
+                                break;
+                        }
+                    }
+                    if (seen > views[index])
+                        break;
+                }
+                if (seen != views[index])
+                {
+                    good = false;
+                    break;
+                }
+            }
+            if (good)
+                // we found it
+                return;
+        }
+    }
+
+    private static IEnumerable<string> GenerateCombination(string monstersList)
+    {
+        var result = new List<string>();
+        var sample = new string(' ', monstersList.Length).ToCharArray();
+
+        return GenerateSubCombination(monstersList, sample, result, 0);
+    }
+
+    private static IEnumerable<string> GenerateSubCombination(string monstersList, char[] sample, List<string> result, int i)
+    {
+        var monster = monstersList[0];
+        monstersList = monstersList.Substring(1);
+        for (; i < sample.Length; i++)
+        {
+            if (sample[i] != ' ')
+                continue;
+            sample[i] = monster;
+            if (!string.IsNullOrEmpty(monstersList))
+            {
+                GenerateSubCombination(monstersList, sample, result, monster == monstersList[0] ? i + 1 : 0);
+            }
+            else
+            {
+                result.Add(new string(sample));
+            }
+            sample[i] = ' ';
+        }
+        return result;
     }
 
     private static List<Room> ViewFrom(int dir, int row, int col, char[,] map)
     {
         var result = new List<Room>();
+        var mirror = false;
         while (row < map.GetLength(0) && col < map.GetLength(1) && row>=0 && col >=0)
         {
             var room = map[row, col];
             if (room == '.')
             {
-                result.Add(new Room(row, col));
+                result.Add(new Room(row, col, map));
             }
             else
             {
@@ -166,7 +252,11 @@ ZZZ
                         dir = room == '/' ? 2 : 0;
                         break;
                 }
-                result.Add(new Room(row, col));
+                if (!mirror)
+                {
+                    mirror = true;
+                    result.Add(null);
+                }
             }
             // we move
             switch (dir)
@@ -193,16 +283,28 @@ ZZZ
     {
         public int Row;
         public int Column;
+        private char[,] map;
 
-        public Room(int row, int column)
+        public Room(int row, int column, char[,] map)
         {
             Row = row;
             Column = column;
+            this.map = map;
         }
 
         public override string ToString()
         {
             return string.Format("{0}:{1}", Row, Column);
+        }
+
+        public void Set(char c)
+        {
+            map[Row, Column] = c;
+        }
+
+        public char Get()
+        {
+            return map[Row, Column];
         }
     }
 }
