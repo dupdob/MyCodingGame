@@ -46,6 +46,7 @@
     <Compile Include="Community\SkyEdge.cs" />
     <Compile Include="Community\SquareOrder.cs" />
     <Compile Include="Community\TheFastest.cs" />
+    <Compile Include="Community\TriForce.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
