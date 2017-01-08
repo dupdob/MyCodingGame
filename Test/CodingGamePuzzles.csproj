@@ -38,6 +38,7 @@
     <Compile Include="Community\CardCastle.cs" />
     <Compile Include="Community\castleSiege.cs" />
     <Compile Include="Community\Elevator.cs" />
+    <Compile Include="Community\Gravity.cs" />
     <Compile Include="Community\GreatestNumber.cs" />
     <Compile Include="Community\HauntedManor.cs" />
     <Compile Include="Community\LettersInBin.cs" />
