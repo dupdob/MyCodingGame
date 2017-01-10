@@ -8,7 +8,7 @@ namespace CodingGame.Community
 {
     class EinsteinRiddle
     {
-        static void Main(string[] args)
+        static void MainEinstein(string[] args)
         {
             string[] inputs;
             inputs = Console.ReadLine().Split(' ');
