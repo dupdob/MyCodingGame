@@ -10,13 +10,7 @@ L'expression ne contient pas d'espaces.
  */
 class Brackets
 {
-    private static TimeSpan start;
-    class Bracket
-    {
-        public char Marker;
-        public int Count;
-    }
-    static void Main(string[] args)
+    static void MainBrackets(string[] args)
     {
         var expressions = Console.ReadLine();
         var stack = new Stack<char>();
