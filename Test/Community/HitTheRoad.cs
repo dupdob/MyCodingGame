@@ -101,7 +101,7 @@ class Solution
         public int d;
     }
 
-    static void Main(string[] args)
+    static void MainRoad(string[] args)
     {
         string[] inputs;
         inputs = Console.ReadLine().Split(' ');
