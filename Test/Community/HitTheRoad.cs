@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 /**
 A driver is on a road network with n junctions and m roads with two specific positions s and t. 
@@ -85,8 +81,8 @@ class Solution
                 return true;
             foreach (var link in this.links)
             {
-                if (path.Contains(link))
-                    // don't reuse the road
+                if (path.Where(x => x==link).Count()>1)
+                    // reuse the road only once (arbitrary)
                     continue;
                 path.Push(link);
                 if (link.v.Scan(terminal, time + link.d, path))
