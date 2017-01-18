@@ -38,12 +38,14 @@
     <Compile Include="Community\BracketsEnhanced.cs" />
     <Compile Include="Community\CardCastle.cs" />
     <Compile Include="Community\CastleSiege.cs" />
+    <Compile Include="Community\CodinDice.cs" />
     <Compile Include="Community\DivisorSum.cs" />
     <Compile Include="Community\EinsteinRiddle.cs" />
     <Compile Include="Community\Elevator.cs" />
     <Compile Include="Community\Gravity.cs" />
     <Compile Include="Community\GreatestNumber.cs" />
     <Compile Include="Community\HauntedManor.cs" />
+    <Compile Include="Community\HitTheRoad.cs" />
     <Compile Include="Community\LettersInBin.cs" />
     <Compile Include="Community\MaxSurfaceBox.cs" />
     <Compile Include="Community\MicroAssembly.cs" />
