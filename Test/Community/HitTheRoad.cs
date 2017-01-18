@@ -74,10 +74,29 @@ class Solution
         {
             b = 0;
             e = int.MaxValue;
-            links = new List<Junction>();
+            links = new List<Road>();
         }
 
-        public IList<Junction> links;
+        public bool Scan(Junction terminal, int time, Stack<Road> path)
+        {
+            if (time < this.b || time > this.e)
+                return false;
+            if (terminal == this)
+                return true;
+            foreach (var link in this.links)
+            {
+                if (path.Contains(link))
+                    // don't reuse the road
+                    continue;
+                path.Push(link);
+                if (link.v.Scan(terminal, time + link.d, path))
+                    return true;
+                path.Pop();
+            }
+            return false;
+        }
+
+        public IList<Road> links;
     }
 
     class Road
@@ -98,6 +117,10 @@ class Solution
         inputs = Console.ReadLine().Split(' ');
         int s = int.Parse(inputs[0]);
         int t = int.Parse(inputs[1]);
+        for (int index = 0; index < junctions.Length; index++)
+        {
+            junctions[index] = new Junction();
+        }
         for (int i = 0; i < ntw; i++)
         {
             inputs = Console.ReadLine().Split(' ');
@@ -114,6 +137,10 @@ class Solution
             j.d = int.Parse(inputs[2]);
             junctions[u].links.Add(j);
         }
-        Console.WriteLine("true");
+        var start = junctions[s];
+        var terminal = junctions[t];
+        var found = start.Scan(terminal, 0, new Stack<Road>());
+        
+        Console.WriteLine(found ? "true":"false");
     }
 }
