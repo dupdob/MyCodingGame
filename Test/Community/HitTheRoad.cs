@@ -59,7 +59,7 @@ m next lines : three integers u, v and d, the origin, the destination and the du
 Sortie
 Line 1 : print true if there is a path from s to t satisfying the time windows constraints. Otherwise, print false.
     **/
-class Solution
+class HitTheRoad
 {
     class Junction
     {
