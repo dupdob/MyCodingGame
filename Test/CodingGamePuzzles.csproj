@@ -78,6 +78,7 @@
     <Compile Include="Difficile\PlayerKirk.cs" />
     <Compile Include="Difficile\Clones.cs" />
     <Compile Include="Community\TwoEgg.cs" />
+    <Compile Include="Sponsored Challenge\CodingGame.cs" />
     <Compile Include="Tooling\ContextProgram.cs" />
     <Compile Include="Tooling\InFromFile.cs" />
     <Compile Include="Tooling\InFromText.cs" />
