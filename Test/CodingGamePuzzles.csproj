@@ -60,9 +60,11 @@
     <Compile Include="Community\TheFastest.cs" />
     <Compile Include="Community\TimerClash.cs" />
     <Compile Include="Community\TriForce.cs" />
+    <Compile Include="Community\Xorandor.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
+    <Compile Include="Leagues\CodersStrikeBack.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="MarsLander.cs" />
     <Compile Include="Moyen\DontPanic.cs" />

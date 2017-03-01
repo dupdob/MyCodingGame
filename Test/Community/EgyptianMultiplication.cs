@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
 
 /**
  You have to multiply two integers (a&b) by means of a method used in Ancien Egypt, described in Rhind’s hieratic papyrus written circa −1650 by Ahmes. This method is still used in Russia.
