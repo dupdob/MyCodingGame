@@ -64,6 +64,12 @@
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
+    <Compile Include="Facile\BankRobbers.cs" />
+    <Compile Include="Facile\BracketsEnhancedEasy.cs" />
+    <Compile Include="Facile\Gravity_Tumbler.cs" />
+    <Compile Include="Facile\OrderOfSuccession.cs" />
+    <Compile Include="Facile\River.cs" />
+    <Compile Include="Facile\RiverII.cs" />
     <Compile Include="Leagues\CodersStrikeBack.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="MarsLander.cs" />

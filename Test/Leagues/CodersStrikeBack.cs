@@ -48,7 +48,7 @@ class CodersStrikeBacks
         }
     }
 
-    private static void Main(string[] args)
+    private static void MainLeague(string[] args)
     {
         var boosted = false;
         var lastPosX = 0;

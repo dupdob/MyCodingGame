@@ -48,7 +48,7 @@ class SolutionClone
 		}
 	}
 
-	static void Main2(string[] args)
+	static void MainClone(string[] args)
 	{
 		int n = int.Parse(Console.ReadLine()); // the number of relationships of influence
 		for (int i = 0; i < n; i++)
