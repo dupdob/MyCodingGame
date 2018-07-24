@@ -6,7 +6,7 @@
  **/
 class RiverII
 {
-    static void Main(string[] args)
+    static void MainRiverII(string[] args)
     {
         long r1 = long.Parse(Console.ReadLine());
         int foundPrecedent = 1;

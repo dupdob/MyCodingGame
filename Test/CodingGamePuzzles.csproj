@@ -70,6 +70,7 @@
     <Compile Include="Facile\OrderOfSuccession.cs" />
     <Compile Include="Facile\River.cs" />
     <Compile Include="Facile\RiverII.cs" />
+    <Compile Include="Facile\TravelingSalesman.cs" />
     <Compile Include="Leagues\CodersStrikeBack.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="MarsLander.cs" />
