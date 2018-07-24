@@ -72,6 +72,7 @@
     <Compile Include="Facile\RiverII.cs" />
     <Compile Include="Facile\TravelingSalesman.cs" />
     <Compile Include="Leagues\CodersStrikeBack.cs" />
+    <Compile Include="Moyen\ANEOSpeed.cs" />
     <Compile Include="Moyen\APU init.cs" />
     <Compile Include="MarsLander.cs" />
     <Compile Include="Moyen\DontPanic.cs" />

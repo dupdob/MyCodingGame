@@ -9,7 +9,7 @@ namespace CodingGame.Facile
 {
     class TravelingSalesman
     {
-        static void Main(string[] args)
+        static void MainTS(string[] args)
         {
             var N = int.Parse(Console.ReadLine());
             var cities = new List<Point>(N);
