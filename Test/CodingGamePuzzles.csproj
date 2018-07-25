@@ -31,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Community\AdvancedTree.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="MarsLander.cs" />
     <Compile Include="Moyen\DontPanic.cs" />
     <Compile Include="Moyen\FloodFill.cs" />
+    <Compile Include="Moyen\GravityCentrifugeTuning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Clones.cs" />
     <Compile Include="Facile\EmptyClass.cs" />
@@ -100,5 +102,8 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Community\FoldingPaper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
