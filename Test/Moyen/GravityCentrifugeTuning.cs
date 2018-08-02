@@ -6,7 +6,7 @@ namespace CodingGame.Moyen
 {
     public class GravityCentrifugeTuning
     {
-        static void MainCentrifuge(string[] args)
+        static void MainCentrifugeééé(string[] args)
         {
 
             var input = BigInteger.Parse(Console.ReadLine());

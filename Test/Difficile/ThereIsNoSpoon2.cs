@@ -6,10 +6,12 @@ using System.Collections.Generic;
  **/
 class NoSpoon2
 {
-    static void MainSpoon(string[] args)
+    static void Main(string[] args)
     {
         var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
+        Console.Error.WriteLine(width);
         var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
+        Console.Error.WriteLine(height);
         var map = new Node[width, height];
         for (var i = 0; i < height; i++)
         {
@@ -24,10 +26,8 @@ class NoSpoon2
                 }
                 else
                 {
-                    Node node = new Node();
-                    node.X = j;
-                    node.Y = i;
-                    node.NeedeedLinks = car - '0';
+                    var node = new Node(j, i, car-'0');
+
                     map[j, i] = node;
                 }
             }
@@ -46,49 +46,36 @@ class NoSpoon2
                 // look for node going up
                 for (var x = i - 1; x >= 0; x--)
                 {
-                    if (map[x, j] != null)
-                    {
-                        node.AddNeighbour(map[x, j]);
-                        break;
-                    }
+                    if (map[x, j] == null) continue;
+                    node.AddNeighbour(map[x, j]);
+                    break;
                 }
                 for (var x = i + 1; x < width; x++)
                 {
-                    if (map[x, j] != null)
-                    {
-                        node.AddNeighbour(map[x, j]);
-                        break;
-                    }
+                    if (map[x, j] == null) continue;
+                    node.AddNeighbour(map[x, j]);
+                    break;
                 }
                 for (var y = j - 1; y >= 0; y--)
                 {
-                    if (map[i, y] != null)
-                    {
-                        node.AddNeighbour(map[i, y]);
-                        break;
-                    }
+                    if (map[i, y] == null) continue;
+                    node.AddNeighbour(map[i, y]);
+                    break;
                 }
                 for (var y = j + 1; y < height; y++)
                 {
-                    if (map[i, y] != null)
-                    {
-                        node.AddNeighbour(map[i, y]);
-                        break;
-                    }
+                    if (map[i, y] == null) continue;
+                    node.AddNeighbour(map[i, y]);
+                    break;
                 }
                 Console.Error.WriteLine("Added node {0}", node);
                 nodes.Add(map[i, j]);
             }
         }
-        var links = new List<Links>();
-        while (nodes.Count > 0)
-        {
-            if (!NoSpoon2.BuildGraph(nodes, links))
-            {
-                Console.Error.WriteLine("Algo is in a dead end.");
-                break;
-            }
-        }
+        var links = new List<Link>();
+//        CreateObviousLinks(nodes, links);
+        StartScan(nodes, links);
+  
         // Write an action using Console.WriteLine()
         // To debug: Console.Error.WriteLine("Debug messages...");
         foreach (var link in links)
@@ -98,91 +85,191 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static bool BuildGraph(ICollection<Node> nodes, ICollection<Links> links)
+    private static bool CreateObviousLinks(ICollection<Node> nodes, ICollection<Link> links)
     {
-        var addedLink = false;
-        // we need to add a link
-        Node node = null;
-        var minPriority = int.MaxValue;
-        foreach (var scan in nodes)
+        // handle trivial nodes (1 node and 1 neighbour or twice as much as neighbors)
+        foreach (var node in nodes)
         {
-            if (scan.Priority < minPriority)
+            if (node.MissingLinks == 1 && node.NeighBours.Count == 1)
             {
-                minPriority = scan.Priority;
-                node = scan;
-            }
-        }
-        if (node.NeedeedLinks > 0)
-        {
-            Console.Error.WriteLine("Linking {0}", node);
-            var possibleLinks = new List<Links>(node.NeighBours.Count);
-            foreach (var nodeNeighBour in node.NeighBours)
-            {
-                if (!node.CanLinkToo(nodeNeighBour))
-                    continue;
-                possibleLinks.Add(new Links {From = node, To = nodeNeighBour});
-            }
-            possibleLinks.Sort();
-            foreach (var link in possibleLinks)
-            {
-                var crossing = false;
-                foreach (var existing in links)
+                Console.Error.WriteLine($"Node @ {node.X},{node.Y} has only one neighbour.");
+                var link = node.EstablishLink(node.NeighBours[0]);
+                if (link != null)
                 {
-                    if (link.Crosses(existing))
+                    links.Add(link);
+                }
+            }
+            else if (node.NeedeedLinks == node.NeighBours.Count*2)
+            {
+                Console.Error.WriteLine($"Node @ {node.X},{node.Y} is trivial.");
+                foreach (var nextNode in node.NeighBours)
+                {
+                    var link = node.EstablishLink(nextNode);
+                    if (link != null)
                     {
-                        Console.Error.WriteLine("Skipping link {0} as it crosses {1}", link, existing);
-                        crossing = true;
-                        break;
+                        links.Add(link);
+                    }
+                    link = node.EstablishLink(nextNode);
+                    if (link != null)
+                    {
+                        links.Add(link);
                     }
                 }
-                if (crossing)
+            }
+        }
+
+        Console.Error.WriteLine("Optimization done.");
+        return true;
+    }
+
+    private static void StartScan(List<Node> nodes, List<Link> links)
+    {
+        // find a simple node
+        var minNeedeedLinks = 9;
+        var minFreeNodes = minNeedeedLinks;
+        Node start = null;
+        foreach (var node in nodes)
+        {
+            if (node.NeedeedLinks > minNeedeedLinks)
+            {
+                continue;
+            }
+            minNeedeedLinks = node.NeedeedLinks;
+            if (node.NeighBours.Count * 2 - node.NeedeedLinks> minFreeNodes)
+            {
+                continue;
+            }
+            minFreeNodes = node.NeighBours.Count*2 - node.NeedeedLinks;
+            start = node;
+            if (minFreeNodes == 0)
+            {
+                break;
+            }
+        }
+        
+        BuildNetwork(links, start);
+    }
+
+    private static bool BuildNetwork(IList<Link> links, Node start)
+    {
+        // we are done here
+        if (start.MissingLinks == 0)
+        {
+            return true;
+        }
+// extract links
+        var possibleLinks = new List<Node>(8);
+        for (var i = 0; i < Math.Min(2, start.MissingLinks); i++)
+        {
+            foreach (var neighBour in start.NeighBours)
+            {
+                if (neighBour.MissingLinks > i)
                 {
+                    var newLink = new Link(start, neighBour);
+                    foreach (var link in links)
+                    {
+                        if (newLink.Crosses(link))
+                        {
+                            newLink = null;
+                            break;
+                        }
+                    }
+
+                    if (newLink != null)
+                    {
+                        possibleLinks.Add(neighBour);
+                    }
+                }
+            }
+        }
+
+        if (possibleLinks.Count < start.MissingLinks)
+        {
+            // not enough available links: dead end.
+            return false;
+        }
+
+        // build all potential links
+        var combinations = BuildCombinations(possibleLinks, start.MissingLinks);
+
+        var tempLinks = new List<Link>(links.Count);
+        tempLinks.AddRange(links);
+        // try all combinations
+        foreach (var combination in combinations)
+        {
+            foreach (var node in combination)
+            {
+                var link = start.EstablishLink(node);
+                links.Add(link);
+            }
+
+            var success = true;
+            foreach (var nextNode in start.NeighBours)
+            {
+                if (!start.IsLinkedTo(nextNode))
+                {
+                    // we dont try to extend to non linked node
                     continue;
                 }
-                Console.Error.WriteLine("Establishing link {0} ({1})", link, link.Priority);
-                node.EstablishLink(link.To);
-                links.Add(link);
-                //               Console.Error.WriteLine("Add link {0}", link);
-                addedLink = true;
-                if (!BuildGraph(nodes, links))
+                if (!BuildNetwork(links, nextNode))
                 {
-                    links.Remove(link);
-                    node.DestroyLink(link.To);
-                    addedLink = false;
-                }
-                if (node.MissingLinks == 0)
-                {
+                    success = false;
                     break;
                 }
             }
+
+            if (success)
+            {
+                break;
+            }
+            // remove all added links
+            while( tempLinks.Count < links.Count)
+            {
+                var link = links[tempLinks.Count];
+                link.From.DestroyLink(link.To);
+                links.RemoveAt(tempLinks.Count);
+            }     
         }
-        if (node.MissingLinks == 0)
-        {
-            addedLink = true;
-            nodes.Remove(node);
-        }
-        return addedLink;
+
+        return true;
     }
 
-
-    class Node : IComparable
+    private static List<List<T>> BuildCombinations<T>(List<T> items, int len)
     {
-        public int X;
-        public int Y;
-        public int NeedeedLinks;
+        var result = new List<List<T>>();
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (len == 1)
+            {
+                var sub = new List<T> {items[i]};
+                result.Add(new List<T>(sub));
+            }
+            else
+            {
+                foreach (var combination in BuildCombinations(items.GetRange(i+1, items.Count-(i+1)), len - 1))
+                {
+                    combination.Add(items[i]);
+                    result.Add(combination);
+                }
+            }
+        }
+
+        return result;
+    }
+    
+    private class Node 
+    {
+        public int X { get; }
+        public int Y { get; }
+        public int NeedeedLinks { get; }
         public readonly List<Node> NeighBours = new List<Node>();
         private readonly Dictionary<Node, int> linkedTo = new Dictionary<Node, int>();
-        private int linkUsed = 0;
+        private int linkEstablished;
 
         // number of links that must be set to this node
-        public int MissingLinks => this.NeedeedLinks - this.linkUsed;
+        public int MissingLinks => this.NeedeedLinks - this.linkEstablished;
 
-        public int Priority => this.FlexibleLinks * 10000 + this.Y * 50 + this.X;
-        // number of links freely allocable(i.e for which multiple options are possible
-
-        private int FlexibleLinks => this.MissingLinks > 0 ? this.FreeNeighboursLinks - this.MissingLinks : 100;
-
-        private int FreeNeighboursLinks
+        public int FreeNeighboursLinks
         {
             get
             {
@@ -198,9 +285,11 @@ class NoSpoon2
             }
         }
 
-        public bool CanLinkToo(Node other)
+        public Node(int x, int y, int needeedLinks)
         {
-            return other.MissingLinks > 0 && this.linkedTo[other] < 2;
+            Y = y;
+            X = x;
+            NeedeedLinks = needeedLinks;
         }
 
         public bool IsLinkedTo(Node other)
@@ -214,14 +303,16 @@ class NoSpoon2
             this.linkedTo[node] = 0;
         }
 
-        public bool EstablishLink(Node other)
+        public Link EstablishLink(Node other)
         {
             if (!this.LinkTo(other))
             {
-                return false;
+                return null;
             }
             other.LinkTo(this);
-            return true;
+            var result = new Link(this, other);
+
+            return result;
         }
 
         private bool LinkTo(Node other)
@@ -231,7 +322,7 @@ class NoSpoon2
             {
                 return false;
             }
-            this.linkUsed++;
+            this.linkEstablished++;
             this.linkedTo[other]++;
             return true;
         }
@@ -249,40 +340,28 @@ class NoSpoon2
             if (!this.NeighBours.Contains(other))
                 return false;
             this.linkedTo[other]--;
-            this.linkUsed--;
+            this.linkEstablished--;
             return true;
-        }
-
-        public int CompareTo(object obj)
-        {
-            var other = obj as Node;
-            if (other == null)
-            {
-                return 1;
-            }
-            if (this.Priority < other.Priority)
-            {
-                return -1;
-            }
-            if (this.Priority > other.Priority)
-            {
-                return 1;
-            }
-            return 0;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}:{1} ({2})", this.X, this.Y, this.Priority);
+            return string.Format("{0}:{1} ({2})", this.X, this.Y, this.MissingLinks);
         }
     }
 
-    class Links : IComparable
+    private class Link
     {
-        public Node From;
-        public Node To;
+        public Node From { get;}
+        public Node To { get;}
 
-        public bool Crosses(Links other)
+        public Link(Node from, Node to)
+        {
+            From = from;
+            To = to;
+        }
+
+        public bool Crosses(Link other)
         {
             if (this.From.X == this.To.X && other.From.X != other.To.X)
             {
@@ -296,46 +375,10 @@ class NoSpoon2
             }
             return false;
         }
-
-        public int Priority
-        {
-            get
-            {
-                if (this.From.NeedeedLinks == 1 && this.To.NeedeedLinks == 1)
-                {
-                    return this.To.Priority + 100000;
-                }
-                if (this.From.IsLinkedTo(this.To))
-                {
-                    return this.To.Priority + 100000;
-                }
-                int lenght =
-                    (int) Math.Sqrt(Math.Pow(this.From.X - this.To.X, 2) + Math.Pow(this.From.Y - this.To.Y, 2));
-                return this.To.Priority + lenght * 100;
-            }
-        }
     
-        public int CompareTo(object obj)
-        {
-            var other = obj as Node;
-            if (other == null)
-            {
-                return 1;
-            }
-            if (this.Priority < other.Priority)
-            {
-                return -1;
-            }
-            if (this.Priority > other.Priority)
-            {
-                return 1;
-            }
-            return 0;
-        }
-
         public override string ToString()
         {
-            return string.Format("{0}:{1}<=>{2}:{3}", From.X, From.Y, this.To.X, this.To.Y);
+            return $"{From.X}:{From.Y}<=>{this.To.X}:{this.To.Y}";
         }
     }
 }
