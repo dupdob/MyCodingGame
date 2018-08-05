@@ -68,12 +68,12 @@ class NoSpoon2
                     node.AddNeighbour(map[i, y]);
                     break;
                 }
-                Console.Error.WriteLine("Added node {0}", node);
+//                Console.Error.WriteLine("Added node {0}", node);
                 nodes.Add(map[i, j]);
             }
         }
         var links = new List<Link>();
-//        CreateObviousLinks(nodes, links);
+        CreateObviousLinks(nodes, links);
         StartScan(nodes, links);
   
         // Write an action using Console.WriteLine()
@@ -85,37 +85,39 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static bool CreateObviousLinks(ICollection<Node> nodes, ICollection<Link> links)
+    private static bool CreateObviousLinks(IEnumerable<Node> nodes, ICollection<Link> links)
     {
         // handle trivial nodes (1 node and 1 neighbour or twice as much as neighbors)
-        foreach (var node in nodes)
+        var worthATry = true;
+        while (worthATry)
         {
-            if (node.MissingLinks == 1 && node.NeighBours.Count == 1)
+            worthATry = false;
+            foreach (var node in nodes)
             {
-                Console.Error.WriteLine($"Node @ {node.X},{node.Y} has only one neighbour.");
-                var link = node.EstablishLink(node.NeighBours[0]);
-                if (link != null)
+                if (node.PossibleLinksCount(links) == node.MissingLinks && node.MissingLinks>0)
                 {
-                    links.Add(link);
+                    worthATry = true;
+                    Console.Error.WriteLine($"Node @ {node.X},{node.Y} is now trivial.");
+                    foreach (var nextNode in node.NeighBours)
+                    {
+                        if (new Link(node, nextNode).CrossesAny(links))
+                        {
+                            continue;
+                        }
+                        var link = node.EstablishLink(nextNode);
+                        if (link != null)
+                        {
+                            links.Add(link);
+                        }
+                        link = node.EstablishLink(nextNode);
+                        if (link != null)
+                        {
+                            links.Add(link);
+                        }
+                    }
                 }
             }
-            else if (node.NeedeedLinks == node.NeighBours.Count*2)
-            {
-                Console.Error.WriteLine($"Node @ {node.X},{node.Y} is trivial.");
-                foreach (var nextNode in node.NeighBours)
-                {
-                    var link = node.EstablishLink(nextNode);
-                    if (link != null)
-                    {
-                        links.Add(link);
-                    }
-                    link = node.EstablishLink(nextNode);
-                    if (link != null)
-                    {
-                        links.Add(link);
-                    }
-                }
-            }
+            
         }
 
         Console.Error.WriteLine("Optimization done.");
@@ -146,16 +148,41 @@ class NoSpoon2
                 break;
             }
         }
-        
-        BuildNetwork(links, start);
+        var toVisit = new List<Node>(nodes);    
+        BuildNetwork(links, start, toVisit);
     }
 
-    private static bool BuildNetwork(IList<Link> links, Node start)
+    private static bool BuildNetwork(IList<Link> links, Node start, List<Node> toVisit)
     {
         // we are done here
         if (start.MissingLinks == 0)
         {
+            if (!toVisit.Contains(start))
+            {
+                // already visited
+                return true;
+            }
+
+            toVisit.Remove(start);
+            foreach (var nextNode in start.NeighBours)
+            {
+                if (!start.IsLinkedTo(nextNode))
+                {
+                    // we dont try to extend to non linked node
+                    continue;
+                }
+                if (!BuildNetwork(links, nextNode, toVisit))
+                {
+                    return false;
+                }
+            }
+
             return true;
+        }
+
+        if (!toVisit.Contains(start))
+        {
+            toVisit.Add(start);
         }
 // extract links
         var possibleLinks = new List<Node>(8);
@@ -165,20 +192,11 @@ class NoSpoon2
             {
                 if (neighBour.MissingLinks > i)
                 {
-                    var newLink = new Link(start, neighBour);
-                    foreach (var link in links)
+                    if (new Link(start, neighBour).CrossesAny(links))
                     {
-                        if (newLink.Crosses(link))
-                        {
-                            newLink = null;
-                            break;
-                        }
+                        continue;
                     }
-
-                    if (newLink != null)
-                    {
-                        possibleLinks.Add(neighBour);
-                    }
+                    possibleLinks.Add(neighBour);
                 }
             }
         }
@@ -206,16 +224,21 @@ class NoSpoon2
             var success = true;
             foreach (var nextNode in start.NeighBours)
             {
+                if (!nextNode.IsSolvable(links))
+                {
+                    success = false;
+                    break;
+                }
+                
                 if (!start.IsLinkedTo(nextNode))
                 {
                     // we dont try to extend to non linked node
                     continue;
                 }
-                if (!BuildNetwork(links, nextNode))
-                {
-                    success = false;
-                    break;
-                }
+
+                if (BuildNetwork(links, nextNode, toVisit)) continue;
+                success = false;
+                break;
             }
 
             if (success)
@@ -269,22 +292,6 @@ class NoSpoon2
         // number of links that must be set to this node
         public int MissingLinks => this.NeedeedLinks - this.linkEstablished;
 
-        public int FreeNeighboursLinks
-        {
-            get
-            {
-                var res = 0;
-                foreach (var neighBour in this.NeighBours)
-                {
-                    if (neighBour.MissingLinks > 0)
-                    {
-                        res += Math.Min(neighBour.MissingLinks, 2 - this.linkedTo[neighBour]);
-                    }
-                }
-                return res;
-            }
-        }
-
         public Node(int x, int y, int needeedLinks)
         {
             Y = y;
@@ -292,6 +299,31 @@ class NoSpoon2
             NeedeedLinks = needeedLinks;
         }
 
+        public bool IsSolvable(ICollection<Link> links)
+        {
+            return this.MissingLinks <= PossibleLinksCount(links);
+        }
+
+        public int PossibleLinksCount(ICollection<Link> links)
+        {
+            var res = 0;
+            foreach (var neighBour in NeighBours)
+            {
+                if (neighBour.MissingLinks == 0)
+                {
+                    continue;
+                }
+
+                if (new Link(this, neighBour).CrossesAny(links))
+                {
+                    continue;
+                }
+                res += Math.Min(2 - linkedTo[neighBour], neighBour.MissingLinks);
+            }
+
+            return res;
+        }
+        
         public bool IsLinkedTo(Node other)
         {
             return this.linkedTo[other] > 0;
@@ -309,7 +341,12 @@ class NoSpoon2
             {
                 return null;
             }
-            other.LinkTo(this);
+
+            if (!other.LinkTo(this))
+            {
+                this.RemoveLink(other);
+                return null;
+            }
             var result = new Link(this, other);
 
             return result;
@@ -317,7 +354,7 @@ class NoSpoon2
 
         private bool LinkTo(Node other)
         {
-            if (this.linkedTo[other] > 1)
+            if (this.linkedTo[other] > 1 || this.MissingLinks == 0)
             // link saturated
             {
                 return false;
@@ -327,12 +364,10 @@ class NoSpoon2
             return true;
         }
 
-        public bool DestroyLink(Node other)
+        public void DestroyLink(Node other)
         {
-            if (!this.RemoveLink(other))
-                return false;
+            if (!this.RemoveLink(other)) return;
             other.RemoveLink(this);
-            return true;
         }
 
         private bool RemoveLink(Node other)
@@ -373,6 +408,19 @@ class NoSpoon2
                 return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
                        (other.To.X - this.To.X) * (this.From.X - other.From.X) > 0;
             }
+            return false;
+        }
+
+        public bool CrossesAny(IEnumerable<Link> links)
+        {
+            foreach (var link in links)
+            {
+                if (Crosses(link))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
     
