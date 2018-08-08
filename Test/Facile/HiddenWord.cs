@@ -5,6 +5,7 @@ using System.Text;
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
+ * https://www.codingame.com/ide/puzzle/hidden-word
  **/
 namespace CodingGame.Facile
 {
