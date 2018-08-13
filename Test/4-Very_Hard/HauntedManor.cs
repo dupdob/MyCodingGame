@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ namespace CodingGame
 {
     internal static class HauntedManor
     {
-        /*
+/*
      * Given a grid representing a haunted manor filled with mirrors, empty cells, and cells containing different types of monsters, you must determine the type and position of each monster.
 
 The different types of monsters are:
@@ -65,60 +66,84 @@ And the required output would be:
 /\/
 GGZ
 ZZZ
+https://www.codingame.com/ide/puzzle/haunted-manor
      */
         static void Main()
         {
             // monster distribution
-            var monsters = Console.ReadLine().Split(' ').Select(x => int.Parse(x)).ToArray();
+            var readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            var monsters = readLine.Split(' ').Select(x => int.Parse(x)).ToArray();
             // siez of manor
-            var size = int.Parse(Console.ReadLine());
+            readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            var size = int.Parse(readLine);
             // number of monsters seen from windows
             var views = new List<int>();
-            views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
-            views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
-            views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
-            views.AddRange(Console.ReadLine().Split(' ').Select(x => int.Parse(x)));
+            readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            readLine = Console.ReadLine();
+            Console.Error.WriteLine(readLine);
+            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
             // mirror locations
             var manorFloor = new char[size, size];
             var roomWithMonsters = new List<Room>(size * size);
             for (var row = 0; row < size; row++)
             {
-                var line = Console.ReadLine().ToCharArray();
+                readLine = Console.ReadLine();
+                var line = readLine.ToCharArray();
                 for (int column = 0; column < size; column++)
                 {
                     manorFloor[row, column] = line[column];
                     if (line[column] == '.')
                     {
-                        roomWithMonsters.Add(new Room(row, column, manorFloor));
+                        roomWithMonsters.Add(new Room(row, column, manorFloor, false));
                     }
                     Console.Error.Write(line[column]);
                 }
                 Console.Error.WriteLine();
             }
             // build room seen from windows
-            var windows = new List<List<Room>>(4*size);
+            var windows = new List<View>(4*size);
             for (var col = 0; col < size; col++)
             {
-                windows.Add(ViewFrom(0, 0, col, manorFloor));
-            }
-            for (var col = 0; col < size; col++)
-            {
-                windows.Add(ViewFrom(2, size - 1, col, manorFloor));
+                var viewFrom = ViewFrom(Direction.Down, 0, col, manorFloor, views);
+                if (viewFrom != null && !windows.Any(_ => _.IsReversedView(viewFrom)))
+                {
+                    windows.Add(viewFrom);
+                }
+                viewFrom = ViewFrom(Direction.Up, size - 1, col, manorFloor, views);
+                if (viewFrom != null && !windows.Any(_ => _.IsReversedView(viewFrom)))
+                {
+                    windows.Add(viewFrom);
+                }
             }
             for (var row = 0; row < size; row++)
             {
-                windows.Add(ViewFrom(3, row, 0, manorFloor));
-            }
-            for (var row = 0; row < size; row++)
-            {
-                windows.Add(ViewFrom(1, row, size-1, manorFloor));
+                var viewFrom = ViewFrom(Direction.Right, row, 0, manorFloor, views);
+                if (viewFrom != null && !windows.Any(_ => _.IsReversedView(viewFrom)))
+                {
+                    windows.Add(viewFrom);
+                }
+                viewFrom = ViewFrom(Direction.Left, row, size-1, manorFloor, views);
+                if (viewFrom != null && !windows.Any(_ => _.IsReversedView(viewFrom)))
+                {
+                    windows.Add(viewFrom);
+                }
             }
 
             // Todo: solve
-            Solve(monsters, roomWithMonsters, windows, views);
+            Solve(monsters, roomWithMonsters, windows);
             for (var row = 0; row < size; row++)
             {
-                for (int column = 0; column < size; column++)
+                for (var column = 0; column < size; column++)
                 {
                     Console.Write(manorFloor[row, column]);
                 }
@@ -126,7 +151,8 @@ ZZZ
             }
         }
 
-        private static void Solve(IReadOnlyList<int> monsters, IReadOnlyList<Room> roomWithMonsters, IReadOnlyList<List<Room>> windows, List<int> views)
+        private static void Solve(IReadOnlyList<int> monsters, IReadOnlyList<Room> roomWithMonsters, 
+            IReadOnlyList<View> windows)
         {
             var monstersList = new StringBuilder();
             monstersList.Append('V', monsters[0]);
@@ -134,6 +160,7 @@ ZZZ
             monstersList.Append('G', monsters[2]);
             var monsterCombos = GenerateCombination(monstersList.ToString());
             Console.Error.WriteLine("Found {0} combos.", monsterCombos.Count());
+            var good = false;
             foreach (var monsterCombo in monsterCombos)
             {
                 // fill the manor with monsters
@@ -141,46 +168,19 @@ ZZZ
                 {
                     roomWithMonsters[index].Set(monsterCombo[index]);
                 }
-                var good = true;
+                good = windows.All(window => window.IsSolved());
                 // we check the windows
-                for (var index = 0; index < views.Count; index++)
-                {
-                    var view = windows[index];
-                    var seen = 0;
-                    var mirror = false;
-                    foreach (var room in view)
-                    {
-                        if (room == null)
-                            mirror = true;
-                        else
-                        {
-                            switch (room.Get())
-                            {
-                                case 'V':
-                                    if (!mirror)
-                                        seen++;
-                                    break;
-                                case 'G':
-                                    if (mirror)
-                                        seen++;
-                                    break;
-                                case 'Z':
-                                    seen++;
-                                    break;
-                            }
-                        }
-                        if (seen > views[index])
-                            break;
-                    }
-                    if (seen != views[index])
-                    {
-                        good = false;
-                        break;
-                    }
-                }
+
                 if (good)
                     // we found it
+                {
                     return;
+                }
+            }
+
+            if (!good)
+            {
+                Console.Error.WriteLine("Failed to solve.");
             }
         }
 
@@ -192,7 +192,8 @@ ZZZ
             return GenerateSubCombination(monstersList, sample, result, 0);
         }
 
-        private static IEnumerable<string> GenerateSubCombination(string monstersList, char[] sample, List<string> result, int i)
+        private static IEnumerable<string> GenerateSubCombination(string monstersList, char[] sample, 
+             ICollection<string> result, int i)
         {
             var monster = monstersList[0];
             monstersList = monstersList.Substring(1);
@@ -214,78 +215,153 @@ ZZZ
             return result;
         }
 
-        private static List<Room> ViewFrom(int dir, int row, int col, char[,] map)
+        private static View ViewFrom(Direction dir, int row, int col, char[,] map, List<int> views)
         {
             var result = new List<Room>();
-            var mirror = false;
+            var count = ViewCount(views, row, col, dir);
+            var initDir = dir;
             while (row < map.GetLength(0) && col < map.GetLength(1) && row>=0 && col >=0)
             {
                 var room = map[row, col];
                 if (room == '.')
                 {
-                    result.Add(new Room(row, col, map));
+                    result.Add(new Room(row, col, map, false));
                 }
                 else
                 {
                     // mirror
                     switch (dir)
                     {
-                        case 0:
-                            dir = room == '/' ? 1 : 3;
+                        case Direction.Down:
+                            dir = room == '/' ? Direction.Left : Direction.Right;
                             break;
-                        case 1:
-                            dir = room == '/' ? 0 : 2;
+                        case Direction.Left:
+                            dir = room == '/' ? Direction.Down : Direction.Up;
                             break;
-                        case 2:
-                            dir = room == '/' ? 3 : 1;
+                        case Direction.Up:
+                            dir = room == '/' ? Direction.Right : Direction.Left;
                             break;
-                        case 3:
-                            dir = room == '/' ? 2 : 0;
+                        case Direction.Right:
+                            dir = room == '/' ? Direction.Up : Direction.Down;
                             break;
                     }
-                    if (!mirror)
-                    {
-                        mirror = true;
-                        result.Add(null);
-                    }
+                    result.Add(new Room(row, col, map, true));
                 }
                 // we move
                 switch (dir)
                 {
-                    case 0:
+                    case Direction.Down:
                         row++;
                         break;
-                    case 1:
+                    case Direction.Left:
                         col--;
                         break;
-                    case 2:
+                    case Direction.Up:
                         row--;
                         break;
-                    case 3:
+                    case Direction.Right:
                         col++;
                         break;
                 }
             }
 
-            return result;
+            if (count > 0)
+            {
+                var reverseCount = ViewCount(views, row, col, View.Reverse(dir));
+                var view = new View(result, count, reverseCount, initDir, dir);
+                Console.Error.WriteLine(view.ToString());
+                view.Analyze();
+                return view;
+            }
+
+            return null;
         }
 
-        class Room
+        private static int Dimension(ICollection views)
         {
-            public int Row;
-            public int Column;
-            private char[,] map;
+            return views.Count / 4;
+        }
+        
+        private static int ViewCount(List<int> views, int row, int col, Direction dir)
+        {
+            var dim = Dimension(views);
+            if (row <= 0)
+            {
+                switch (dir)
+                {
+                    case Direction.Down:
+                    case Direction.Up:
+                        return views[col];
+                    case Direction.Left:
+                        return views[dim * 3];
+                    case Direction.Right:
+                        return views[dim * 2];
+                }
+            }
 
-            public Room(int row, int column, char[,] map)
+            if (row >= dim-1)
+            {
+                switch (dir)
+                {
+                    case Direction.Down:
+                    case Direction.Up:
+                        return views[col+dim];
+                    case Direction.Left:
+                        return views[dim * 4 -1];
+                    case Direction.Right:
+                        return views[dim * 3 - 1];
+                }
+            }
+
+            if (col <= 0)
+            {
+                switch (dir)
+                {
+                    case Direction.Left:
+                    case Direction.Right:
+                        return views[dim * 2 + row];
+                    case Direction.Up:
+                        return views[0];
+                    case Direction.Down:
+                        return views[dim];
+                }
+            }
+            
+            if (col >= dim-1)
+            {
+                switch (dir)
+                {
+                    case Direction.Left:
+                    case Direction.Right:
+                        return views[dim * 3 + row];
+                    case Direction.Up:
+                        return views[dim - 1];
+                    case Direction.Down:
+                        return views[dim*2 - 1];
+                }
+            }
+
+            return -1;
+        }
+        
+        private class Room
+        {
+            public readonly int Row;
+            public readonly int Column;
+            private readonly char[,] map;
+            public readonly bool IsMirror;
+
+            public Room(int row, int column, char[,] map, bool isMirror)
             {
                 Row = row;
                 Column = column;
                 this.map = map;
+                IsMirror = isMirror;
             }
 
             public override string ToString()
             {
-                return $"{Row}:{Column}";
+                return $"{Column}:{Row}";
             }
 
             public void Set(char c)
@@ -298,5 +374,192 @@ ZZZ
                 return map[Row, Column];
             }
         }
+
+        private class View
+        {
+            private readonly List<Room> roomsInSight;
+            private readonly int count;
+            private readonly int reverseCount;
+            private readonly Direction initDir;
+            private readonly Direction finalDir;
+            private readonly int monsterCount;
+
+            public View(List<Room> roomsInSight, int count, int reverseCount, Direction initDir, Direction finalDir)
+            {
+                this.roomsInSight = roomsInSight;
+                this.count = count;
+                this.reverseCount = reverseCount;
+                this.initDir = initDir;
+                this.finalDir = finalDir;
+                monsterCount = 0;
+                foreach (var room in roomsInSight)
+                {
+                    if (!room.IsMirror)
+                    {
+                        monsterCount++;
+                    }
+                }
+            }
+
+            public bool IsSolved()
+            {
+                return DirectCount() == count && ReverseCount() == reverseCount;
+            }
+
+            public bool IsReversedView(View other)
+            {
+                var lastOther = other.roomsInSight[other.roomsInSight.Count - 1];
+                var thisFirst = roomsInSight[0];
+                return lastOther.Column == thisFirst.Column && lastOther.Row == thisFirst.Row &&
+                       DirectionsAreReversed(initDir, other.finalDir);
+            }
+
+            private static bool DirectionsAreReversed(Direction first, Direction second)
+            {
+                return second == Reverse(first);
+            }
+
+            public static Direction Reverse(Direction init)
+            {
+                switch (init)
+                {
+                    case Direction.Down:
+                        return Direction.Up;
+                    case Direction.Left:
+                        return Direction.Right;
+                    case Direction.Up:
+                        return Direction.Down;
+                    case Direction.Right:
+                        return Direction.Left;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(init), init, null);
+                }
+            }
+
+            private int DirectCount()
+            {
+                var res = 0;
+                var mirror = false;
+                foreach (var room in roomsInSight)
+                {
+                    if (room.IsMirror)
+                    {
+                        mirror = true;
+                    }
+                    else
+                    {
+                        switch (room.Get())
+                        {
+                            case 'Z':
+                                res++;
+                                break;
+                            case 'V':
+                                res += mirror ? 0 : 1;
+                                break;
+                            case 'G':
+                                res += mirror ? 1 : 0;
+                                break;
+                        }
+                    }
+                }
+
+                return res;
+            }
+
+            private int ReverseCount()
+            {
+                var res = 0;
+                var mirror = false;
+                for(var i= roomsInSight.Count-1; i>=0; i--)
+                {
+                    var room = roomsInSight[i];
+                    if (room.IsMirror)
+                    {
+                        mirror = true;
+                    }
+                    else
+                    {
+                        switch (room.Get())
+                        {
+                            case 'Z':
+                                res++;
+                                break;
+                            case 'V':
+                                res += mirror ? 0 : 1;
+                                break;
+                            case 'G':
+                                res += mirror ? 1 : 0;
+                                break;
+                        }
+                    }
+                }
+
+                return res;
+            }
+            
+            public void Analyze()
+            {
+                if (monsterCount == 0)
+                {
+                    // no info
+                    return;
+                }
+                var directDirect = 0;
+                var reverseDirect = 0;
+                for (var i = 0; i < roomsInSight.Count; i++)
+                {
+                    if (!roomsInSight[i].IsMirror) continue;
+                    directDirect = i;
+                    break;
+                }
+                
+                for (var i = roomsInSight.Count-1; i >= 0; i--)
+                {
+                    if (!roomsInSight[i].IsMirror) continue;
+                    reverseDirect = roomsInSight.Count-1-i;
+                    break;
+                }
+
+                var mid = Math.Max(monsterCount - directDirect - reverseDirect, 0);
+                Console.Error.WriteLine($"split:{directDirect}:{mid}:{reverseDirect}.");
+                if (count == 0 && reverseCount == 0)
+                {
+                    if (directDirect == reverseDirect && reverseDirect == monsterCount)
+                    {
+                        Console.Error.WriteLine($"View contains only Ghosts {monsterCount}.");
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"View contains only Vampires {monsterCount}.");
+                    }
+                }
+                else if (count == 0)
+                {
+                    Console.Error.WriteLine($"View contains {directDirect} Ghosts and {monsterCount-directDirect} Vampires.");
+                }
+                else if (reverseCount == 0)
+                {
+                    Console.Error.WriteLine($"View contains {reverseDirect} Ghosts and {monsterCount-reverseDirect} Vampires.");
+                }
+            }
+           
+            public override string ToString()
+            {
+                var builder = new StringBuilder();
+                builder.Append($"View from {roomsInSight[0]}({initDir}) to {roomsInSight[roomsInSight.Count-1]}({finalDir})");
+                builder.Append($" [direct:{count}, reverse:{reverseCount}]");
+                builder.Append($" {monsterCount} rooms seen.");
+                return builder.ToString();
+            }
+        }
+
+        private enum Direction
+        {
+            Down,
+            Left,
+            Up,
+            Right
+        }
+        
     }
 }
