@@ -7,7 +7,7 @@ using System.Collections.Generic;
  **/
 class NoSpoon2
 {
-    static void MainSpoon(string[] args)
+    static void Main(string[] args)
     {
         var width = Int32.Parse(Console.ReadLine()); // the number of cells on the X axis
         Console.Error.WriteLine(width);
@@ -16,7 +16,7 @@ class NoSpoon2
         var map = new Node[width, height];
         for (var i = 0; i < height; i++)
         {
-            string line = Console.ReadLine(); // width characters, each either 0 or .
+            var line = Console.ReadLine(); // width characters, each either 0 or .
             Console.Error.WriteLine(line);
             for (var j = 0; j < line.Length; j++)
             {
@@ -69,13 +69,13 @@ class NoSpoon2
                     node.AddNeighbour(map[i, y]);
                     break;
                 }
-//                Console.Error.WriteLine("Added node {0}", node);
                 nodes.Add(map[i, j]);
             }
         }
         var links = new List<Link>();
         CreateObviousLinks(nodes, links);
-        BuildLinkOptions(nodes, links);
+        var allSegments = BuildLinkOptions(nodes, links);
+        var allIndices = new int[allSegments.Count];
         StartScan(nodes, links);
   
         // Write an action using Console.WriteLine()
@@ -87,14 +87,14 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static List<List<List<Node>>> BuildLinkOptions(List<Node> nodes, List<Link> links)
+    private static Dictionary<Node, List<List<Node>>> BuildLinkOptions(List<Node> nodes, List<Link> links)
     {
-        var result = new List<List<List<Node>>>();
+        var result = new Dictionary<Node, List<List<Node>>>();
         foreach (var node in nodes)
         {
             var potentialLins = node.PossibleLinks(links);
             var combi = BuildCombinations(potentialLins, node.MissingLinks);
-            result.Add(combi);
+            result.Add(node, combi);
         }
 
         return result;
@@ -134,29 +134,28 @@ class NoSpoon2
         }
 
         Console.Error.WriteLine("Optimization done.");
-        return;
     }
 
     private static void StartScan(IReadOnlyCollection<Node> nodes, IList<Link> links)
     {
         // find a simple node
-        var minNeedeedLinks = 9;
-        var minFreeNodes = minNeedeedLinks;
+        var maxNeedeedLinks = 0;
+        var maxFreeNodes = 0;
         Node start = null;
         foreach (var node in nodes)
         {
-            if (node.NeedeedLinks > minNeedeedLinks)
+            if (node.NeedeedLinks < maxNeedeedLinks)
             {
                 continue;
             }
-            minNeedeedLinks = node.NeedeedLinks;
-            if (node.NeighBours.Count * 2 - node.NeedeedLinks> minFreeNodes)
+            maxNeedeedLinks = node.NeedeedLinks;
+            if (node.NeighBours.Count * 2 - node.NeedeedLinks< maxFreeNodes)
             {
                 continue;
             }
-            minFreeNodes = node.NeighBours.Count*2 - node.NeedeedLinks;
+            maxFreeNodes = node.NeighBours.Count*2 - node.NeedeedLinks;
             start = node;
-            if (minFreeNodes == 0)
+            if (maxFreeNodes == 0)
             {
                 break;
             }
@@ -291,15 +290,15 @@ class NoSpoon2
 
         public bool Crosses(Link other)
         {
-            if (this.From.X == this.To.X && other.From.X != other.To.X)
+            if (From.X == To.X && other.From.X != other.To.X)
             {
-                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
-                       (other.To.X - this.To.X) * (this.From.X - other.From.X) > 0;
+                return (From.Y - other.From.Y) * (other.To.Y - To.Y) > 0 &&
+                       (other.To.X - To.X) * (From.X - other.From.X) > 0;
             }
-            if (this.From.Y == this.To.Y && other.From.Y != other.To.Y)
+            if (From.Y == To.Y && other.From.Y != other.To.Y)
             {
-                return (this.From.Y - other.From.Y) * (other.To.Y - this.To.Y) > 0 &&
-                       (other.To.X - this.To.X) * (this.From.X - other.From.X) > 0;
+                return (From.Y - other.From.Y) * (other.To.Y - To.Y) > 0 &&
+                       (other.To.X - To.X) * (From.X - other.From.X) > 0;
             }
             return false;
         }
@@ -319,7 +318,7 @@ class NoSpoon2
     
         public override string ToString()
         {
-            return $"{From.X}:{From.Y}<=>{this.To.X}:{this.To.Y}";
+            return $"{From.X}:{From.Y}<=>{To.X}:{To.Y}";
         }
     }
 
@@ -333,7 +332,7 @@ class NoSpoon2
         private int linkEstablished;
 
         // number of links that must be set to this node
-        public int MissingLinks => this.NeedeedLinks - this.linkEstablished;
+        public int MissingLinks => NeedeedLinks - linkEstablished;
 
         public Node(int x, int y, int needeedLinks)
         {
@@ -344,7 +343,7 @@ class NoSpoon2
 
         public bool IsSolvable(ICollection<Link> links)
         {
-            return this.MissingLinks <= PossibleLinksCount(links);
+            return MissingLinks <= PossibleLinksCount(links);
         }
 
         public int PossibleLinksCount(ICollection<Link> links)
@@ -371,19 +370,17 @@ class NoSpoon2
         {
 // extract links
             var possibleLinks = new List<Node>(8);
-            for (var i = 0; i < Math.Min(2, this.MissingLinks); i++)
+            for (var i = 0; i < Math.Min(2, MissingLinks); i++)
             {
-                foreach (var neighBour in this.NeighBours)
+                foreach (var neighBour in NeighBours)
                 {
-                    if (neighBour.MissingLinks > i)
+                    if (neighBour.MissingLinks <= i) continue;
+                    if (new Link(this, neighBour).CrossesAny(links))
                     {
-                        if (new Link(this, neighBour).CrossesAny(links))
-                        {
-                            continue;
-                        }
-
-                        possibleLinks.Add(neighBour);
+                        continue;
                     }
+
+                    possibleLinks.Add(neighBour);
                 }
             }
 
@@ -392,25 +389,25 @@ class NoSpoon2
 
         public bool IsLinkedTo(Node other)
         {
-            return this.linkedTo[other] > 0;
+            return linkedTo[other] > 0;
         }
 
         public void AddNeighbour(Node node)
         {
-            this.NeighBours.Add(node);
-            this.linkedTo[node] = 0;
+            NeighBours.Add(node);
+            linkedTo[node] = 0;
         }
 
         public Link EstablishLink(Node other)
         {
-            if (!this.LinkTo(other))
+            if (!LinkTo(other))
             {
                 return null;
             }
 
             if (!other.LinkTo(this))
             {
-                this.RemoveLink(other);
+                RemoveLink(other);
                 return null;
             }
             var result = new Link(this, other);
@@ -420,34 +417,34 @@ class NoSpoon2
 
         private bool LinkTo(Node other)
         {
-            if (this.linkedTo[other] > 1 || this.MissingLinks == 0)
+            if (linkedTo[other] > 1 || MissingLinks == 0)
                 // link saturated
             {
                 return false;
             }
-            this.linkEstablished++;
-            this.linkedTo[other]++;
+            linkEstablished++;
+            linkedTo[other]++;
             return true;
         }
 
         public void DestroyLink(Node other)
         {
-            if (!this.RemoveLink(other)) return;
+            if (!RemoveLink(other)) return;
             other.RemoveLink(this);
         }
 
         private bool RemoveLink(Node other)
         {
-            if (!this.NeighBours.Contains(other))
+            if (!NeighBours.Contains(other))
                 return false;
-            this.linkedTo[other]--;
-            this.linkEstablished--;
+            linkedTo[other]--;
+            linkEstablished--;
             return true;
         }
 
         public override string ToString()
         {
-            return String.Format("{0}:{1} ({2})", this.X, this.Y, this.MissingLinks);
+            return $"{X}:{Y} ({MissingLinks})";
         }
     }
 }
