@@ -69,6 +69,7 @@
     <Compile Include="Facile\BracketsEnhancedEasy.cs" />
     <Compile Include="Facile\Gravity_Tumbler.cs" />
     <Compile Include="Facile\HiddenWord.cs" />
+    <Compile Include="Facile\HowTimeFlies.cs" />
     <Compile Include="Facile\OrderOfSuccession.cs" />
     <Compile Include="Facile\River.cs" />
     <Compile Include="Facile\RiverII.cs" />
