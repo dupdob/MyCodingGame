@@ -68,7 +68,7 @@ GGZ
 ZZZ
 https://www.codingame.com/ide/puzzle/haunted-manor
      */
-        static void Main()
+        static void MainHaunted()
         {
             // monster distribution
             var readLine = Console.ReadLine();
@@ -82,16 +82,16 @@ https://www.codingame.com/ide/puzzle/haunted-manor
             var views = new List<int>();
             readLine = Console.ReadLine();
             Console.Error.WriteLine(readLine);
-            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            views.AddRange(readLine.Split(' ').Select(int.Parse));
             readLine = Console.ReadLine();
             Console.Error.WriteLine(readLine);
-            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            views.AddRange(readLine.Split(' ').Select(int.Parse));
             readLine = Console.ReadLine();
             Console.Error.WriteLine(readLine);
-            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            views.AddRange(readLine.Split(' ').Select(int.Parse));
             readLine = Console.ReadLine();
             Console.Error.WriteLine(readLine);
-            views.AddRange(readLine.Split(' ').Select(x => int.Parse(x)));
+            views.AddRange(readLine.Split(' ').Select(int.Parse));
             // mirror locations
             var manorFloor = new char[size, size];
             var roomWithMonsters = new List<Room>(size * size);
@@ -99,7 +99,7 @@ https://www.codingame.com/ide/puzzle/haunted-manor
             {
                 readLine = Console.ReadLine();
                 var line = readLine.ToCharArray();
-                for (int column = 0; column < size; column++)
+                for (var column = 0; column < size; column++)
                 {
                     manorFloor[row, column] = line[column];
                     if (line[column] == '.')
@@ -139,8 +139,56 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                 }
             }
 
+            var goOn = true;
+            var optimizationPass = 1;
             // Todo: solve
-            Solve(monsters, roomWithMonsters, windows);
+            while (goOn)
+            {
+                goOn = false;
+                Console.Error.WriteLine($"Optimization pass #{optimizationPass}.");
+                foreach (var view in windows)
+                {
+                    view.UpdateStatus();
+                   goOn|=view.Analyze();
+                }
+
+                optimizationPass++;
+            }
+
+            Console.Error.WriteLine("Post optimization");
+            for (var row = 0; row < size; row++)
+            {
+                for (var column = 0; column < size; column++)
+                {
+                    Console.Error.Write(manorFloor[row, column]);
+                }
+                Console.Error.WriteLine();
+            }
+            
+            var roomList = new List<Room>();
+            // identify monsters already identified
+            foreach (var room in roomWithMonsters)
+            {
+                switch (room.Get())
+                {
+                    case 'Z':
+                        monsters[1]--;
+                        break;
+                    case 'V':
+                        monsters[0]--;
+                        break;
+                    case 'G':
+                        monsters[2]--;
+                        break;
+                    case '.':
+                        roomList.Add(room);
+                        break;
+                }
+            }
+
+            Console.Error.WriteLine("Brute Force");
+
+            Solve(monsters, roomList, windows);
             for (var row = 0; row < size; row++)
             {
                 for (var column = 0; column < size; column++)
@@ -151,13 +199,14 @@ https://www.codingame.com/ide/puzzle/haunted-manor
             }
         }
 
-        private static void Solve(IReadOnlyList<int> monsters, IReadOnlyList<Room> roomWithMonsters, 
-            IReadOnlyList<View> windows)
+        private static void Solve(IReadOnlyList<int> monsters, IReadOnlyList<Room> roomWithMonsters,
+            IReadOnlyList<View> windows)    
         {
             var monstersList = new StringBuilder();
             monstersList.Append('V', monsters[0]);
             monstersList.Append('Z', monsters[1]);
             monstersList.Append('G', monsters[2]);
+
             var monsterCombos = GenerateCombination(monstersList.ToString());
             Console.Error.WriteLine("Found {0} combos.", monsterCombos.Count());
             var good = false;
@@ -167,6 +216,11 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                 for (var index = 0; index < roomWithMonsters.Count; index++)
                 {
                     roomWithMonsters[index].Set(monsterCombo[index]);
+                }
+
+                foreach (var window in windows)
+                {
+                    window.UpdateStatus();
                 }
                 good = windows.All(window => window.IsSolved());
                 // we check the windows
@@ -270,7 +324,6 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                 var reverseCount = ViewCount(views, row, col, View.Reverse(dir));
                 var view = new View(result, count, reverseCount, initDir, dir);
                 Console.Error.WriteLine(view.ToString());
-                view.Analyze();
                 return view;
             }
 
@@ -382,7 +435,11 @@ https://www.codingame.com/ide/puzzle/haunted-manor
             private readonly int reverseCount;
             private readonly Direction initDir;
             private readonly Direction finalDir;
-            private readonly int monsterCount;
+            private int _directDirect;
+            private int _reverseDirect;
+            private int remainingCount;
+            private int remainingReverse;
+            private int remainingMonsters;
 
             public View(List<Room> roomsInSight, int count, int reverseCount, Direction initDir, Direction finalDir)
             {
@@ -391,19 +448,14 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                 this.reverseCount = reverseCount;
                 this.initDir = initDir;
                 this.finalDir = finalDir;
-                monsterCount = 0;
-                foreach (var room in roomsInSight)
-                {
-                    if (!room.IsMirror)
-                    {
-                        monsterCount++;
-                    }
-                }
+                remainingCount = count;
+                remainingReverse = reverseCount;
+                UpdateStatus();
             }
 
             public bool IsSolved()
             {
-                return DirectCount() == count && ReverseCount() == reverseCount;
+                return remainingMonsters == 0 && remainingCount == 0 && remainingReverse == 0;
             }
 
             public bool IsReversedView(View other)
@@ -436,10 +488,12 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                 }
             }
 
-            private int DirectCount()
+            public void UpdateStatus()
             {
                 var res = 0;
                 var mirror = false;
+                _directDirect = 0;
+                remainingMonsters = 0;
                 foreach (var room in roomsInSight)
                 {
                     if (room.IsMirror)
@@ -459,17 +513,22 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                             case 'G':
                                 res += mirror ? 1 : 0;
                                 break;
+                            case '.':
+                                remainingMonsters++;
+                                if (!mirror)
+                                {
+                                    _directDirect++;
+                                }
+                                break;
                         }
                     }
+
                 }
 
-                return res;
-            }
-
-            private int ReverseCount()
-            {
-                var res = 0;
-                var mirror = false;
+                remainingCount = count - res;
+                res = 0;
+                mirror = false;
+                _reverseDirect = 0;
                 for(var i= roomsInSight.Count-1; i>=0; i--)
                 {
                     var room = roomsInSight[i];
@@ -490,65 +549,145 @@ https://www.codingame.com/ide/puzzle/haunted-manor
                             case 'G':
                                 res += mirror ? 1 : 0;
                                 break;
+                            case '.':
+                                if (!mirror)
+                                {
+                                    _reverseDirect++;
+                                }
+                                break;
                         }
                     }
                 }
 
-                return res;
+                remainingReverse = reverseCount - res;
             }
-            
-            public void Analyze()
+   
+            public bool Analyze()
             {
-                if (monsterCount == 0)
+                if (remainingMonsters == 0 || IsSolved())
                 {
                     // no info
-                    return;
+                    return false;
                 }
-                var directDirect = 0;
-                var reverseDirect = 0;
-                for (var i = 0; i < roomsInSight.Count; i++)
+                var mid = Math.Max(remainingMonsters - _directDirect - _reverseDirect, 0);
+                Console.Error.WriteLine($"{this} split:{_directDirect}:{mid}:{_reverseDirect}.");
+                // do we have only invisible monsters?
+                if (remainingCount == 0 && remainingReverse == 0)
                 {
-                    if (!roomsInSight[i].IsMirror) continue;
-                    directDirect = i;
-                    break;
-                }
-                
-                for (var i = roomsInSight.Count-1; i >= 0; i--)
-                {
-                    if (!roomsInSight[i].IsMirror) continue;
-                    reverseDirect = roomsInSight.Count-1-i;
-                    break;
-                }
-
-                var mid = Math.Max(monsterCount - directDirect - reverseDirect, 0);
-                Console.Error.WriteLine($"split:{directDirect}:{mid}:{reverseDirect}.");
-                if (count == 0 && reverseCount == 0)
-                {
-                    if (directDirect == reverseDirect && reverseDirect == monsterCount)
+                    if (_directDirect == _reverseDirect && _reverseDirect == remainingMonsters)
                     {
-                        Console.Error.WriteLine($"View contains only Ghosts {monsterCount}.");
+                        Console.Error.WriteLine($"View contains only Ghosts {remainingMonsters}.");
+                        foreach (var room in roomsInSight)
+                        {
+                            if (room.Get() == '.')
+                            {
+                                room.Set('G');
+                            }
+                        }
                     }
                     else
                     {
-                        Console.Error.WriteLine($"View contains only Vampires {monsterCount}.");
+                        Console.Error.WriteLine($"View contains only Vampires {remainingMonsters}.");
+                        foreach (var room in roomsInSight)
+                        {
+                            if (room.Get() == '.')
+                            {
+                                room.Set('V');
+                            }
+                        }
+
+                        return true;
                     }
                 }
-                else if (count == 0)
+                // do we have only invisible monsters in Direct?
+                else if (remainingCount == 0)
                 {
-                    Console.Error.WriteLine($"View contains {directDirect} Ghosts and {monsterCount-directDirect} Vampires.");
+                    Console.Error.WriteLine($"View contains {_directDirect} Ghosts and {remainingMonsters-_directDirect} Vampires.");
+                    foreach (var room in roomsInSight)
+                    {
+                        if (room.IsMirror)
+                        {
+                            break;
+                        }
+
+                        if (room.Get() == '.')
+                        {
+                            room.Set('G');
+                        }
+                    }
+
+                    for (var i = roomsInSight.Count - 1; i >= 0; i--)
+                    {
+                        var room = roomsInSight[i];
+                        if (room.IsMirror)
+                        {
+                            break;
+                        }
+
+                        if (room.Get() == '.')
+                        {
+                            room.Set('V');
+                        }
+                    }
+
+                    return true;
                 }
-                else if (reverseCount == 0)
+                // do we have only invisible monsters in Reverse?
+                else if (remainingReverse == 0)
                 {
-                    Console.Error.WriteLine($"View contains {reverseDirect} Ghosts and {monsterCount-reverseDirect} Vampires.");
+                    Console.Error.WriteLine($"View contains {_reverseDirect} Ghosts and {remainingMonsters-_reverseDirect} Vampires.");
+                    foreach (var room in roomsInSight)
+                    {
+                        if (room.IsMirror)
+                        {
+                            break;
+                        }
+
+                        if (room.Get() == '.')
+                        {
+                            room.Set('V');
+                        }
+                    }
+
+                    for (var i = roomsInSight.Count - 1; i >= 0; i--)
+                    {
+                        var room = roomsInSight[i];
+                        if (room.IsMirror)
+                        {
+                            break;
+                        }
+
+                        if (room.Get() == '.')
+                        {
+                            room.Set('G');
+                        }
+                    }
+
+                    return true;
                 }
+                else if (mid == 0 && remainingCount == remainingReverse && remainingCount == (_directDirect+_reverseDirect))
+                {
+                    Console.Error.WriteLine($"View contains {remainingCount} Zombies.");
+                    foreach (var room in roomsInSight)
+                    {
+                        if (room.Get()=='.')
+                        {
+                            room.Set('Z');
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
             }
            
             public override string ToString()
             {
                 var builder = new StringBuilder();
                 builder.Append($"View from {roomsInSight[0]}({initDir}) to {roomsInSight[roomsInSight.Count-1]}({finalDir})");
-                builder.Append($" [direct:{count}, reverse:{reverseCount}]");
-                builder.Append($" {monsterCount} rooms seen.");
+                builder.Append($" [direct:{remainingCount}, reverse:{remainingReverse}]");
+                builder.Append($" {remainingMonsters} rooms seen.");
                 return builder.ToString();
             }
         }
