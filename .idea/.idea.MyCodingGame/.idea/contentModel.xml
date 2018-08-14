@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p="MyCodingGame.sln" t="IncludeFlat" />
+      <e p="packages" t="ExcludeRecursive" />
+      <e p="PlatinumRift2" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Game1.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="PlatinumRift2.csproj" t="IncludeRecursive" />
+        <e p="Program.cs" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+        </e>
+      </e>
+      <e p="Test" t="IncludeRecursive">
+        <e p="4-Very_Hard" t="Include">
+          <e p="HauntedManor.cs" t="Include" />
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Clones.cs" t="Include" />
+        <e p="CodingGamePuzzles.csproj" t="IncludeRecursive" />
+        <e p="Community" t="Include">
+          <e p="AdvancedTree.cs" t="Include" />
+          <e p="Ancestor.cs" t="Include" />
+          <e p="BalancedTernary.cs" t="Include" />
+          <e p="Brackets.cs" t="Include" />
+          <e p="BracketsEnhanced.cs" t="Include" />
+          <e p="CardCastle.cs" t="Include" />
+          <e p="CastleSiege.cs" t="Include" />
+          <e p="CodinDice.cs" t="Include" />
+          <e p="DivisorSum.cs" t="Include" />
+          <e p="EgyptianMultiplication.cs" t="Include" />
+          <e p="EinsteinRiddle.cs" t="Include" />
+          <e p="Elevator.cs" t="Include" />
+          <e p="FoldingPaper.cs" t="Include" />
+          <e p="Gravity.cs" t="Include" />
+          <e p="GreatestNumber.cs" t="Include" />
+          <e p="HitTheRoad.cs" t="Include" />
+          <e p="LettersInBin.cs" t="Include" />
+          <e p="MaxSurfaceBox.cs" t="Include" />
+          <e p="MicroAssembly.cs" t="Include" />
+          <e p="SafeCracking.cs" t="Include" />
+          <e p="SimpleFraction.cs" t="Include" />
+          <e p="SimplifySelection.cs" t="Include" />
+          <e p="SkyEdge.cs" t="Include" />
+          <e p="SquareOrder.cs" t="Include" />
+          <e p="TheFastest.cs" t="Include" />
+          <e p="TimerClash.cs" t="Include" />
+          <e p="TriForce.cs" t="Include" />
+          <e p="TwoEgg.cs" t="Include" />
+          <e p="Xorandor.cs" t="Include" />
+          <e p="Zergling Rush.cs" t="Include" />
+        </e>
+        <e p="Difficile" t="Include">
+          <e p="Clones.cs" t="Include" />
+          <e p="Indiana Hard.cs" t="Include" />
+          <e p="PlayerKirk.cs" t="Include" />
+          <e p="PlayerSkynetHard.cs" t="Include" />
+          <e p="ThereIsNoSpoon2.cs" t="Include" />
+        </e>
+        <e p="Facile" t="Include">
+          <e p="BankRobbers.cs" t="Include" />
+          <e p="BracketsEnhancedEasy.cs" t="Include" />
+          <e p="EmptyClass.cs" t="Include" />
+          <e p="Gravity_Tumbler.cs" t="Include" />
+          <e p="HiddenWord.cs" t="Include" />
+          <e p="OrderOfSuccession.cs" t="Include" />
+          <e p="River.cs" t="Include" />
+          <e p="RiverII.cs" t="Include" />
+          <e p="TravelingSalesman.cs" t="Include" />
+        </e>
+        <e p="Leagues" t="Include">
+          <e p="CodersStrikeBack.cs" t="Include" />
+        </e>
+        <e p="MarsLander.cs" t="Include" />
+        <e p="Moyen" t="Include">
+          <e p="ANEOSpeed.cs" t="Include" />
+          <e p="APU init.cs" t="Include" />
+          <e p="Bender.cs" t="Include" />
+          <e p="Cadeau.cs" t="Include" />
+          <e p="CalculMaya.cs" t="Include" />
+          <e p="DontPanic.cs" t="Include" />
+          <e p="FloodFill.cs" t="Include" />
+          <e p="GravityCentrifugeTuning.cs" t="Include" />
+          <e p="HorseHyperRacing.cs" t="Include" />
+          <e p="PlayerMars.cs" t="Include" />
+          <e p="Scrabble.cs" t="Include" />
+          <e p="Skynet.cs" t="Include" />
+        </e>
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="packages.config" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+        </e>
+        <e p="Sponsored Challenge" t="Include">
+          <e p="CodingGame.cs" t="Include" />
+        </e>
+        <e p="Tooling" t="Include">
+          <e p="ContextProgram.cs" t="Include" />
+          <e p="InFromFile.cs" t="Include" />
+          <e p="InFromText.cs" t="Include" />
+          <e p="OutToFile.cs" t="Include" />
+          <e p="OutToString.cs" t="Include" />
+        </e>
+      </e>
+    </e>
+    <e p="$USER_HOME$/Library/Caches/Rider2018.1/resharper-host/local/Transient/ReSharperHost/v12/SolutionCaches/_MyCodingGame.655614101.00" t="ExcludeRecursive" />
+  </component>
+</project>

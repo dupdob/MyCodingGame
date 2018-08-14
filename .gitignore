@@ -8,6 +8,10 @@
 # Xamarin
 *.userprefs
 
+# Rider ide files
+.idea/
+.idea/*
+
 # Build results
 Artifacts/Binaries/*.dll
 Artifacts/Binaries/*.xml
