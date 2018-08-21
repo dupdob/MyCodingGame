@@ -63,6 +63,7 @@
         <e p="Facile" t="Include">
           <e p="BankRobbers.cs" t="Include" />
           <e p="BracketsEnhancedEasy.cs" t="Include" />
+          <e p="CountingSquares.cs" t="Include" />
           <e p="EmptyClass.cs" t="Include" />
           <e p="Gravity_Tumbler.cs" t="Include" />
           <e p="HiddenWord.cs" t="Include" />

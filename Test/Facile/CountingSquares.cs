@@ -10,138 +10,92 @@ namespace CodingGame.Facile
 {
     internal static class CountingSquares
     {
-        private static void Main(string[] args)
-        {
-            var N = int.Parse(Console.ReadLine());
-            var vertex = new Vertex[N];
-            for (var i = 0; i < N; i++)
+        private static void Main()
+        {    
+            var n = int.Parse(Console.ReadLine());
+            var vertex = new Vertex[n];
+            for (var i = 0; i < n; i++)
             {
                 var inputs = Console.ReadLine().Split(' ');
-                var X = int.Parse(inputs[0]);
-                var Y = int.Parse(inputs[1]);
-                vertex[i] = new Vertex(X, Y);
+                var x = int.Parse(inputs[0]);    
+                var y = int.Parse(inputs[1]);
+                vertex[i] = new Vertex(x, y);
             }
 
             var edges = new Dictionary<int, ICollection<Edge>>();
-            for (var i = 0; i < N; i++)
+            var vertices = new Dictionary<int, ICollection<Vertex>>();
+            for (var i = 0; i < n; i++)
             {
-                for (var j = i+1; j < N; j++)
+                for (var j = 0; j < n; j++)
                 {
                     var vertice = new Edge(vertex[i], vertex[j]);
+                    
+                    if (vertice.Dx < 0 || vertice.Dy < 0)
+                    {
+                        continue;
+                    }
+                    
                     if (!edges.ContainsKey(vertice.Distance))
                     {
                         edges[vertice.Distance] = new List<Edge >();
+                        vertices[vertice.Distance] = new HashSet<Vertex>();
                     }
                     edges[vertice.Distance].Add(vertice);
+                    vertices[vertice.Distance].Add(vertex[i]);
+                    vertices[vertice.Distance].Add(vertex[j]);
                 }
             }
             // now scan length
             var answer = 0;
             foreach (var entry in edges)
             {
-                if (entry.Value.Count < 4)
+                if (entry.Value.Count < 4 || !edges.ContainsKey(entry.Key * 2) || edges[entry.Key * 2].Count < 2)
                 {
                     continue;
                 }
 
-                //Console.Error.WriteLine($"Found {entry.Value.Count} vertices with a squared length of ${entry.Key}.");
-                var findSquare = FindSquare(entry.Value);
-                if (findSquare > 0)
-                {
-                    Console.Error.WriteLine($"Found {findSquare} squares of dim {Math.Sqrt(entry.Key)}.");
-                }
+                var findSquare = FindSquare(entry.Value, vertices[entry.Key]);
+
                 answer += findSquare;
             }
             Console.Write(answer);
         }
 
-        private static int FindSquare(IEnumerable<Edge> edges)
+        private static int FindSquare(ICollection<Edge> edges, ICollection<Vertex> diagVertex)
         {
             var count = 0;
-            var edgePerVertex = new Dictionary<Vertex, HashSet<Vertex>>();
-            var allVertices = new HashSet<Vertex>();
             // identify edges per vertex
-            foreach (var edge in edges)
-            {
-                if (!edgePerVertex.ContainsKey(edge.Start))
-                {
-                    edgePerVertex.Add(edge.Start, new HashSet<Vertex>());
-                }
-
-                if (!edgePerVertex.ContainsKey(edge.End))
-                {
-                    edgePerVertex.Add(edge.End, new HashSet<Vertex>());
-                }
-
-                allVertices.Add(edge.Start);
-                allVertices.Add(edge.End);
-                edgePerVertex[edge.Start].Add(edge.End);
-                edgePerVertex[edge.End].Add(edge.Start);
-            }
 
             var excluded = new HashSet<Edge>();
-            foreach(var entry in edgePerVertex)
+            foreach(var entry in edges)
             {
-                var vertexList = entry.Value;
-                var vertex = entry.Key;
-//                Console.Error.WriteLine($"Found {vertexList.Count} edges starting at {vertex}");
-                if (vertexList.Count < 2)
+                var vertex = entry.Start;
+                var secondVertex = entry.End;
+
+                if (excluded.Contains(entry))
                 {
-                    // no interest
                     continue;
                 }
 
-                foreach (var secondVertex in vertexList)
+                excluded.Add(entry);
+                var yDiff = secondVertex.Y - vertex.Y;
+                var xDiff = secondVertex.X - vertex.X;
+                var potentialThirdVertex = new Vertex(vertex.X - yDiff, vertex.Y + xDiff);
+                var potentialFourthVertex = new Vertex(secondVertex.X - yDiff, secondVertex.Y + xDiff);
+                if (diagVertex.Contains(potentialThirdVertex) && diagVertex.Contains(potentialFourthVertex))
                 {
-                    var log = false;
-                    var edge = new Edge(vertex, secondVertex);
-                    if (log)
-                    {
-                        Console.Error.Write($"examine {secondVertex}.");
-                    }
-                    if (excluded.Contains(edge))
-                    {
-                        continue;
-                    }
-
-                    excluded.Add(edge);
-                    var YDiff = secondVertex.Y - vertex.Y;
-                    var xDiff = secondVertex.X - vertex.X;
-                    var potentialThirdVertex = new Vertex(vertex.X - YDiff, vertex.Y + xDiff);
-                    var potentialFourthVertex = new Vertex(secondVertex.X - YDiff, secondVertex.Y + xDiff);
-                    if (log)
-                    {
-                        Console.Error.Write($"with {potentialThirdVertex} and {potentialFourthVertex}, ");
-                    }
-                    if (vertexList.Contains(potentialThirdVertex) && allVertices.Contains(potentialFourthVertex))
-                    {
-                        if (!excluded.Contains(new Edge(secondVertex, potentialFourthVertex))
-                            && !excluded.Contains(new Edge(potentialThirdVertex, potentialFourthVertex))
-                            && !excluded.Contains(new Edge(potentialThirdVertex, vertex)))
-                        {
-                            Console.Error.WriteLine($"Found {vertex}/{secondVertex}/{potentialFourthVertex}/{potentialThirdVertex}");
-                            count++;
-                        }
-                    }
-                    // let's see if we can find the fourth vertex
-                    potentialThirdVertex = new Vertex(vertex.X + YDiff, vertex.Y - xDiff);
-                    potentialFourthVertex = new Vertex(secondVertex.X + YDiff, secondVertex.Y - xDiff);
-                    if (log)
-                    {
-                        Console.Error.WriteLine($"with {potentialThirdVertex} and {potentialFourthVertex}.");
-                    }
-                    if (vertexList.Contains(potentialThirdVertex) && allVertices.Contains(potentialFourthVertex))
-                    {
-                        if (!excluded.Contains(new Edge(secondVertex, potentialFourthVertex))
-                            && !excluded.Contains(new Edge(potentialThirdVertex, potentialFourthVertex))
-                            && !excluded.Contains(new Edge(potentialThirdVertex, vertex)))
-                        {
-                            Console.Error.WriteLine($"Found {vertex}/{secondVertex}/{potentialFourthVertex}/{potentialThirdVertex}");
-                            count++;
-                        }
-                    }
-
+                    count++;
                 }
+                /*
+                // let's see if we can find the fourth vertex
+                potentialThirdVertex = new Vertex(vertex.X + YDiff, vertex.Y - xDiff);
+                potentialFourthVertex = new Vertex(secondVertex.X + YDiff, secondVertex.Y - xDiff);
+                if (diagVertex.Contains(potentialThirdVertex) && diagVertex.Contains(potentialFourthVertex))
+                {
+                    count++;
+                }
+*/
+              
             }
             return count;
         }
@@ -190,7 +144,7 @@ namespace CodingGame.Facile
 
         private class Edge
         {
-            protected bool Equals(Edge other)
+            private bool Equals(Edge other)
             {
                 return Equals(Start, other.Start) && Equals(End, other.End) ||
                        Equals(Start, other.End) && Equals(End, other.Start);
@@ -200,16 +154,13 @@ namespace CodingGame.Facile
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((Edge) obj);
             }
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    return ((Start != null ? Start.GetHashCode() : 0 ) ^ (End != null ? End.GetHashCode() : 0));
-                }
+                return (Start != null ? Start.GetHashCode() : 0 ) ^ (End != null ? End.GetHashCode() : 0);
             }
 
             public Edge(Vertex start, Vertex end)
@@ -220,9 +171,14 @@ namespace CodingGame.Facile
             }
 
             public Vertex Start { get; }
+            
             public Vertex End { get; }
 
             public int Distance { get; }
+
+            public int Dx => End.X - Start.X;
+            
+            public int Dy => End.Y - Start.Y;
 
             public override string ToString()
             {
