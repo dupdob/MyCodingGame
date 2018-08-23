@@ -64,6 +64,7 @@
     <Compile Include="Community\Xorandor.cs" />
     <Compile Include="Community\Zergling Rush.cs" />
     <Compile Include="Difficile\Indiana Hard.cs" />
+    <Compile Include="Difficile\Queen.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
     <Compile Include="Facile\BankRobbers.cs" />
     <Compile Include="Facile\BracketsEnhancedEasy.cs" />

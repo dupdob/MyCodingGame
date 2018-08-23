@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 
 /**
@@ -91,7 +92,7 @@ class NoSpoon2
             var failed = false;
             for(var i = 0; i< allSegments.Keys.Count; i++)
             {
-                var key = allSegments.Keys[i];
+                var key = allSegments.Keys.ElementAt(i);
                 var subList = allSegments[key][allIndices[key]];
                 var localLinks = new List<Link>();
                 var localFailed = false;
