@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 /**
  * Don't let the machines win. You are humanity's last hope...
@@ -9,14 +11,14 @@ class NoSpoon2
 {
     static void MainSpoon2(string[] args)
     {
-        var width = Int32.Parse(Console.ReadLine()); // the number of cells on the X axis
+        var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
         Console.Error.WriteLine(width);
-        var height = Int32.Parse(Console.ReadLine()); // the number of cells on the Y axis
+        var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
         Console.Error.WriteLine(height);
         var map = new Node[width, height];
         for (var i = 0; i < height; i++)
         {
-            var line = Console.ReadLine(); // width characters, each either 0 or .
+            var line = Console.ReadLine(); // 'width' characters, each either digit or .
             Console.Error.WriteLine(line);
             for (var j = 0; j < line.Length; j++)
             {
@@ -44,7 +46,7 @@ class NoSpoon2
                 {
                     continue;
                 }
-                // look for node going up
+                // look for a node going up
                 for (var x = i - 1; x >= 0; x--)
                 {
                     if (map[x, j] == null) continue;
@@ -73,9 +75,61 @@ class NoSpoon2
             }
         }
         var links = new List<Link>();
+        // simplify problem
         CreateObviousLinks(nodes, links);
         var allSegments = BuildLinkOptions(nodes, links);
-        var allIndices = new int[allSegments.Count];
+        var allIndices = new Dictionary<Node, int>(allSegments.Count);
+        foreach (var key in allSegments.Keys)
+        {
+            allIndices[key] = 0;
+        }
+        // now try all combination (brute force)
+
+        while (true)
+        {
+            var builtLinks = new List<Link>();
+            var failed = false;
+            for(var i = 0; i< allSegments.Keys.Count; i++)
+            {
+                var key = allSegments.Keys[i];
+                var subList = allSegments[key][allIndices[key]];
+                var localLinks = new List<Link>();
+                var localFailed = false;
+                do
+                {
+                    foreach (var node in subList)
+                    {
+                        var link = key.EstablishLink(node);
+                        if (link == null)
+                        {
+                            localFailed = true;
+                            break;
+                        }
+                        localLinks.Add(link);
+                        if (!link.CrossesAny(builtLinks)) continue;
+                        localFailed = true;
+                        break;
+                    }
+
+                    if (!localFailed)
+                    {
+                        break;
+                    }
+                    foreach (var localLink in localLinks)
+                    {
+                        key.DestroyLink(localLink.To);
+                    }
+                    localLinks.Clear();
+                    allIndices[key]++;
+                    if (allIndices[key] == allSegments[key].Count)
+                    {
+                        // we tried all remaining combos, none of them is possible
+                        allIndices[key] = 0;
+                    }
+                } while (true);
+            }
+        }
+        
         StartScan(nodes, links);
   
         // Write an action using Console.WriteLine()
@@ -87,7 +141,7 @@ class NoSpoon2
         Console.Error.WriteLine("Instructions Finished");
     }
 
-    private static Dictionary<Node, List<List<Node>>> BuildLinkOptions(List<Node> nodes, List<Link> links)
+    private static Dictionary<Node, List<List<Node>>> BuildLinkOptions(IEnumerable<Node> nodes, IList<Link> links)
     {
         var result = new Dictionary<Node, List<List<Node>>>();
         foreach (var node in nodes)
@@ -328,11 +382,11 @@ class NoSpoon2
         public int Y { get; }
         public int NeedeedLinks { get; }
         public readonly List<Node> NeighBours = new List<Node>();
-        private readonly Dictionary<Node, int> linkedTo = new Dictionary<Node, int>();
-        private int linkEstablished;
+        private readonly Dictionary<Node, int> _linkedTo = new Dictionary<Node, int>();
+        private int _linkEstablished;
 
         // number of links that must be set to this node
-        public int MissingLinks => NeedeedLinks - linkEstablished;
+        public int MissingLinks => NeedeedLinks - _linkEstablished;
 
         public Node(int x, int y, int needeedLinks)
         {
@@ -360,7 +414,7 @@ class NoSpoon2
                 {
                     continue;
                 }
-                res += Math.Min(2 - linkedTo[neighBour], neighBour.MissingLinks);
+                res += Math.Min(2 - _linkedTo[neighBour], neighBour.MissingLinks);
             }
 
             return res;
@@ -389,13 +443,13 @@ class NoSpoon2
 
         public bool IsLinkedTo(Node other)
         {
-            return linkedTo[other] > 0;
+            return _linkedTo[other] > 0;
         }
 
         public void AddNeighbour(Node node)
         {
             NeighBours.Add(node);
-            linkedTo[node] = 0;
+            _linkedTo[node] = 0;
         }
 
         public Link EstablishLink(Node other)
@@ -417,13 +471,13 @@ class NoSpoon2
 
         private bool LinkTo(Node other)
         {
-            if (linkedTo[other] > 1 || MissingLinks == 0)
+            if (_linkedTo[other] > 1 || MissingLinks == 0)
                 // link saturated
             {
                 return false;
             }
-            linkEstablished++;
-            linkedTo[other]++;
+            _linkEstablished++;
+            _linkedTo[other]++;
             return true;
         }
 
@@ -437,8 +491,8 @@ class NoSpoon2
         {
             if (!NeighBours.Contains(other))
                 return false;
-            linkedTo[other]--;
-            linkEstablished--;
+            _linkedTo[other]--;
+            _linkEstablished--;
             return true;
         }
 

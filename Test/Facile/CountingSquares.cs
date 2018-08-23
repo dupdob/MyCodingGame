@@ -10,7 +10,7 @@ namespace CodingGame.Facile
 {
     internal static class CountingSquares
     {
-        private static void Main()
+        private static void MainSquares()
         {    
             var n = int.Parse(Console.ReadLine());
             var vertex = new Vertex[n];
@@ -24,13 +24,14 @@ namespace CodingGame.Facile
 
             var edges = new Dictionary<int, ICollection<Edge>>();
             var vertices = new Dictionary<int, ICollection<Vertex>>();
+            var count = 0;
             for (var i = 0; i < n; i++)
             {
                 for (var j = 0; j < n; j++)
                 {
                     var vertice = new Edge(vertex[i], vertex[j]);
                     
-                    if (vertice.Dx < 0 || vertice.Dy < 0)
+                    if (vertice.Dx < 0 || vertice.Dy <= 0)
                     {
                         continue;
                     }
@@ -43,13 +44,15 @@ namespace CodingGame.Facile
                     edges[vertice.Distance].Add(vertice);
                     vertices[vertice.Distance].Add(vertex[i]);
                     vertices[vertice.Distance].Add(vertex[j]);
+                    count++;
                 }
             }
+            Console.Error.WriteLine($"Found {count} vertices.");
             // now scan length
             var answer = 0;
             foreach (var entry in edges)
             {
-                if (entry.Value.Count < 4 || !edges.ContainsKey(entry.Key * 2) || edges[entry.Key * 2].Count < 2)
+                if (entry.Value.Count < 2 || !edges.ContainsKey(entry.Key * 2))
                 {
                     continue;
                 }
