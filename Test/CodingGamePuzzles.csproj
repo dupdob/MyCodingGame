@@ -68,6 +68,7 @@
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
     <Compile Include="Facile\BankRobbers.cs" />
     <Compile Include="Facile\BracketsEnhancedEasy.cs" />
+    <Compile Include="Facile\BulkEmailGenerator.cs" />
     <Compile Include="Facile\CountingSquares.cs" />
     <Compile Include="Facile\Gravity_Tumbler.cs" />
     <Compile Include="Facile\HiddenWord.cs" />
