@@ -1,36 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Policy;
 
 /**
  * Don't let the machines win. You are humanity's last hope...
  * https://www.codingame.com/ide/puzzle/there-is-no-spoon-episode-2
+ * This code is ugly, as in needs refactoring + it relies on an heuristic only valid for provided examples:
+ * we favor shorter path but we don't ensure we have a single graph at the end
  **/
 namespace CodingGame
 {
     internal static class NoSpoon2
     {
-        private static void Main()
+        private static void MainSpoon()
         {
-            var revert = true;
             var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
             Console.Error.WriteLine(width);
             var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
             Console.Error.WriteLine(height);
-            if (revert)
-            {
-                var temp = height;
-                height = width;
-                width = temp;
-            }
             var map = new Node[width, height];
                 
-            for (var i = 0; i < map.GetLength(0); i++)
+            for (var i = 0; i < height; i++)
             {
                 var line = Console.ReadLine(); // 'width' characters, each either digit or .
                 Console.Error.WriteLine(line);
@@ -39,29 +30,13 @@ namespace CodingGame
                     var car = line[j];
                     if (car == '.')
                     {
-                        if (revert)
-                        {
-                            map[i, j] = null;
-                        }
-                        else
-                        {
-                            map[j, i] = null;
-                        }
+                        map[j, i] = null;
                     }
                     else
                     {
-                        if (revert)
-                        {
-                            var node = new Node(i, j, car - '0');
+                        var node = new Node(j, i, car - '0');
 
-                            map[i, j] = node;
-                        }
-                        else
-                        {
-                            var node = new Node(j, i, car - '0');
-
-                            map[j, i] = node;
-                        }                    
+                        map[j, i] = node;
                     }
                 }
             }
@@ -126,32 +101,11 @@ namespace CodingGame
             {
                 var key = listOfNodes[i];
                 var localLinks = new List<Link>();
-                Console.Error.WriteLine($"Trying to link {key} (variants: {allSegments[key].Count}).");
-                bool localFailed;
                 do
                 {
-                    localFailed = false;
                     var subList = allSegments[key][allIndices[key]];
-                    Console.Error.Write("To: ");
-                    foreach (var link in subList)
-                    {
-                        if (link.Count == 2)
-                        {
-                            Console.Error.Write($"=");
-                        }
-                        Console.Error.Write($"{link.To}, ");
-                    }
-                    Console.Error.WriteLine();
-                    foreach (var tryLink in  subList)
-                    {
-                        if (!key.LinkCanBeEstablished(tryLink) || tryLink.CrossesAny(builtLinks))
-                        {
-                            localFailed = true;
-                            break;
-                        }
-                    }
 
-                    if (!localFailed)
+                    if (key.IsValidHypothesis(subList, builtLinks))
                     {
                         foreach (var tryLink in subList)
                         {
@@ -161,6 +115,8 @@ namespace CodingGame
                                 localLinks.Add(result);
                             }
                         }
+                        stackOfLinks.Push(localLinks);
+                        builtLinks.AddRange(localLinks);
 
                         break;
                     }
@@ -183,17 +139,10 @@ namespace CodingGame
 
                         allIndices[key]++;
                     } while (allIndices[key] == allSegments[key].Count);
-                    Console.Error.WriteLine($"Dead End, retry from {listOfNodes[i]} (stack {stackOfLinks.Count}, links {builtLinks.Count})");
                     i--;
                     break;
                 } while (true);
 
-                if (!localFailed)
-                {
-                    stackOfLinks.Push(localLinks);
-                    builtLinks.AddRange(localLinks);
-                    Console.Error.WriteLine($"Works (stack {stackOfLinks.Count}, links {builtLinks.Count})");
-                }
             }
 
             foreach (var link in builtLinks)
@@ -228,6 +177,23 @@ namespace CodingGame
                     if (firstList.Count < secondList.Count)
                     {
                         return 1;
+                    }
+
+                    if (firstList.Count == secondList.Count)
+                    {
+                        var distance1 = 0;
+                        var distance2 = 0;
+                        foreach (var link in firstList)
+                        {
+                            distance1 += link.Length;
+                        }
+
+                        foreach (var link in secondList)
+                        {
+                            distance2 += link.Length;
+                        }
+
+                        return distance2 < distance1 ? 1 : -1;
                     }
 
                     return -1;
@@ -326,7 +292,8 @@ namespace CodingGame
         {
             public Node From { get;}
             public Node To { get;}
-            public int Count { get; private set; }
+            public int Count { get; }
+            public int Length => Math.Abs(To.X - From.X) + Math.Abs(To.Y - From.Y);
 
             public Link(Node from, Node to, int count)
             {
@@ -384,7 +351,7 @@ namespace CodingGame
 
             public override int GetHashCode()
             {
-                return ((From != null ? From.GetHashCode() : 0)) ^ (To != null ? To.GetHashCode() : 0);
+                return (From != null ? From.GetHashCode() : 0) ^ (To != null ? To.GetHashCode() : 0);
             }
 
         }
@@ -458,6 +425,34 @@ namespace CodingGame
                 _linkedTo[node] = 0;
             }
 
+            public bool IsValidHypothesis(ICollection<Link> hypothesis, ICollection<Link> existing)
+            {
+                var variation = 0;
+                foreach (var link in hypothesis)
+                {
+                    if (link.CrossesAny(existing))
+                    {
+                        return false;
+                    }
+
+                    if (_linkedTo[link.To] == 0)
+                    {
+                        if (link.To.MissingLinks < link.Count)
+                        {
+                            return false;
+                        }
+
+                        variation += link.Count;
+                    }
+                    else if (_linkedTo[link.To] != link.Count)
+                    {
+                        return false;
+                    }
+                }
+
+                return variation == MissingLinks;
+            }
+
             public bool LinkCanBeEstablished(Link link)
             {
                 Debug.Assert(link.From == this);
@@ -466,12 +461,13 @@ namespace CodingGame
                     // already exists
                     return true;
                 }
-                return _linkedTo[link.To] + link.Count <= 2 && MissingLinks >= link.Count && link.To.MissingLinks >= link.Count;
+                return link.Count <= 2 && MissingLinks >= link.Count && link.To.MissingLinks >= link.Count;
             }
 
             public Link EstablishLink(Link link)
             {
                 Debug.Assert(LinkCanBeEstablished(link));
+   
                 if (_linkedTo[link.To] == link.Count)
                 {
                     // already exists
@@ -482,6 +478,11 @@ namespace CodingGame
                 link.To._linkEstablished += link.Count;
                 _linkedTo[link.To] = link.Count;
                 link.To._linkedTo[link.From] = link.Count;
+                var count = 0;
+                foreach (var xValue in _linkedTo.Values)
+                {
+                    count += xValue;
+                }
 
                 return link;
             }
@@ -494,12 +495,12 @@ namespace CodingGame
                     return null;
                 }
 
-                if (_linkedTo[other] == 0 && other.MissingLinks > 1 && MissingLinks > 1)
+                if (other.MissingLinks > 1 && MissingLinks > 1)
                 {
                     _linkEstablished += 2;
-                    _linkedTo[other] += 2;
+                    _linkedTo[other] = 2;
                     other._linkEstablished += 2;
-                    other._linkedTo[this] += 2;
+                    other._linkedTo[this] = 2;
                     result = new Link(this, other, 2);
                 }
                 else
@@ -507,7 +508,7 @@ namespace CodingGame
                     _linkEstablished ++;
                     _linkedTo[other] ++;
                     other._linkEstablished ++;
-                    other._linkedTo[this] ++;
+                    other._linkedTo[this]= 1;
                     result = new Link(this, other, 1);
                 }
 
@@ -521,15 +522,6 @@ namespace CodingGame
                 _linkEstablished -= link.Count;
                 link.To._linkedTo[link.From] = 0;
                 link.To._linkEstablished -= link.Count;
-            }
-
-            private bool RemoveLink(Node other)
-            {
-                if (!Neighbours.Contains(other))
-                    return false;
-                _linkedTo[other]--;
-                _linkEstablished--;
-                return true;
             }
 
             public override string ToString()
