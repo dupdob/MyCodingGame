@@ -126,7 +126,7 @@ namespace CodingGame
             {
                 var key = listOfNodes[i];
                 var localLinks = new List<Link>();
-                Console.Error.WriteLine($"Trying to link {key}.");
+                Console.Error.WriteLine($"Trying to link {key} (variants: {allSegments[key].Count}).");
                 bool localFailed;
                 do
                 {
@@ -135,12 +135,11 @@ namespace CodingGame
                     Console.Error.Write("To: ");
                     foreach (var link in subList)
                     {
-                        Console.Error.Write($"{link.To}");
                         if (link.Count == 2)
                         {
-                            Console.Error.Write($"(2)");
+                            Console.Error.Write($"=");
                         }
-                        Console.Error.Write($",");
+                        Console.Error.Write($"{link.To}, ");
                     }
                     Console.Error.WriteLine();
                     foreach (var tryLink in  subList)
@@ -174,12 +173,12 @@ namespace CodingGame
                         allIndices[key] = 0;
                         // we need to go back to previous stage
                         i--;
-                        var toRemove = stackOfLinks.Pop();
                         key = listOfNodes[i];
+                        var toRemove = stackOfLinks.Pop();
                         builtLinks.RemoveRange(builtLinks.Count - toRemove.Count, toRemove.Count);
                         foreach (var link in toRemove)
                         {
-                            key.DestroyLink(link.To);
+                            key.DestroyLink(link);
                         }
 
                         allIndices[key]++;
@@ -515,10 +514,13 @@ namespace CodingGame
                 return result;
             }
 
-            public void DestroyLink(Node other)
+            public void DestroyLink(Link link)
             {
-                if (!RemoveLink(other)) return;
-                other.RemoveLink(this);
+                Debug.Assert(_linkedTo[link.To] == link.Count);
+                _linkedTo[link.To] = 0;
+                _linkEstablished -= link.Count;
+                link.To._linkedTo[link.From] = 0;
+                link.To._linkEstablished -= link.Count;
             }
 
             private bool RemoveLink(Node other)
