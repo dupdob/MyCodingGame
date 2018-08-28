@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Policy;
 
 /**
  * Don't let the machines win. You are humanity's last hope...
@@ -14,12 +17,20 @@ namespace CodingGame
     {
         private static void Main()
         {
+            var revert = true;
             var width = int.Parse(Console.ReadLine()); // the number of cells on the X axis
             Console.Error.WriteLine(width);
             var height = int.Parse(Console.ReadLine()); // the number of cells on the Y axis
             Console.Error.WriteLine(height);
+            if (revert)
+            {
+                var temp = height;
+                height = width;
+                width = temp;
+            }
             var map = new Node[width, height];
-            for (var i = 0; i < height; i++)
+                
+            for (var i = 0; i < map.GetLength(0); i++)
             {
                 var line = Console.ReadLine(); // 'width' characters, each either digit or .
                 Console.Error.WriteLine(line);
@@ -28,13 +39,29 @@ namespace CodingGame
                     var car = line[j];
                     if (car == '.')
                     {
-                        map[j, i] = null;
+                        if (revert)
+                        {
+                            map[i, j] = null;
+                        }
+                        else
+                        {
+                            map[j, i] = null;
+                        }
                     }
                     else
                     {
-                        var node = new Node(j, i, car-'0');
+                        if (revert)
+                        {
+                            var node = new Node(i, j, car - '0');
 
-                        map[j, i] = node;
+                            map[i, j] = node;
+                        }
+                        else
+                        {
+                            var node = new Node(j, i, car - '0');
+
+                            map[j, i] = node;
+                        }                    
                     }
                 }
             }
@@ -99,12 +126,24 @@ namespace CodingGame
             {
                 var key = listOfNodes[i];
                 var localLinks = new List<Link>();
-                var localFailed = false;
+                Console.Error.WriteLine($"Trying to link {key}.");
+                bool localFailed;
                 do
                 {
                     localFailed = false;
                     var subList = allSegments[key][allIndices[key]];
-                    foreach (var tryLink in subList)
+                    Console.Error.Write("To: ");
+                    foreach (var link in subList)
+                    {
+                        Console.Error.Write($"{link.To}");
+                        if (link.Count == 2)
+                        {
+                            Console.Error.Write($"(2)");
+                        }
+                        Console.Error.Write($",");
+                    }
+                    Console.Error.WriteLine();
+                    foreach (var tryLink in  subList)
                     {
                         if (!key.LinkCanBeEstablished(tryLink) || tryLink.CrossesAny(builtLinks))
                         {
@@ -123,6 +162,7 @@ namespace CodingGame
                                 localLinks.Add(result);
                             }
                         }
+
                         break;
                     }
 
@@ -144,6 +184,8 @@ namespace CodingGame
 
                         allIndices[key]++;
                     } while (allIndices[key] == allSegments[key].Count);
+                    Console.Error.WriteLine($"Dead End, retry from {listOfNodes[i]} (stack {stackOfLinks.Count}, links {builtLinks.Count})");
+                    i--;
                     break;
                 } while (true);
 
@@ -151,6 +193,7 @@ namespace CodingGame
                 {
                     stackOfLinks.Push(localLinks);
                     builtLinks.AddRange(localLinks);
+                    Console.Error.WriteLine($"Works (stack {stackOfLinks.Count}, links {builtLinks.Count})");
                 }
             }
 
@@ -176,6 +219,20 @@ namespace CodingGame
                     continue;
                 }
                 var combi = BuildOptions(potentialLinks, node.MissingLinks);
+                combi.Sort((firstList, secondList) =>
+                {
+                    if (firstList == secondList)
+                    {
+                        return 0;
+                    }
+
+                    if (firstList.Count < secondList.Count)
+                    {
+                        return 1;
+                    }
+
+                    return -1;
+                });
                 result.Add(node, combi);
             }
 
