@@ -19,6 +19,7 @@
       <e p="Test" t="IncludeRecursive">
         <e p="4-Very_Hard" t="Include">
           <e p="HauntedManor.cs" t="Include" />
+          <e p="ShadowsOfTheKnight.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
         <e p="Clones.cs" t="Include" />
