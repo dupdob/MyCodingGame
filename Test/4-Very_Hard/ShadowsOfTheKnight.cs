@@ -20,7 +20,7 @@ namespace CodingGame
             int X0 = int.Parse(inputs[0]);
             int Y0 = int.Parse(inputs[1]);
 
-            Console.Error.WriteLine($"{W}x{H} in {N} from {X0}:{Y0}");
+//            Console.Error.WriteLine($"{W}x{H} in {N} from {X0}:{Y0} ({W*H})");
 
             string bombDir = Console.ReadLine(); // Current distance to the bomb compared to previous distance (COLDER, WARMER, SAME or UNKNOWN)
             var topX = 0;
@@ -32,38 +32,59 @@ namespace CodingGame
             // game loop
             while (true)
             {
-                Console.Error.WriteLine($"Possible zone is: {topX}:{topY}-{endX}:{endY}, scanning {(onX ? "X" : "Y")}");
+                Console.Error.WriteLine($"Possible zone is: {topX}:{topY}-{endX}:{endY} ({(endX-topX+1)*(endY-topY+1)}).");
                 var previousX = X0;
                 var previousY = Y0;
                 var movedOnX = onX;
   
                 // optimization
-                if ((Y0 <topY || Y0 > endY) && (topX != endX) && !optimized)
+                if (topY == endY && Y0 != topY)
                 {
-                    X0 =  endX + topX - X0;
-                    optimized = true;
+                    Y0 = topY;
+                    movedOnX = false;
+                }
+                else if (topX == endX && X0 != topX)
+                {
+                    X0 = topX;
                     movedOnX = true;
+                }
+                else if (endX-topX>endY-topY)
+                {
+                    movedOnX = true;
+                    X0 =  endX + topX - X0;
+                    if (X0 == previousX)
+                    {
+                        if (X0 < endX)
+                        {
+                            X0++;
+                        }
+                        else
+                        {
+                            X0--;
+                        }
+                    }
                 }
                 else
                 {
-                    if (onX)
+                    movedOnX = false;
+                    Y0 = endY + topY - Y0;
+                    if (Y0 == previousY)
                     {
-                        X0 =  endX + topX - X0;
+                        if (Y0 < endY)
+                        {
+                            Y0++;
+                        }
+                        else
+                        {
+                            Y0--;
+                        }
                     }
-                    else
-                    {
-                        Y0 = endY + topY - Y0;
-                    }
-
-                    if (X0 == previousX && Y0 == previousY)
-                    {
-                        X0++;
-                        Y0++;
-                    }
-                    X0 = Math.Min(endX, Math.Max(topX, X0));
-                    Y0 = Math.Min(endY, Math.Max(topY, Y0));
                 }
-                
+                Console.Error.WriteLine($"scanning {(movedOnX ? "X" : "Y")}");
+
+                X0 = Math.Min(W-1, Math.Max(0, X0));
+                Y0 = Math.Min(H-1, Math.Max(0, Y0));
+
                 Console.WriteLine($"{X0} {Y0}");
                 bombDir = Console.ReadLine();
                 switch (bombDir)
@@ -71,70 +92,23 @@ namespace CodingGame
                     case "COLDER":
                         if (movedOnX)
                         {
-                            if (previousX > X0)
-                            {
-                                topX = (endX + topX) / 2;
-                            }
-                            else
-                            {
-                                endX = (endX + topX ) / 2;
-                            }
+                            Adjust(X0, previousX, ref topX, ref endX, false);
                         }
                         else
                         {
-                            if (previousY > Y0)
-                            {
-                                topY = (endY + topY) / 2;
-                            }
-                            else
-                            {
-                                endY = (endY + topY) / 2;
-                            }
+                            Adjust(Y0, previousY, ref topY, ref endY, false);
                         }
-                        break;
-                    case "WARMER":
-                        
+                        break;                    
+                    case "WARMER":          
                         if (movedOnX)
                         {
-                            if (previousX < topX || previousX > endX)
-                            {
-                                break;
-                            }
-
-                            if (topX + 1 == endX)
-                            {
-                                topX = endX = X0;
-                            }
-                            else if (previousX > X0)
-                            {
-                                endX = Math.Min(endX, (endX + topX) / 2);
-                            }
-                            else
-                            {
-                                topX = Math.Max(topX, (endX + topX) / 2);
-                            }
+                            Adjust(X0, previousX, ref topX, ref endX, true);
                         }
                         else
                         {
-                            if (previousY < topY || previousY > endY)
-                            {
-                                break;
-                            }
-
-                            if (topY + 1 == endY)
-                            {
-                                topY = endY = Y0;
-                            }
-                            if (previousY > Y0)
-                            {
-                                endY = Math.Min(endY, (endY + topY) / 2);
-                            }
-                            else
-                            {
-                                topY = Math.Max(topY, (endY + topY ) / 2);
-                            }
+                            Adjust(Y0, previousY, ref topY, ref endY, true);
                         }
-                        break;
+                        break;                    
                     case "SAME":
                         if (movedOnX)
                         {
@@ -143,47 +117,28 @@ namespace CodingGame
                         }
                         else
                         {
-                            endY = (previousY + endY ) / 2;
+                            endY = (previousY + Y0 ) / 2;
                             topY = endY;
                         }
                         break;
                 }
-
-                if (topX == endX && topY != endY)
-                {
-                    if (Y0 == endY)
-                    {
-                        endY--;
-                    }
-                    else if (Y0 == topY)
-                    {
-                        topY++;
-                    }
-                    
-                    if (X0 == endX)
-                    {
-                        onX = false;
-                    }
-                }
-                
-                if (topY == endY && topX !=endX)
-                {
-                    if (X0 == endX)
-                    {
-                        endX--;
-                    }
-                    else if (X0 == topX)
-                    {
-                        topX++;
-                    }
-                    if (Y0 == endY)
-                    {
-                        onX = true;
-                    }
-                    
-                }
                 
             }
+        }
+
+        private static void Adjust(int newCoord, int prevCoord, ref int zoneStart, ref int zoneEnd, bool warmer)
+        {
+            var mid = (newCoord + prevCoord) / 2;
+            var altMid = (newCoord + prevCoord) / 2+1;
+            if ((mid < newCoord && warmer) || (mid>newCoord && !warmer))
+            {
+                zoneStart = Math.Max(zoneStart, altMid);
+            }
+            else
+            {
+                zoneEnd = Math.Min(zoneEnd, mid);
+            }
+
         }
     }
 }
