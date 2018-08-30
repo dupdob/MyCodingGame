@@ -28,34 +28,48 @@ namespace CodingGame
             var endX = W - 1;
             var endY = H - 1;
             var onX = (topX>topY);
+            var optimized = false;
             // game loop
             while (true)
             {
                 Console.Error.WriteLine($"Possible zone is: {topX}:{topY}-{endX}:{endY}, scanning {(onX ? "X" : "Y")}");
                 var previousX = X0;
                 var previousY = Y0;
-                if (onX)
+                var movedOnX = onX;
+  
+                // optimization
+                if ((Y0 <topY || Y0 > endY) && (topX != endX) && !optimized)
                 {
                     X0 =  endX + topX - X0;
+                    optimized = true;
+                    movedOnX = true;
                 }
                 else
                 {
-                    Y0 = endY + topY - Y0;
-                }
+                    if (onX)
+                    {
+                        X0 =  endX + topX - X0;
+                    }
+                    else
+                    {
+                        Y0 = endY + topY - Y0;
+                    }
 
-                if (X0 == previousX && Y0 == previousY)
-                {
-                    X0++;
-                    Y0++;
+                    if (X0 == previousX && Y0 == previousY)
+                    {
+                        X0++;
+                        Y0++;
+                    }
+                    X0 = Math.Min(endX, Math.Max(topX, X0));
+                    Y0 = Math.Min(endY, Math.Max(topY, Y0));
                 }
-                X0 = Math.Min(endX, Math.Max(topX, X0));
-                Y0 = Math.Min(endY, Math.Max(topY, Y0));
+                
                 Console.WriteLine($"{X0} {Y0}");
                 bombDir = Console.ReadLine();
                 switch (bombDir)
                 {
                     case "COLDER":
-                        if (onX)
+                        if (movedOnX)
                         {
                             if (previousX > X0)
                             {
@@ -80,7 +94,7 @@ namespace CodingGame
                         break;
                     case "WARMER":
                         
-                        if (onX)
+                        if (movedOnX)
                         {
                             if (previousX < topX || previousX > endX)
                             {
@@ -122,7 +136,7 @@ namespace CodingGame
                         }
                         break;
                     case "SAME":
-                        if (onX)
+                        if (movedOnX)
                         {
                             endX = (previousX + X0) / 2;
                             topX = endX;
@@ -169,17 +183,6 @@ namespace CodingGame
                     
                 }
                 
-                // optimization
-                if ((X0 <topX || X0 > endX) && (topY != endY))
-                {
-                    onX = false;
-                }
-                
-                // optimization
-                if ((Y0 <topY || Y0 > endY) && (topX != endX))
-                {
-                    onX = true;
-                }
             }
         }
     }
