@@ -7,7 +7,7 @@ using System;
  **/
 namespace CodingGame
 {
-    class ShardsOfTheKnight
+    static class ShadowsOfTheKnight
     {
         static void Main(string[] args)
         {
@@ -20,28 +20,26 @@ namespace CodingGame
             int X0 = int.Parse(inputs[0]);
             int Y0 = int.Parse(inputs[1]);
 
-//            Console.Error.WriteLine($"{W}x{H} in {N} from {X0}:{Y0} ({W*H})");
 
             string bombDir = Console.ReadLine(); // Current distance to the bomb compared to previous distance (COLDER, WARMER, SAME or UNKNOWN)
             var topX = 0;
             var topY = 0;
             var endX = W - 1;
             var endY = H - 1;
-            var onX = (topX>topY);
-            var optimized = false;
             // game loop
             while (true)
             {
+                var ignoreResult = false;
                 Console.Error.WriteLine($"Possible zone is: {topX}:{topY}-{endX}:{endY} ({(endX-topX+1)*(endY-topY+1)}).");
                 var previousX = X0;
                 var previousY = Y0;
-                var movedOnX = onX;
+                var movedOnX = false;
   
                 // optimization
                 if (topY == endY && Y0 != topY)
                 {
                     Y0 = topY;
-                    movedOnX = false;
+                    X0 = topX;
                 }
                 else if (topX == endX && X0 != topX)
                 {
@@ -52,41 +50,58 @@ namespace CodingGame
                 {
                     movedOnX = true;
                     X0 =  endX + topX - X0;
-                    if (X0 == previousX)
-                    {
-                        if (X0 < endX)
-                        {
-                            X0++;
-                        }
-                        else
-                        {
-                            X0--;
-                        }
-                    }
+
                 }
                 else
                 {
-                    movedOnX = false;
                     Y0 = endY + topY - Y0;
-                    if (Y0 == previousY)
-                    {
-                        if (Y0 < endY)
-                        {
-                            Y0++;
-                        }
-                        else
-                        {
-                            Y0--;
-                        }
-                    }
                 }
-                Console.Error.WriteLine($"scanning {(movedOnX ? "X" : "Y")}");
 
+
+                
                 X0 = Math.Min(W-1, Math.Max(0, X0));
                 Y0 = Math.Min(H-1, Math.Max(0, Y0));
+                Console.Error.WriteLine($"scanning {(movedOnX ? "X" : "Y")}");
 
+                if (movedOnX && endX-topX>2)
+                {
+                    var refX = (previousX + X0) / 2;
+                    if (refX <= topX || refX>=endX)
+                    {
+                        // we will not learn anything
+                        ignoreResult = true;
+                    }
+                }
+                else if (!movedOnX && endY - topY>2)
+                {
+                    var refY = (previousY + Y0) / 2;
+                    if (refY <= topY || refY>=endY)
+                    {
+                        // we will not learn anything
+                        ignoreResult = true;
+                    }
+                    
+                }
+
+                if (ignoreResult)
+                {
+                    X0 = topX+(endX-topX)*2/3;
+                    Y0 = topY+(endY - topY)*2/3;
+                }
+                X0 = Math.Min(W-1, Math.Max(0, X0));
+                Y0 = Math.Min(H-1, Math.Max(0, Y0));
+                if (X0 == previousX && Y0 == previousY)
+                {
+                    X0 = endX;
+                    Y0 = endY;
+                    ignoreResult = true;
+                }
                 Console.WriteLine($"{X0} {Y0}");
                 bombDir = Console.ReadLine();
+                if (ignoreResult)
+                {
+                    continue;
+                }
                 switch (bombDir)
                 {
                     case "COLDER":
@@ -106,16 +121,19 @@ namespace CodingGame
                         }
                         else
                         {
-                            Adjust(Y0, previousY, ref topY, ref endY, true);
+                              Adjust(Y0, previousY, ref topY, ref endY, true);
                         }
                         break;                    
                     case "SAME":
                         if (movedOnX)
                         {
-                            endX = (previousX + X0) / 2;
-                            topX = endX;
+                            if (X0 != previousX)
+                            {
+                                endX = (previousX + X0) / 2;
+                                topX = endX;
+                            }
                         }
-                        else
+                        else if (Y0 != previousY)
                         {
                             endY = (previousY + Y0 ) / 2;
                             topY = endY;
@@ -128,9 +146,18 @@ namespace CodingGame
 
         private static void Adjust(int newCoord, int prevCoord, ref int zoneStart, ref int zoneEnd, bool warmer)
         {
+            if (zoneStart == zoneEnd)
+            {
+                return;
+            }
             var mid = (newCoord + prevCoord) / 2;
             var altMid = (newCoord + prevCoord) / 2+1;
-            if ((mid < newCoord && warmer) || (mid>newCoord && !warmer))
+            if ((newCoord + prevCoord) % 2 == 0)
+            {
+                mid--;
+                altMid = mid + 2;
+            }
+            if ((mid <= newCoord && warmer) || (mid>=newCoord && !warmer))
             {
                 zoneStart = Math.Max(zoneStart, altMid);
             }
