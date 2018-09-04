@@ -9,7 +9,7 @@ namespace CodingGame
 {
     static class ShadowsOfTheKnight
     {
-        static void Main(string[] args)
+        static void MainShadows(string[] args)
         {
             string[] inputs;
             inputs = Console.ReadLine().Split(' ');

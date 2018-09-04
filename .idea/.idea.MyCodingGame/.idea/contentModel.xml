@@ -19,6 +19,7 @@
       <e p="Test" t="IncludeRecursive">
         <e p="4-Very_Hard" t="Include">
           <e p="HauntedManor.cs" t="Include" />
+          <e p="LaResistance.cs" t="Include" />
           <e p="ShadowsOfTheKnight.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
@@ -70,6 +71,7 @@
           <e p="BulkEmailGenerator.cs" t="Include" />
           <e p="CountingSquares.cs" t="Include" />
           <e p="EmptyClass.cs" t="Include" />
+          <e p="GhostLegs.cs" t="Include" />
           <e p="Gravity_Tumbler.cs" t="Include" />
           <e p="HiddenWord.cs" t="Include" />
           <e p="HowTimeFlies.cs" t="Include" />
