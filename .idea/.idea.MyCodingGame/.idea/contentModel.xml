@@ -78,6 +78,7 @@
           <e p="River.cs" t="Include" />
           <e p="RiverII.cs" t="Include" />
           <e p="TravelingSalesman.cs" t="Include" />
+          <e p="XMLMDF.cs" t="Include" />
         </e>
         <e p="Leagues" t="Include">
           <e p="CodersStrikeBack.cs" t="Include" />
