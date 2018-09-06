@@ -27,7 +27,7 @@ class LaResistance
     static void MainResistance(string[] args)
     {
         var temp = Console.In;
-        Console.SetIn(new StringReader(hardValue));
+//        Console.SetIn(new StringReader(hardValue));
 
         var morse = Console.ReadLine();
         var N = int.Parse(Console.ReadLine());
@@ -51,36 +51,30 @@ class LaResistance
         {
             cache[value] = 1;
         }
-        Console.WriteLine(Scan(morse, words));
+        Console.WriteLine(Scan(morse));
+        Console.SetIn(temp);
     }
 
-    private static long Scan(string morse, IEnumerable<string> words)
+    private static long Scan(string morse)
     {
-        if (string.IsNullOrEmpty(morse))
+        if (cache.ContainsKey(morse))
         {
-            return 1;
+            return cache[morse];
         }
 
         if (morse.Length < minlen)
         {
             return 0;
         }
-        if (!cache.ContainsKey(morse))
-        {
-            var result = 0L;
-            var known = cache.Keys.ToArray();
-            foreach (var word in known)
-            {
-                if (morse.StartsWith(word))
-                {
-                    result += Scan(morse.Substring(word.Length, morse.Length - word.Length), words)*cache[word];
-                }
-            }
 
-            cache[morse] = result;
+        var result = 0L;
+        for (var i = minlen; i < morse.Length; i++)
+        {
+            result += Scan(morse.Substring(0, i)) * Scan(morse.Substring(i));
         }
 
-        return cache[morse];
+        cache[morse] = result;
+        return result;
     }
 
 

@@ -68,6 +68,7 @@
     <Compile Include="Difficile\Indiana Hard.cs" />
     <Compile Include="Difficile\Queen.cs" />
     <Compile Include="Difficile\ThereIsNoSpoon2.cs" />
+    <Compile Include="Facile\AStar.cs" />
     <Compile Include="Facile\BankRobbers.cs" />
     <Compile Include="Facile\BracketsEnhancedEasy.cs" />
     <Compile Include="Facile\BulkEmailGenerator.cs" />

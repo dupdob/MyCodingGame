@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="/7713d25c" t="IncludeRecursive" />
-    <e p="/app" t="IncludeRecursive" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="MyCodingGame.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />
@@ -66,6 +64,7 @@
           <e p="ThereIsNoSpoon2.cs" t="Include" />
         </e>
         <e p="Facile" t="Include">
+          <e p="AStar.cs" t="Include" />
           <e p="BankRobbers.cs" t="Include" />
           <e p="BracketsEnhancedEasy.cs" t="Include" />
           <e p="BulkEmailGenerator.cs" t="Include" />
