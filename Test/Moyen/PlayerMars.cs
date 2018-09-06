@@ -12,8 +12,6 @@ using System.Collections.Generic;
 class PlayerMarsLander
 {
 
-	static double g = 3.7111;
-
 	class Surface
 	{
 		class Point

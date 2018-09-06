@@ -75,6 +75,7 @@
           <e p="HiddenWord.cs" t="Include" />
           <e p="HowTimeFlies.cs" t="Include" />
           <e p="OrderOfSuccession.cs" t="Include" />
+          <e p="QuadriLateral.cs" t="Include" />
           <e p="River.cs" t="Include" />
           <e p="RiverII.cs" t="Include" />
           <e p="TravelingSalesman.cs" t="Include" />

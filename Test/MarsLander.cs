@@ -7,8 +7,6 @@
 class Player
 {
 
-	static double g = 3.7111;
-
 	static void MainLander(string[] args)
 	{
 		string[] inputs;

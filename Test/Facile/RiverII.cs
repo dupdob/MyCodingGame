@@ -9,7 +9,6 @@ class RiverII
     static void MainRiverII(string[] args)
     {
         long r1 = long.Parse(Console.ReadLine());
-        int foundPrecedent = 1;
 
         for (var i = r1 - 1;i > 0; i--)
         {

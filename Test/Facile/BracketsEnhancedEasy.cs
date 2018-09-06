@@ -18,11 +18,6 @@ namespace CodingGame.Facile
     internal class BracketsEnhancedEasy
     {
         private static TimeSpan start;
-        class Bracket
-        {
-            public char Marker;
-            public int Count;
-        }
         static void MainBrackets(string[] args)
         {
             BracketsEnhancedEasy.start = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMilliseconds(200));

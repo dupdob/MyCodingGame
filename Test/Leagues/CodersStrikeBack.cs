@@ -53,7 +53,6 @@ class CodersStrikeBacks
         var boosted = false;
         var lastPosX = 0;
         var lastPosY = 0;
-        var firstPoint = true;
         var points = new List<Coord>();
         var identifySegments = false;
         Coord furthestPoint = null;
@@ -112,7 +111,6 @@ class CodersStrikeBacks
                 thrust = 0;
             }
 
-            firstPoint = false;
             lastPosX = x;
             lastPosY = y;
             Console.WriteLine("{0} {1} {2}", nextCheckpointX, nextCheckpointY, boost ? "BOOST" : thrust.ToString());

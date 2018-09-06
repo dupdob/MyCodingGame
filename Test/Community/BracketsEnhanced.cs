@@ -16,11 +16,6 @@ You can flip a bracketing element in-place by replacing it with its counterpart,
 class BracketsEnhanced
 {
     private static TimeSpan start;
-    class Bracket
-    {
-        public char Marker;
-        public int Count;
-    }
     static void MainBrackets(string[] args)
     {
         BracketsEnhanced.start = DateTime.Now.TimeOfDay.Add(TimeSpan.FromMilliseconds(200));
