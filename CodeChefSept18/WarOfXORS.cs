@@ -35,7 +35,7 @@ namespace CodeChefSept18
                     reUse[key]+=1;
                 }
             }
-            long counter = integers.LongLength*(integers.LongLength-1)/2;
+            var counter = integers.LongLength*(integers.LongLength-1)/2;
             foreach (var reUseValue in reUse.Values)
             {
                 if (reUseValue > 1)
