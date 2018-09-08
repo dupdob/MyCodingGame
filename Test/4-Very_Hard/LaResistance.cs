@@ -24,7 +24,7 @@ class LaResistance
     static readonly IDictionary<string, long> cache = new Dictionary<string, long>();
     private static int minlen = int.MaxValue;
     
-    static void MainResistance(string[] args)
+    static void Main(string[] args)
     {
         var temp = Console.In;
         Console.SetIn(new StringReader(hardValue));
