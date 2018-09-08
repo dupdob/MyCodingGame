@@ -27,13 +27,13 @@ class LaResistance
     static void MainResistance(string[] args)
     {
         var temp = Console.In;
-//        Console.SetIn(new StringReader(hardValue));
+        Console.SetIn(new StringReader(hardValue));
 
         var morse = Console.ReadLine();
         var N = int.Parse(Console.ReadLine());
         var words = new HashSet<string>();
         
-        for (int i = 0; i < N; i++)
+        for (var i = 0; i < N; i++)
         {
             var builder = new StringBuilder();
             var word = Console.ReadLine();
@@ -70,7 +70,11 @@ class LaResistance
         var result = 0L;
         for (var i = minlen; i < morse.Length; i++)
         {
-            result += Scan(morse.Substring(0, i)) * Scan(morse.Substring(i));
+            var left = Scan(morse.Substring(0, i));
+            if (left > 0)
+            {
+                result += left * Scan(morse.Substring(i));
+            }
         }
 
         cache[morse] = result;

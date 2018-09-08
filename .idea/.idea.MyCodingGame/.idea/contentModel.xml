@@ -2,6 +2,22 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p="CodeChefSept18" t="IncludeRecursive">
+        <e p="AndSquareSub.cs" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="ChefAdventure.cs" t="Include" />
+        <e p="CodeChefSept18.csproj" t="IncludeRecursive" />
+        <e p="ConditionZero.cs" t="Include" />
+        <e p="Magician.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.0" t="Include">
+              <e p="CodeChefSept18.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="WarOfXORS.cs" t="Include" />
+      </e>
       <e p="MyCodingGame.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />
       <e p="PlatinumRift2" t="IncludeRecursive">

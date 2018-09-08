@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatinumRift2", "PlatinumRi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodingGamePuzzles", "Test\CodingGamePuzzles.csproj", "{6DDB028A-2A1D-4CFC-A2D2-E874410B6BF5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeChefSept18", "CodeChefSept18\CodeChefSept18.csproj", "{B3D56345-2A85-4C23-ADEF-6F5420F8BC99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -21,6 +23,10 @@ Global
 		{6DDB028A-2A1D-4CFC-A2D2-E874410B6BF5}.Debug|x86.Build.0 = Debug|x86
 		{6DDB028A-2A1D-4CFC-A2D2-E874410B6BF5}.Release|x86.ActiveCfg = Release|x86
 		{6DDB028A-2A1D-4CFC-A2D2-E874410B6BF5}.Release|x86.Build.0 = Release|x86
+		{B3D56345-2A85-4C23-ADEF-6F5420F8BC99}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B3D56345-2A85-4C23-ADEF-6F5420F8BC99}.Debug|x86.Build.0 = Debug|Any CPU
+		{B3D56345-2A85-4C23-ADEF-6F5420F8BC99}.Release|x86.ActiveCfg = Release|Any CPU
+		{B3D56345-2A85-4C23-ADEF-6F5420F8BC99}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
