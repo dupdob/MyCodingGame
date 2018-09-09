@@ -4,6 +4,7 @@
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="CodeChefSept18" t="IncludeRecursive">
         <e p="AndSquareSub.cs" t="Include" />
+        <e p="BadShuffle.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="ChefAdventure.cs" t="Include" />
         <e p="CodeChefSept18.csproj" t="IncludeRecursive" />

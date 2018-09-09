@@ -5,7 +5,7 @@ namespace CodeChefSept18
 {
     public class ConditionZero
     {
-        static void Main(string[] args)
+        static void MainZero(string[] args)
         {
             var parameters = Console.ReadLine().Split(' ').Select(int.Parse).ToList();
             var N = parameters[0];
