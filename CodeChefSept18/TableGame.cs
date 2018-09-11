@@ -6,48 +6,32 @@ namespace CodeChefSept18
 {
     public class TableGame
     {
-        static ushort[][] matrix;
+        static bool[,] matrix;
         private static int lastX;
         private static int lastY;
-        private static string left;
-        private static ushort[] transformed;
-        private static ushort[] altTransformed;
-        
         
         static void Main(string[] args)
         {
-            InitTransformed();
             var testCases = int.Parse(Console.ReadLine());
             for (var i = 0; i < testCases; i++)
             {
                 var top = Console.ReadLine();
-                left = "0"+Console.ReadLine();
+                var left = Console.ReadLine();
                 lastX = 0;
                 lastY = 0;
-                var width = (top.Length + 15) >> 4;
-                var padding = 16-(top.Length % 16);
-                matrix = new ushort[left.Length][];
- 
-                matrix[0] = new ushort[width];
-                ushort store = 0;
+
+                matrix = new bool[left.Length + 1, top.Length + 1];
+                // fill first line and col
                 for (var j = 0; j < top.Length; j++)
                 {
-                    store <<= 1;
-                    if (top[j] == '1')
-                    {
-                        store++;
-                    }
-
-                    if (j % 16 == 15)
-                    {
-                        matrix[0][j >> 4] = store;
-                        store = 0;
-                    }
+                    matrix[0, j + 1] = top[j] == '1';
                 }
-                matrix[0][width - 1] = (ushort) (store<<padding);
-
+                for (var j = 0; j < left.Length; j++)
+                {
+                    matrix[j + 1, 0] = left[j] == '1';
+                }
               
-                // fill first line and col
+//                ComputeBorders();
                 var q = int.Parse(Console.ReadLine());
                 var text = new StringBuilder();
                 for (var j = 0; j < q; j++)
@@ -61,76 +45,46 @@ namespace CodeChefSept18
             
         }
 
-        private static void InitTransformed()
+        private static void ComputeBorders()
         {
-            transformed = new ushort[ushort.MaxValue+1];
-            altTransformed = new ushort[ushort.MaxValue+1];
-            for (int i = 0; i <= ushort.MaxValue; i++)
+            for (var y = 1; y < 3; y++)
             {
-                ushort trans = 0;
-                ushort altTrans = 0;
-                var previous = false;
-                var altPrevious = true;
-                for (ushort bit = 0x8000; bit > 0; bit >>= 1)
+                for (var x = 1; x < matrix.GetLength(1); x++)
                 {
-                    if (!previous || (i & bit) == 0)
-                    {
-                        trans += bit;
-                        previous = true;
-                    }
-                    else
-                    {
-                        previous = false;
-                    }
-                    if (!altPrevious || (i & bit) == 0)
-                    {
-                        altTrans += bit;
-                        altPrevious = true;
-                    }
-                    else
-                    {
-                        altPrevious = false;
-                    }    
+                    matrix[y, x] = !matrix[y, x - 1] || !matrix[y-1, x];
                 }
-
-                altTransformed[i] = altTrans;
-                transformed[i] = trans;
             }
-            
+            for (var y = 3; y < matrix.GetLength(0); y++)
+            {
+                for (var x = 1; x < 3; x++)
+                {
+                    matrix[y, x] = !matrix[y, x - 1] || !matrix[y-1, x];
+                }
+            }
         }
 
         private static bool IsAWin(int Y, int X)
         {
             if (X > lastX || Y > lastY)
             {
-                if (Y > lastY)
+                for (var j = lastX+1; j <= X; j++)
                 {
-                    for (var y = lastY+1; y <= Y; y++)
+                    for (var k = 1; k <= lastY; k++)
                     {
-                        var previous = left[y]=='1';
-                        var newLine = new ushort[matrix[0].Length];
-                        for (var i = 0; i < newLine.Length; i++)
-                        {
-                            var word = matrix[y - 1][i];
-                            word = previous ? altTransformed[word] : transformed[word];
-
-                            newLine[i] = word;
-                            previous = (word & 1) == 1;
-                        }
-
-                        matrix[y] = newLine;
+                        matrix[k, j] = !matrix[k, j - 1] || !matrix[k-1, j];
                     }
                 }
-                
                 lastX = Math.Max(lastX, X);
+                for (var k = lastY+1; k <= Y; k++)
+                {
+                    for (var j = 1; j <= lastX; j++)
+                    {
+                        matrix[k, j] = !matrix[k, j - 1] || !matrix[k-1, j];
+                    }
+                }
                 lastY = Math.Max(lastY, Y);
             }
-
-            X--;
-            var index = X >> 4;
-            var mask = 1 << (15 - (X % 16));
-            return (matrix[Y][index] & mask) != 0;
-
+            return matrix[Y, X];
         }
     }
 }    
