@@ -6,32 +6,38 @@ namespace CodeChefSept18
 {
     public class TableGame
     {
-        static bool[,] matrix;
-        private static int lastX;
-        private static int lastY;
+        static bool[,] topMatrix;
+        static bool[,] leftMatrix;
         
-        static void Main(string[] args)
+        static void MainTableGame(string[] args)
         {
             var testCases = int.Parse(Console.ReadLine());
             for (var i = 0; i < testCases; i++)
             {
                 var top = Console.ReadLine();
                 var left = Console.ReadLine();
-                lastX = 0;
-                lastY = 0;
 
-                matrix = new bool[left.Length + 1, top.Length + 1];
+                topMatrix = new bool[3, top.Length + 1];
+                leftMatrix = new bool[left.Length + 1, 3];
                 // fill first line and col
                 for (var j = 0; j < top.Length; j++)
                 {
-                    matrix[0, j + 1] = top[j] == '1';
+                    topMatrix[0, j + 1] = top[j] == '1';
+                    if (j < 2)
+                    {
+                        leftMatrix[0, j + 1] = topMatrix[0, j + 1];
+                    }
                 }
                 for (var j = 0; j < left.Length; j++)
                 {
-                    matrix[j + 1, 0] = left[j] == '1';
+                    leftMatrix[j + 1, 0] = left[j] == '1';
+                    if (j < 2)
+                    {
+                        topMatrix[j + 1, 0] = leftMatrix[j + 1, 0];
+                    }
                 }
               
-//                ComputeBorders();
+                ComputeBorders();
                 var q = int.Parse(Console.ReadLine());
                 var text = new StringBuilder();
                 for (var j = 0; j < q; j++)
@@ -49,42 +55,40 @@ namespace CodeChefSept18
         {
             for (var y = 1; y < 3; y++)
             {
-                for (var x = 1; x < matrix.GetLength(1); x++)
+                for (var x = 1; x < topMatrix.GetLength(1); x++)
                 {
-                    matrix[y, x] = !matrix[y, x - 1] || !matrix[y-1, x];
+                    topMatrix[y, x] = !topMatrix[y, x - 1] || !topMatrix[y-1, x];
                 }
             }
-            for (var y = 3; y < matrix.GetLength(0); y++)
+            
+            for (var y = 1; y < leftMatrix.GetLength(0); y++)
             {
                 for (var x = 1; x < 3; x++)
                 {
-                    matrix[y, x] = !matrix[y, x - 1] || !matrix[y-1, x];
+                    leftMatrix[y, x] = !leftMatrix[y, x - 1] || !leftMatrix[y-1, x];
                 }
             }
         }
 
         private static bool IsAWin(int Y, int X)
         {
-            if (X > lastX || Y > lastY)
+            if (Y < 3)
             {
-                for (var j = lastX+1; j <= X; j++)
-                {
-                    for (var k = 1; k <= lastY; k++)
-                    {
-                        matrix[k, j] = !matrix[k, j - 1] || !matrix[k-1, j];
-                    }
-                }
-                lastX = Math.Max(lastX, X);
-                for (var k = lastY+1; k <= Y; k++)
-                {
-                    for (var j = 1; j <= lastX; j++)
-                    {
-                        matrix[k, j] = !matrix[k, j - 1] || !matrix[k-1, j];
-                    }
-                }
-                lastY = Math.Max(lastY, Y);
+                return topMatrix[Y, X];
             }
-            return matrix[Y, X];
+
+            if (X < 3)
+            {
+                return leftMatrix[Y, X];
+            }
+            if (X > Y)
+            {
+                return IsAWin(2, X - Y + 2);
+            }
+            else
+            {
+                return IsAWin(Y - X + 2, 2);
+            }
         }
     }
 }    
