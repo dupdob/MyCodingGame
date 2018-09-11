@@ -136,7 +136,7 @@ namespace CodeChefSept18
         private static int FillMap(IReadOnlyList<int[]> map, int[,] answer, IScanner cursor, int k, long totalPop)
         {
             var zonePops = new long[k];
-            var totalError = 0L;
+ //           var totalError = 0L;
             var zoneId = 0;
             var targetPop = totalPop / k;
             var cumulatedPopulation = 0L;

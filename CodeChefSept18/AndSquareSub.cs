@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CodeChefSept18
@@ -13,6 +14,11 @@ namespace CodeChefSept18
         static void MainSquare(string[] args)
         {
             var testCases = int.Parse(Console.ReadLine());
+            var squares = new HashSet<int>();
+            for (int i = 0; i < 32768; i++)
+            {
+                squares.Add(i * i);
+            }
             for (var i = 0; i < testCases; i++)
             {
                 var parameters = Console.ReadLine().Split(' ').Select(int.Parse).ToList();
@@ -66,8 +72,7 @@ namespace CodeChefSept18
                                 cacheDepths[l] = r;
                                 break;
                             }
-                            var sqrt = Math.Sqrt(mask);
-                            if (sqrt == Math.Floor(sqrt))
+                            if (squares.Contains(mask))
                             {
                                 localCounter++;
                             }

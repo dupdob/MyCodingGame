@@ -11,12 +11,13 @@
         <e p="ConditionZero.cs" t="Include" />
         <e p="Magician.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
-          <e p="Release" t="Include">
+          <e p="Debug" t="Include">
             <e p="netcoreapp2.0" t="Include">
               <e p="CodeChefSept18.AssemblyInfo.cs" t="Include" />
             </e>
           </e>
         </e>
+        <e p="TableGame.cs" t="Include" />
         <e p="WarOfXORS.cs" t="Include" />
       </e>
       <e p="MyCodingGame.sln" t="IncludeFlat" />
