@@ -9,7 +9,7 @@ namespace CodeChefSept18
 {
     public class ConditionZero
     {
-        static void MainZero(string[] args)
+        static void MainZero()
         {
             var totalPop = 0L;
 #if TEST
@@ -111,7 +111,7 @@ namespace CodeChefSept18
             
         }
 
-        private static int ComputeScore(long[] zonePops)
+        private static long ComputeScore(long[] zonePops)
         {
             var minPop = long.MaxValue;
             var maxPop = 0L;
@@ -130,13 +130,12 @@ namespace CodeChefSept18
             }
 
             var score = maxPop - minPop;
-            return (int)score;
+            return score;
         }
 
-        private static int FillMap(IReadOnlyList<int[]> map, int[,] answer, IScanner cursor, int k, long totalPop)
+        private static long FillMap(IReadOnlyList<int[]> map, int[,] answer, IScanner cursor, int k, long totalPop)
         {
             var zonePops = new long[k];
- //           var totalError = 0L;
             var zoneId = 0;
             var targetPop = totalPop / k;
             var cumulatedPopulation = 0L;
@@ -176,7 +175,7 @@ namespace CodeChefSept18
             for (var i = 0; i < N; i++)
             {
                 result[i] = new int[M];
-                for (int j = 0; j < M; j++)
+                for (var j = 0; j < M; j++)
                 {
                     result[i][j] = rdn.Next(10000000);
                 }

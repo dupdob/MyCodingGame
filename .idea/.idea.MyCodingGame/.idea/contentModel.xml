@@ -17,6 +17,7 @@
             </e>
           </e>
         </e>
+        <e p="Photos.cs" t="Include" />
         <e p="TableGame.cs" t="Include" />
         <e p="WarOfXORS.cs" t="Include" />
       </e>

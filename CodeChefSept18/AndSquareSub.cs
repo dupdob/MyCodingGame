@@ -15,10 +15,11 @@ namespace CodeChefSept18
         {
             var testCases = int.Parse(Console.ReadLine());
             var squares = new HashSet<int>();
-            for (int i = 0; i < 32768; i++)
+            for (var i = 0; i < 32768; i++)
             {
                 squares.Add(i * i);
             }
+
             for (var i = 0; i < testCases; i++)
             {
                 var parameters = Console.ReadLine().Split(' ').Select(int.Parse).ToList();
