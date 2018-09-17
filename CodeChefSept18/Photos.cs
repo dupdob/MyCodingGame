@@ -8,7 +8,7 @@ namespace CodeChefSept18
 {
     public static class Photos
     {
-        static void Main()
+        static void MainPhotos()
         {
             var testCount = int.Parse(Console.ReadLine());
             for (var testId = 0; testId < testCount; testId++)
