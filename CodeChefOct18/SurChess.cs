@@ -1,4 +1,4 @@
-#define TEST
+//#define TEST
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,47 +36,54 @@ namespace CodeChefOct18
                 board[i] = Console.ReadLine();
             }
 #endif
-            var syntheticBoard = new bool[N, M];
-            for (int i = 0; i < N; i++)
+            var syntheticBoard = new int[N, M];
+            for (var i = 0; i < N; i++)
             {
                 for (var j = 0; j < M; j++)
                 {
                     var isOn = board[i][j] == '1';
-                    syntheticBoard[i, j] = (isOn == ((i + j) %2 == 1));
+                    syntheticBoard[i, j] = (isOn == ((i + j) %2 == 1)) ? 0 : 1;
                 }
             }
 
             var minErrors = new Dictionary<int, int>(Math.Min(M, N));
-            for (var size = Math.Min(M, N); size > 1; size--)
+            for (var y = 0; y < N; y++)
             {
-                var minSize = int.MaxValue;
-                for (var y = 0; y <= N - size; y++)
+                for (var x = 0; x < M; x++)
                 {
-                    for (var x = 0; x <= M - size; x++)
+                    var cellInError = 0;
+                    var maxSize = Math.Min(N - y, M - x);
+                    for(var size = 1; size <= maxSize; size++)
                     {
-                        var cellInError = 0;
-                        for (var j = y; j < y + size; j++)
+                        for (var j = 0; j < size; j++)
                         {
-                            for (var i = x; i < x + size; i++)
-                            {
-                                if (syntheticBoard[j, i])
-                                {
-                                    cellInError++;
-                                }
-                            }
+
+                                cellInError+=syntheticBoard[y+j, x+size-1];
                         }
 
-                        if (cellInError > size * size / 2)
+                        for (var i = 0; i < size -1; i++)
                         {
-                            cellInError = size * size - cellInError;
+                                cellInError+=syntheticBoard[y + size - 1, x + i];
                         }
 
-                        minSize = Math.Min(minSize, cellInError);
-                    }
+                        var error = cellInError;
+                        if (error > size * size / 2)
+                        {
+                            error = size * size - error;
+                        }
+
+                        if (!minErrors.ContainsKey(size))
+                        {
+                            minErrors[size] = error;
+                        }
+                        else
+                        {
+                            minErrors[size] = Math.Min(minErrors[size], error);
+                        }
+                     }                
                 }
-
-                minErrors[size] = minSize;
             }
+
 #if TEST
             Console.WriteLine($"Elapsed: {Environment.TickCount - start} ms.");
 #endif
