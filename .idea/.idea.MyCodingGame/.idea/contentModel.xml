@@ -17,6 +17,7 @@
             </e>
           </e>
         </e>
+        <e p="SurChess.cs" t="Include" />
       </e>
       <e p="CodeChefSept18" t="IncludeRecursive">
         <e p="AndSquareSub.cs" t="Include" />

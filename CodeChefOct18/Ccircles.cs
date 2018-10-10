@@ -1,3 +1,4 @@
+//#define TEST
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +15,9 @@ namespace CodeChefOct18
             private int radius;
             private readonly int _id;
 
-            public int X => x;
+            public long X => x;
 
-            public int Y => y;
+            public long Y => y;
 
             public int Radius => radius;
 
@@ -32,14 +33,16 @@ namespace CodeChefOct18
 
         }
 
-        private class CirclePair: IComparable
+        private class CirclePair
         {
             private readonly long minDist;
             private readonly long maxDist;
             private readonly Circle a;
             private readonly Circle b;
 
-            public long MaxDist => maxDist;
+            public int MaxDist => (int) maxDist;
+
+            public int MinDist => (int) minDist;
 
             public CirclePair(Circle a, Circle b)
             {
@@ -50,13 +53,13 @@ namespace CodeChefOct18
                 var roundedDownDist = (long)Math.Floor(dist);
                 maxDist = roundedDownDist + a.Radius + b.Radius;
 
-                if (a.Radius + dist < b.Radius)
+                if (a.Radius + dist <= b.Radius)
                 {
-                    minDist = b.Radius - roundedUpDist - a.Radius;
+                    minDist = b.Radius - roundedDownDist - a.Radius;
                 }
-                else if (b.Radius + dist < a.Radius)
+                else if (b.Radius + dist <= a.Radius)
                 {
-                    minDist = a.Radius - roundedUpDist - b.Radius;
+                    minDist = a.Radius - roundedDownDist - b.Radius;
                     
                 }
                 else
@@ -64,63 +67,22 @@ namespace CodeChefOct18
                     minDist = Math.Max(0, roundedUpDist - a.Radius - b.Radius);
                 }
             }
-
-            public bool IsPossible(int dist)
-            {
-                return dist >= minDist && dist <= maxDist;
-            }
-
-            public int CompareTo(object obj)
-            {
-                var other = obj as CirclePair;
-                if (other == null)
-                    return 1;
-                if (maxDist > other.maxDist)
-                {
-                    return 1;
-                }
-
-                if (maxDist < other.maxDist)
-                {
-                    return -1;
-                }
-
-                if (minDist > other.minDist)
-                {
-                    return 1;
-                }
-
-                if (minDist < other.minDist)
-                {
-                    return -1;
-                }
-
-                if (a.Id > other.a.Id)
-                {
-                    return 1;
-                }
-                
-                if (a.Id < other.a.Id)
-                {
-                    return -1;
-                }
-
-                if (b.Id > other.b.Id)
-                {
-                    return 1;
-                }
-
-                if (b.Id < other.b.Id)
-                {
-                    return -1;
-                }
-
-                return b.Id > other.b.Id ? 1 : 0;
-            }
         }
         
-        static void Main(string[] args)
+        static void MainCircles(string[] args)
         {
+#if TEST
+            var N = 1000;
+            var rnd = new Random();
+            var coord = 400000;
+            var circles = new List<Circle>(N);
+            for (var i = 0; i < N; i++)
+            {
+                circles.Add(new Circle(rnd.Next(coord) - coord/2, rnd.Next(coord) - coord/2, rnd.Next(coord*2), i));
+            }
+
+            var Q = 100;
+#else
             var scope = Console.ReadLine().Split(' ').Select(int.Parse).ToArray();
             var N = scope[0];
             var Q = scope[1];
@@ -130,35 +92,54 @@ namespace CodeChefOct18
                 var pars = Console.ReadLine().Split(' ').Select(int.Parse).ToArray();
                 circles.Add(new Circle(pars[0], pars[1], pars[2], i));
             }
-            
-            var pairs = new List<CirclePair>(N*(N-1)/2);
+#endif    
+            var mileStones = new SortedDictionary<int,int>();
             for (var i = 0; i < circles.Count-1; i++)
             {
                 for (var j = i+1; j < circles.Count; j++)
                 {
                     var pair = new CirclePair(circles[i], circles[j]);
-                    pairs.Add(pair);
+                    var beginOfZone = pair.MinDist;
+                    if (!mileStones.ContainsKey(beginOfZone))
+                    {
+                        mileStones[beginOfZone] = 1;
+                    }
+                    else
+                    {
+                        mileStones[beginOfZone] ++;
+                    }
+
+                    var endOfZone = pair.MaxDist+1;
+                    if (!mileStones.ContainsKey(endOfZone))
+                    {
+                        mileStones[endOfZone] = -1;
+                    }
+                    else
+                    {
+                        mileStones[endOfZone] --;
+                    }                
                 }
             }
-
-            pairs.Sort();
-            
+            // build
+            var accumulator = 0;
+            var indices = new List<int>(mileStones.Count);
+            var values = new List<int>(mileStones.Count);
+            foreach (var pair in mileStones)
+            {
+                accumulator += pair.Value;
+                indices.Add(pair.Key);
+                values.Add(accumulator);
+            }
+ 
             var result = new StringBuilder(Q * 10);
             for (var i = 0; i < Q; i++)
             {
                 var len = int.Parse(Console.ReadLine());
-
-                var index = FindScan(len, pairs);
+                var index = FindScan(len, indices);
                 var res = 0;
                 if (index >= 0)
                 {
-                    for (var j = index; j < pairs.Count; j++)
-                    {
-                        if (pairs[j].IsPossible(len))
-                        {
-                            res++;
-                        }
-                    }
+                    res = values[index];
                 }
 
                 result.AppendLine(res.ToString());   
@@ -166,37 +147,38 @@ namespace CodeChefOct18
             Console.Write(result);
         }
 
-        private static int FindScan(int len, IReadOnlyList<CirclePair> pairs)
+        private static int FindScan(int len, IReadOnlyList<int> counts)
         {
-            var end = pairs.Count - 1;
+            var end = counts.Count - 1;
 
-            if (pairs[end].MaxDist < len)
+            if (len > counts[end] || len <counts[0])
             {
                 return -1;
             }
 
-            return subscan(len, pairs, 0, end);
+            return subscan(len, counts, 0, end);
         }
 
-        private static int subscan(int len, IReadOnlyList<CirclePair> pairs, int begin, int end)
+        private static int subscan(int len, IReadOnlyList<int> pairs, int begin, int end)
         {
-            var mid = (begin + end) / 2;
+            while (true)
+            {
+                var mid = (begin + end) / 2;
 
-            if (end - begin < 2)
-            {
-                return begin;
-            }
-            
-            if (pairs[mid].MaxDist < len)
-            {
-                begin = mid + 1;
-            }
-            else
-            {
-                end = mid;
-            }
+                if (end - begin < 2)
+                {
+                    return pairs[end] > len ? begin : end;
+                }
 
-            return subscan(len, pairs, begin, end);
+                if (pairs[mid] < len)
+                {
+                    begin = mid;
+                }
+                else
+                {
+                    end = mid;
+                }
+            }
         }
     }
 }
