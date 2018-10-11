@@ -3,6 +3,7 @@
   <component name="ContentModelStore">
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="CodeChefOct18" t="IncludeRecursive">
+        <e p="BBricks.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="ByteToBit.cs" t="Include" />
         <e p="Ccircles.cs" t="Include" />

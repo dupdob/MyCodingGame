@@ -8,7 +8,7 @@ namespace CodeChefOct18
 {
     public class SurChess
     {
-        static void Main(string[] args)
+        static void MainChess(string[] args)
         {
 #if TEST
             var rnd = new Random();
