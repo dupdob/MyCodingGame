@@ -1,17 +1,17 @@
+//#define TEST
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO.IsolatedStorage;
 using System.Linq;
+using System.Numerics;
 
 namespace CodeChefOct18
 {
-    public class BBricks
+    public static class BBricks
     {
         private const long modulo = 1000000007;
-        static void Main(string[] args)
+
+        private static void MainBricks(string[] args)
         {
-            var test = Combination(2, 6);
+#if !TEST
             var testCases = int.Parse(Console.ReadLine());
             for (var i = 0; i < testCases; i++)
             {
@@ -22,6 +22,27 @@ namespace CodeChefOct18
                 var result = P(N, K);
                 Console.WriteLine(result);
             }
+#else
+
+            var testCases = int.Parse(Console.ReadLine());
+            for (var i = 0; i < testCases; i++)
+            {
+                var inputs = Console.ReadLine().Split(' ').Select(int.Parse).ToArray();
+                var N = inputs[0];
+                var K = inputs[1];
+
+                var result = P(N, K);
+                var refP = RefP(N, K);
+                if (refP != result)
+                {
+                    Console.WriteLine($"Error for {N} {K} {result} expected {refP}");
+                }
+                else
+                {
+                    Console.WriteLine(result);
+                }
+            }
+#endif
         }
 
         private static long P(int N, int K)
@@ -43,49 +64,104 @@ namespace CodeChefOct18
             }
 
             var blankRow = N - K;
-            var nbPossibility = 0L;
+            var nbPossibility = new BigInteger(0);
             var baseCombo = 2L;
-            for (var j = 1; j <= K; j++)
+            var combo1 = ComboFast(2, blankRow);
+            var combo2 = ComboFast(1, K - 1);
+            var pattern = (long)((combo1 * combo2)%modulo);
+            nbPossibility += pattern*baseCombo;
+            baseCombo = baseCombo*2 % modulo;
+            for (var j = 2; j <= K; j++)
             {
-                var pattern = (Combination(j + 1, blankRow - j+1) * Combination(j , K - j)) % modulo;
+                // next pattern
+                combo1 *= (blankRow - j + 2);
+                combo1 /= j;
+                combo2 *= (K - j + 1);
+                combo2 /= j-1;
+                pattern = (long)((combo1 * combo2)%modulo);
                 nbPossibility += pattern*baseCombo;
-                baseCombo = (baseCombo*2)% modulo;
-                nbPossibility %= modulo;
+                baseCombo = baseCombo*2 % modulo;
             }
 
-            return nbPossibility;
+            return (int)(nbPossibility % modulo);
         }
-
-        private static long Combination(int slots, int blanks)
+ 
+        private static BigInteger ComboFast(int slots, int tokens)
         {
-            if (blanks == 0)
+            var max = slots + tokens - 1;
+            var result = new BigInteger(1);
+
+            var div = 1;
+
+            for (var i = tokens + 1; i <= max; i++)
             {
-                return 1;
+                result *= i;
+                if (div <= slots - 1)
+                {
+                    result /= div;
+                    div++;
+                }
             }
-            if (blanks < 0)
+
+            return result;
+        }
+        private static long RefP(int N, int K)
+        {
+
+            if (N <= 0 || N <K)
             {
                 return 0;
             }
-            var start = 1L;
-            var sub = 1;
-            for (var j = blanks+1; j < slots + blanks; j++)
-            {
-                start *= j;
-                if (sub < slots)
-                {
-                    start /= sub++;
-                }
 
-                start %= modulo;
+            if (K == 0)
+            {
+                return 1;
             }
 
-            while (sub < slots)
+            if (N == K)
             {
-                start /= sub++;
+                return 2;
             }
 
-            return start;
+            var blankRow = N - K;
+            var nbPossibility = new BigInteger(0);
+            var baseCombo = new BigInteger(2);
+            for (var j = 1; j <= K; j++)
+            {
+                var pattern = (ComboBigI(j + 1, blankRow - j+1) * ComboBigI(j , K - j));
+                nbPossibility += pattern*baseCombo;
+                baseCombo = baseCombo*2;
+            }
+
+            return (int)(nbPossibility % modulo);
         }
-        
+
+        private static BigInteger ComboBigI(int slots, int tokens)
+        {
+            var max = slots + tokens - 1;
+            var div1 = tokens;
+            var div2 = slots - 1;
+            var result = new BigInteger(1);
+
+            var div = 1;
+
+            for (var i = div1+1; i <= max; i++)
+            {
+                result *= i;
+                if (div <= div2)
+                {
+                    result /= div;
+                    div++;
+                }
+            }
+
+            while (div <= div2)
+            {
+                result /= div;
+                div++;
+            }
+            return result;
+        }
+ 
     }
 }
