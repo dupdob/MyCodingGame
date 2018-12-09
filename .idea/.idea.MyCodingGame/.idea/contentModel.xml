@@ -2,12 +2,43 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p="Advent Calendar" t="Include" />
+      <e p="AdventCalendar2018" t="IncludeRecursive">
+        <e p="AdventCalendar2018.csproj" t="IncludeRecursive" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Day1.cs" t="Include" />
+        <e p="Day2.cs" t="Include" />
+        <e p="Day3.cs" t="Include" />
+        <e p="Day4.cs" t="Include" />
+        <e p="Day5.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.1" t="Include">
+              <e p="AdventCalendar2018.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="CodeChefDec18" t="IncludeRecursive">
+        <e p="BeforeHavingDonuts.cs" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="CodeChefDec18.csproj" t="IncludeRecursive" />
+        <e p="DeleteDag.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.1" t="Include">
+              <e p="CodeChefDec18.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
       <e p="CodeChefOct18" t="IncludeRecursive">
         <e p="BBricks.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="ByteToBit.cs" t="Include" />
         <e p="Ccircles.cs" t="Include" />
         <e p="ChefAndServes.cs" t="Include" />
+        <e p="ChefTak.cs" t="Include" />
         <e p="CodeChefOct18.csproj" t="IncludeRecursive" />
         <e p="HMAPPY.cs" t="Include" />
         <e p="MinSum.cs" t="Include" />
@@ -111,6 +142,7 @@
           <e p="Gravity_Tumbler.cs" t="Include" />
           <e p="HiddenWord.cs" t="Include" />
           <e p="HowTimeFlies.cs" t="Include" />
+          <e p="JackSilverCasino.cs" t="Include" />
           <e p="OrderOfSuccession.cs" t="Include" />
           <e p="QuadriLateral.cs" t="Include" />
           <e p="River.cs" t="Include" />
@@ -135,6 +167,7 @@
           <e p="PlayerMars.cs" t="Include" />
           <e p="Scrabble.cs" t="Include" />
           <e p="Skynet.cs" t="Include" />
+          <e p="StockExchange.cs" t="Include" />
         </e>
         <e p="obj" t="ExcludeRecursive" />
         <e p="packages.config" t="Include" />

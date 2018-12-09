@@ -49,7 +49,14 @@ class LaResistance
 
         foreach (var value in words)
         {
-            cache[value] = 1;
+            if (!cache.ContainsKey(value))
+            {
+                cache[value] = 1;
+            }
+            else
+            {
+                cache[value]++;
+            }
         }
         Console.WriteLine(Scan(morse));
         Console.SetIn(temp);

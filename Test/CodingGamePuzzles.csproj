@@ -81,6 +81,7 @@
     <Compile Include="Facile\Gravity_Tumbler.cs" />
     <Compile Include="Facile\HiddenWord.cs" />
     <Compile Include="Facile\HowTimeFlies.cs" />
+    <Compile Include="Facile\JackSilverCasino.cs" />
     <Compile Include="Facile\OrderOfSuccession.cs" />
     <Compile Include="Facile\QuadriLateral.cs" />
     <Compile Include="Facile\River.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Moyen\FloodFill.cs" />
     <Compile Include="Moyen\GravityCentrifugeTuning.cs" />
     <Compile Include="Moyen\HorseHyperRacing.cs" />
+    <Compile Include="Moyen\StockExchange.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Clones.cs" />
     <Compile Include="Facile\EmptyClass.cs" />
