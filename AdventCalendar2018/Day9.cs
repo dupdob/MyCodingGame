@@ -6,7 +6,7 @@ namespace AdventCalendar2018
 {
     public static class Day9
     {
-        private static void Main()
+        private static void MainDay9()
         {
             var nbPlayers = 411;
             var nbRounds = 7205900;
