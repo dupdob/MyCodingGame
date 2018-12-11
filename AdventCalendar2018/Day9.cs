@@ -6,7 +6,7 @@ namespace AdventCalendar2018
 {
     public static class Day9
     {
-        private static void MainDay10()
+        private static void Main()
         {
             var nbPlayers = 411;
             var nbRounds = 7205900;
@@ -14,6 +14,7 @@ namespace AdventCalendar2018
 
             var scores = new long[nbPlayers];
             var list = new List<int>();
+            list.Capacity = nbRounds;
             list.Add(0);
             list.Add(1);
             var currentMarble = 1;

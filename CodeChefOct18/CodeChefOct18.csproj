@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <Configurations>Debug;Release;Test</Configurations>
+        <Platforms>AnyCPU;x86</Platforms>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Test|x86' ">
+      <DefineConstants>TRACE;DEBUG;TEST;NETCOREAPP;NETCOREAPP2_1</DefineConstants>
+      <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Test' ">
+      <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+      <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+</Project>
