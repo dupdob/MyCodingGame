@@ -9,7 +9,7 @@ namespace CodeChefOct18
     {
         private const long modulo = 1000000007;
 
-        private static void MainBricks(string[] args)
+        private static void Main(string[] args)
         {
 #if !TEST
             var testCases = int.Parse(Console.ReadLine());
