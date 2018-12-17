@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace AdventCalendar2018
@@ -35,29 +36,27 @@ namespace AdventCalendar2018
 
             while (true) 
             {
-                var crash = false;
                 carts.Sort();
                 for (var i = 0; i < carts.Count; i++)
                 {
                     var cart = carts[i];
                     if (!cart.Move(map)) continue;
-                    Console.WriteLine($"Crash at: {cart.X},{cart.Y}");
                     // we look for the other cart
                     carts.RemoveAt(i--);
+
                     for (var j = 0; j < carts.Count; j++)
                     {
                         if (carts[j].X == cart.X && carts[j].Y == cart.Y)
                         {
+                            Console.WriteLine($"Crash at: {cart.X},{cart.Y} between #{cart.Id} and #{carts[j].Id}");
                             carts[j].RemoveCart(map);
                             carts.RemoveAt(j);
+                            if (j <= i)
+                            {
+                                i--;
+                            }
                             break;
                         }
-                    }
-
-                    Dump(map);
-                    if (carts.Count == 1)
-                    {
-                        Console.WriteLine($"Last cart at {carts[0].X}, {carts[0].Y}");
                     }
                 }
                 if (carts.Count == 1)
@@ -68,18 +67,22 @@ namespace AdventCalendar2018
             }
         }
 
-        private static void Dump(List<string> map)
+        private static void Dump(IList<string> map, int x, int y, int width, int height)
         {
-            var id = 0;
-            foreach (var line in map)
+            Console.WriteLine();
+            for (var i = y; i< Math.Min(y+height, map.Count); i++)
             {
-                Console.WriteLine($"{id:000}:{line}");
-                id++;
+                Console.WriteLine($"{i:000}:{map[i].Substring(x, Math.Min(map[i].Length-x, width))}");
             }
         }
 
         private class Cart: IComparable<Cart>
         {
+            private readonly int id;
+
+            public int Id => id;
+
+            private static int autoId;
             private int x;
             private int y;
             private int currentDir;
@@ -93,6 +96,7 @@ namespace AdventCalendar2018
                 this.y = y;
                 this.currentDir = currentDir;
                 curCell = this.currentDir % 2 == 0 ? '-' : '|';
+                id = autoId++;
             }
 
             public int Y => y;
@@ -107,6 +111,13 @@ namespace AdventCalendar2018
                 return yComparison != 0 ? yComparison : x.CompareTo(other.x);
             }
 
+            public void Dump(IList<string> map)
+            {
+                const int width = 20;
+                const int height = 10;
+                Day13.Dump(map, Math.Max(0, X-width/2), Math.Max(0, Y - height/2), width, height);
+            }
+            
             public bool Move(IList<string> map)
             {
                 // restore cell
