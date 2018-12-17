@@ -6,7 +6,7 @@ namespace AdventCalendar2018
 {
     public static class Day12
     {
-        private static void Main()
+        private static void MainDay12()
         {
             const string initialStateMarker = "initial state: ";
             var lines = Input.Split(Environment.NewLine);
