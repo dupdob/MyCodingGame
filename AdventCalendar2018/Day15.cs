@@ -72,22 +72,23 @@ namespace AdventCalendar2018
                     cells.Add(start);
                     var inRangeCells = new List<Cell>();
                     var closest = FindNearestInRange(map, cells, altMap, inRangeCells);
-                    // find next move
-                    while (closest.predecessor != start)
+                    if (closest != null)
                     {
-                        closest = closest.predecessor;
+                        // find next move
+                        while (closest.predecessor != start)
+                        {
+                            closest = closest.predecessor;
+                        }
+
+                        UpdateMap(start, '.', map);
+                        x = closest.x;
+                        y = closest.y;
+                        UpdateMap(closest, type, map);
+                        return true;                        
                     }
 
-                    UpdateMap(start, '.', map);
-                    x = closest.x;
-                    y = closest.y;
-                    UpdateMap(closest, type, map);
-                    return true;
                 }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
 
             private Cell FindNearestInRange(string[] map, List<Cell> cells, Cell[,] altMap, List<Cell> inRangeCells)
@@ -116,6 +117,11 @@ namespace AdventCalendar2018
                     }
                 }
 
+                if (inRangeCells.Count == 0)
+                {
+                    // no one in range
+                    return null;
+                }
                 var closests = new List<Cell>();
                 var closest = inRangeCells.Aggregate((current, next) =>
                 {
