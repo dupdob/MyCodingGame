@@ -7,37 +7,46 @@ namespace AdventCalendar2018
 {
     public static class Day15
     {
-        private static void Main()
+        private static void MainDay15()
         {
-            var units = new List<Unit>();
-            var map = Input.Split(Environment.NewLine);
-            // identify units
-            for (var yIndex = 0; yIndex < map.Length; yIndex++)
+            var elvesPower = 13;
+            var oldElvesPower = 3;
+            var oldPowerFailed = true;
+            int round ;
+            List<Unit> units;
+            do
             {
-                for (var xIndex = 0; xIndex < map[yIndex].Length; xIndex++)
+                units = new List<Unit>();
+                round = TestGame(units, elvesPower);
+ /*               if (round == 0 && oldPowerFailed)
                 {
-                    if (map[yIndex][xIndex] == 'E' || map[yIndex][xIndex] == 'G') units.Add(new Unit(xIndex, yIndex, map[yIndex][xIndex]));
+                    // elves have a loss
+                    // => increase power
+                    oldElvesPower = elvesPower;
+                    elvesPower += 10;
                 }
-            }
+                else if (round > 0 && oldPowerFailed && elvesPower - oldElvesPower == 1)
+                {
+                    // found it
+                    break;
+                }
+                else if (round > 0 && !oldPowerFailed)
+                {
+                    var t = elvesPower;
+                    elvesPower = Math.Min(elvesPower, oldElvesPower)-1;
+                    oldElvesPower = t;
+                    oldPowerFailed = true;
+                }
+                else
+                {
+                    var t = elvesPower;
+                    elvesPower = (oldElvesPower + elvesPower) / 2;
+                    oldElvesPower = t;
+                    oldPowerFailed = round==0;
+                }
+                */
+            } while (false);
 
-            var oneMove = true;
-            var round = -1;
-            while (oneMove)
-            {
-                oneMove = false;
-                var moveToClosest = false;
-                units.Sort();
-                foreach (var unit in units)
-                {
-                    moveToClosest = unit.MoveToClosest(map) || moveToClosest;
-                    oneMove = unit.Fight(units, map) || moveToClosest;
-                }
-                round++;
-                DumpMap(map);
-                if (moveToClosest)
-                    Console.ReadKey();
-            }
-            
             // compute score
             var nbUnit = 0;
             var totalHealth = 0;
@@ -50,6 +59,54 @@ namespace AdventCalendar2018
                 }
             }
             Console.WriteLine($"Result: {round * totalHealth}");
+        }
+
+        private static int TestGame(List<Unit> units, int elvesPower)
+        {
+            Console.WriteLine($"Trying power {elvesPower}.");
+            var map = Input.Split(Environment.NewLine);
+            // identify units
+            for (var yIndex = 0; yIndex < map.Length; yIndex++)
+            {
+                for (var xIndex = 0; xIndex < map[yIndex].Length; xIndex++)
+                {
+                    if (map[yIndex][xIndex] == 'E' || map[yIndex][xIndex] == 'G')
+                    {
+                        var unit = new Unit(xIndex, yIndex, map[yIndex][xIndex]);
+                        if (unit.Type == 'E')
+                        {
+                            unit.Power = elvesPower;
+                        }
+                        units.Add(unit);
+                    }
+                }
+            }
+
+            var oneMove = true;
+            var round = -2;
+            while (oneMove)
+            {
+                oneMove = false;
+                var moveToClosest = false;
+                units.Sort();
+                foreach (var unit in units)
+                {
+                    moveToClosest = unit.MoveToClosest(map) || moveToClosest;
+                    oneMove = unit.Fight(units, map) || oneMove || moveToClosest;
+                }
+
+                foreach (var unit in units)
+                {
+                    if (unit.Type == 'E' && unit.Dead)
+                    {
+                        DumpMap(map);
+                        return 0;
+                    }
+                }
+                round++;
+            }
+
+            return round;
         }
 
         private static void DumpMap(string[] map)
@@ -66,6 +123,13 @@ namespace AdventCalendar2018
             private int Id;
             private static int autoId;
             private int power = 3;
+
+            public int Power
+            {
+                get => power;
+                set => power = value;
+            }
+
             private int health = 200;
 
             public int Health => health;
@@ -73,6 +137,8 @@ namespace AdventCalendar2018
             private int x;
             private int y;
             private char type;
+
+            public char Type => type;
 
             public bool Dead => health == 0;
             public Unit(int x, int y, char type)
@@ -338,11 +404,29 @@ namespace AdventCalendar2018
 
         private const string Demo =
 @"#######
-#.G...#
-#...EG#
-#.#.#G#
-#..G#E#
-#.....#
+#G..#E#
+#E#E.E#
+#G.##.#
+#...#E#
+#...E.#
+#######";
+
+        private const string Demo2 =
+@"#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######";
+
+        private const string Demo3 =
+@"#######
+#E.G#.#
+#.#G..#
+#G.#.G#
+#G..#.#
+#...E.#
 #######";
 
         private const string Input = 
