@@ -11,7 +11,7 @@ namespace AdventCalendar2018
 
         private delegate Registers Operation(Registers reg, int a, int b, int c);
         
-        private static void Main()
+        private static void MainDay21()
         {
             var mapping = new Dictionary<string, Operation>
             {
@@ -216,7 +216,8 @@ namespace AdventCalendar2018
             var R5 = 0; // Reg 5
             var R2 = 0; // 2
             var R3 = 0; // 3
-
+            var list = new HashSet<int>();
+            var previous = 0;
             R4 = 0;
 labelB:
             R5 = R4 | 0x10000;
@@ -262,7 +263,16 @@ loop1:
 label:
             if (R4 != A)
             {
-                Console.WriteLine($"R4 = {R4}");
+                if (!list.Contains(R4))
+                {
+                    list.Add(R4);
+                    previous = R4;
+                }
+                else
+                {
+                    Console.WriteLine($"R4 = {previous}");
+                    return 0;
+                }
                 goto labelB;
             }
             return 0;
