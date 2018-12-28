@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
-
+    
 namespace AdventCalendar2018
 {
     public static class Day23
     {
-        private static void Main23()
+        private static IReadOnlyCollection<Nanobot> clique = new List<Nanobot>();
+        private static int minDistance = int.MaxValue;
+        private static void MainDay23()
         {
-            var lines = Demo.Split(Environment.NewLine);
+            var lines = Input.Split(Environment.NewLine);
             var parser = new Regex(Pattern);
             var bots = new List<Nanobot>(lines.Length);
             Nanobot maxBot = null;
@@ -37,31 +41,94 @@ namespace AdventCalendar2018
             {
                 count += maxBot.IsInRange(bot) ? 1 : 0;
             }
+
+            maxBot.FindLargestIntersection();
             Console.WriteLine($"Max radius {maxBot.Radius}, in range: {count}");
-            // find max intersections
-            Point closesPoint = null;
-            var Origin = new Point(0, 0, 0);
-            var maxBotCount = 0;
-            foreach (var bot in bots)
+            for (var i = 0; i < bots.Count; i++)
             {
-                bot.ScanAll(point =>
+                for (var j = i+1; j < bots.Count; j++)
                 {
-                    count = bots.Count(nanobot => nanobot.IsInRange(point));
-                    if (closesPoint == null || maxBotCount < count)
+                    bots[i].AddIfIntersect(bots[j]);
+                }
+            }
+            // find max intersections
+            BronKerbosch1(new List<Nanobot>(),bots, new List<Nanobot>());
+        }
+
+        private static void BronKerbosch1(IReadOnlyCollection<Nanobot> R, ICollection<Nanobot> P, ICollection<Nanobot> X)
+        {
+            if (P.Count == 0 && X.Count == 0)
+            {
+                if (clique.Count<=R.Count)
+                {
+                    Console.WriteLine($"Found a clique of {R.Count} members.");
+                    // fin smallest range
+                    var origin = new Point(0,0,0);
+                    var max = new Point(int.MinValue,int.MinValue,int.MinValue);
+                    var min = new Point(int.MaxValue, int.MaxValue, int.MaxValue);
+                    var mindDist = int.MaxValue;
+                    var maxDist = 0;
+                    foreach (var nanobot in R)
                     {
-                        closesPoint = point;
-                        maxBotCount = count;
+                        var distance = nanobot.Distance(origin);
+                        mindDist = Math.Min(mindDist, distance);
+                        maxDist = Math.Max(maxDist, distance);
+                        max.KeepMax(nanobot);
+                        min.KeepMin(nanobot);
                     }
-                    else if (count == maxBotCount)
+                    Console.WriteLine($"Min distance: {mindDist} max {maxDist}");
+                    while (maxDist - mindDist > 1)
                     {
-                        if (closesPoint.Distance(Origin) > point.Distance(Origin))
+                        var radius = (mindDist + maxDist)/2;
+                        var testBot = new Nanobot(0, 0, 0, radius);
+                        var works = R.All(nanobot => nanobot.Intersect(testBot));
+
+                        if (works)
                         {
-                            closesPoint = point;
+                            Console.WriteLine($"{radius} is in the zone.");
+                            maxDist = radius;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{radius} is not in the zone.");
+                            mindDist = radius;
                         }
                     }
-                });
+
+                    if (R.Count > clique.Count || mindDist > maxDist)
+                    {
+                        clique = R;
+                        minDistance = maxDist;
+                        var testBot = new Nanobot(0, 0, 0, mindDist);
+                        if (R.All(nanobot => nanobot.Intersect(testBot)))
+                        {
+                            Console.WriteLine($"Does not work {mindDist}");
+                        }
+                        testBot = new Nanobot(0, 0, 0, maxDist);
+                        if (R.All(nanobot => nanobot.Intersect(testBot)))
+                        {
+                            Console.WriteLine($"Does not work {maxDist}");
+                        }
+                        Console.WriteLine($"Min distance: {mindDist} max {maxDist}");
+                    }
+                    
+                }
+                return;
             }
-            Console.WriteLine($"Best Spot {closesPoint}, to Origin: {closesPoint.Distance(Origin)}");
+
+            if (P.Count < clique.Count)
+            {
+                // we can't have a big enough clique
+                return;
+            }
+            foreach (var v in P.ToList())
+            {
+                var R2 = R.ToList();
+                R2.Add(v);
+                BronKerbosch1(R2, P.Intersect(v.Neighbours).ToList(), X.Intersect(v.Neighbours).ToList());
+                P.Remove(v);
+                X.Add(v);
+            }
         }
 
         private class Point
@@ -82,6 +149,20 @@ namespace AdventCalendar2018
                 return Math.Abs(x - other.x) + Math.Abs(y - other.y) + Math.Abs(z - other.z);
             }
 
+            public void KeepMin(Point other)
+            {
+                x = Math.Min(x, other.x);
+                y = Math.Min(y, other.y);
+                z = Math.Min(z, other.z);
+            }
+            
+            public void KeepMax(Point other)
+            {
+                x = Math.Max(x, other.x);
+                y = Math.Max(y, other.y);
+                z = Math.Max(z, other.z);
+            }
+            
             public override string ToString()
             {
                 return $"{nameof(x)}: {x}, {nameof(y)}: {y}, {nameof(z)}: {z}";
@@ -90,7 +171,10 @@ namespace AdventCalendar2018
 
         private class Nanobot : Point
         {
-            private int radius;
+            private readonly int radius;
+            private readonly HashSet<Nanobot> neighbours = new HashSet<Nanobot>();
+
+            public HashSet<Nanobot> Neighbours => neighbours;
 
             public int Radius => radius;
 
@@ -102,6 +186,20 @@ namespace AdventCalendar2018
             public bool IsInRange(Point other)
             {
                 return Distance(other) <= radius;
+            }
+
+            public bool Intersect(Nanobot other)
+            {
+                return Distance(other) <= radius + other.radius;
+            }
+            
+            public bool AddIfIntersect(Nanobot other)
+            {
+                if (other == this || !Intersect(other))
+                    return false;
+                neighbours.Add(other);
+                other.neighbours.Add(this);
+                return true;
             }
 
             public void ScanAll(Action<Point> action)
@@ -118,7 +216,16 @@ namespace AdventCalendar2018
                     }
                 }
             }
-            
+
+            public void FindLargestIntersection()
+            {
+                IList<Nanobot> largestBlock = null;
+ 
+                foreach (var next in neighbours.OrderBy(x=>-x.neighbours.Count))
+                {    
+                    
+                }
+            }
         }
         
         private const string Pattern = "pos=<(-\\d+|\\d+),(-\\d+|\\d+),(-\\d+|\\d+)>, r=(\\d+)";
