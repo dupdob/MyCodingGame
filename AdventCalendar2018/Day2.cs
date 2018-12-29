@@ -7,32 +7,20 @@ namespace AdventCalendar2018
     {
         private static int nbSingleRepeat;
         private static int nbDoubleRepeat;
-        private static void MainDay2One()
-        {
-            for(;;)
-            {
-                var line = Console.ReadLine();
-                if (string.IsNullOrEmpty(line))
-                {
-                    break;
-                }
-
-                ScanLine(line);
-            }
-            Console.WriteLine(nbSingleRepeat*nbDoubleRepeat);
-        }
-        
         private static List<string> seen = new List<string>();
+
         private static void MainDay2()
         {
-            var answer = string.Empty;
-            while(string.IsNullOrEmpty(answer))
+            var lines = Input.Split(Environment.NewLine);
+            foreach(var line in lines)
             {
-                var line = Console.ReadLine();
-                if (string.IsNullOrEmpty(line))
-                {
-                    break;
-                }
+                ScanLine(line);
+            }
+            Console.WriteLine($"Checksum is {nbSingleRepeat*nbDoubleRepeat}");
+  
+            var answer = string.Empty;
+            foreach (var line in lines)
+            {
                 foreach (var other in seen)
                 {
                     var diffPos = -1;
@@ -64,7 +52,7 @@ namespace AdventCalendar2018
                 }
                 seen.Add(line);
              }
-            Console.WriteLine(answer);
+            Console.WriteLine( $"Prototype id is {answer}");
         }
 
         private static void ScanLine(string line)
@@ -92,5 +80,257 @@ namespace AdventCalendar2018
                 nbDoubleRepeat++;
             }
         }
+
+        private const string Input = 
+            @"qysdgimlcaghpfozuwejmhrbvx
+qysdtiklcagnpfhzuwbjmhrtvx
+qysdtiflcsgnpfozuwejmhruvx
+qkshtiklnagnpfozuwejmhrbvx
+qysdtnklcagnpmozuwejmhrrvx
+qysdttkecagnpfozuwijmhrbvx
+qyedtiklcagnvfozuweymhrbvx
+qyzdtikzcagnpfozuwejmhqbvx
+qysdtiklcagnpfozlwedmhqbvx
+qjsdtiklcagnpfozubejmhrbvq
+qysdtiklcagnpfozvvejmhrbex
+qdsdziklcagnpfouuwejmhrbvx
+qysttikqccgnpfozuwejmhrbvx
+qysdtiklcagnpbozwwecmhrbvx
+qysdtiklcagnpfozuwexmmrjvx
+nysdtiklcqgjpfozuwejmhrbvx
+cysdoiqlcagnpfozuwejmhrbvx
+qysdthxlcagnpfozuwejmcrbvx
+qyswtiklcrgnpfozuwejmhrbvf
+qysdtiklcagnpfozurejmhvpvx
+qysdtiklcegnpfdzuwejghrbvx
+qysdtjkluagnpfozuwenmhrbvx
+qysdtimlcagnpjwzuwejmhrbvx
+qyrdtiklcegnpeozuwejmhrbvx
+qysdmiklcagnpfokswejmhrbvx
+qysdtizlcagnpiozuwecmhrbvx
+qysdtiklcignafxzuwejmhrbvx
+qycdjiklcagnpzozuwejmhrbvx
+qysdtiklcagnpjozuwepihrbvx
+qyedtiklcrgnpfozuvejmhrbvx
+mysdtikrcagnpfozwwejmhrbvx
+qysdtiklcagnpfozuhcjmhrbsx
+qmsdtiklcagnpfozuwehmhrevx
+qgsdtiklcagnpfozuwejvhrbvp
+lysdtikleagnpfozuwejmhrnvx
+qxsdtivlzagnpfozuwejmhrbvx
+qysdtiklcoggpfozuwebmhrbvx
+wysdtiklcagnpfozuwejmornvx
+jysdtiklvagntfozuwejmhrbvx
+qmsdtiklcagnpfozuwejmrrbax
+qysdttklcagnpfoiuwejmhrbvh
+qysdtnklcaenpfozupejmhrbvx
+qysdtoklcagnpfozuwexmhrbvq
+qysdtiklcagnpuoeuwejmhrjvx
+iysdtitncagnpfozuwejmhrbvx
+qysdtixrcagnprozuwejmhrbvx
+qyfdtiplcagnpfouuwejmhrbvx
+qysdtmklcagnpfowuwejmhrbox
+qysdtiklcagnxiozuwejphrbvx
+fysdtiklcagnptozuwejmhrbvo
+qysdqiklcagnplozuwejmhmbvx
+qysdtwkacagnpfosuwejmhrbvx
+qysdtitlcagnpfozufajmhrbvx
+qysdtcklcagopfdzuwejmhrbvx
+qmfdtdklcagnpfozuwejmhrbvx
+qysztiklcaonpfozuwejmhrbfx
+qygdtiklcggnpfozuwejmhrhvx
+qysdiiklcagnpfozukejmcrbvx
+qysdtrkloagnpfozuwujmhrbvx
+qycdtiklcagnpfozywejmhrlvx
+qgsdtikdcagnpfozgwejmhrbvx
+qyudtikleagvpfozuwejmhrbvx
+pysdtiqlcagnpfozuwejmarbvx
+qysdtiklcaenpfozuwehahrbvx
+qhsttiklcagnpfovuwejmhrbvx
+zysdtikqmagnpfozuwejmhrbvx
+rysdtikacagnpfozuwevmhrbvx
+zysntikllagnpfozuwejmhrbvx
+qysttimlcagndfozuwejmhrbvx
+qysdtiklcaxopfqzuwejmhrbvx
+qysdtislcagnpfozuwejmtrbnx
+qysdviklcagnpfozswejmhibvx
+qmsdtiklrygnpfozuwejmhrbvx
+qysztiklcagnpfozuwejmorbrx
+xysdtiklcagnzwozuwejmhrbvx
+qysjthklcagnpfozowejmhrbvx
+qysdtiklcagnpfofxwemmhrbvx
+jysdtiklcagnpfozfwehmhrbvx
+qysdtgklaagnpfozhwejmhrbvx
+qqsdtiklcaenpfozuwejmhrvvx
+qysdtikloajppfozuwejmhrbvx
+qysdtiklcagnpwozuwejmhrhsx
+qpsdtiklcapnprozuwejmhrbvx
+qyzdtiklcagnpcozuwejmhrbvc
+qusdhiklcagnpfozuwejmhrbxx
+qysdtiklcagnpfozqwejthrvvx
+qysvtiklcagnpfoiuwedmhrbvx
+qgsdtiklcagvpfozuwejmhrbvf
+qysdtikxcawnpfozuwejmarbvx
+qyvctiklcaynpfozuwejmhrbvx
+qyyltiklnagnpfozuwejmhrbvx
+oysdtillcagnpfozuwejmnrbvx
+qysdtiklcagnpfozuvmjmhrbzx
+qykdtikocagnpfhzuwejmhrbvx
+qysdtvkloagnpfozuwejmkrbvx
+qysetiklcagnpfozuwejmhrxvh
+qysdtiklcavnpfuzuwejmhrbvh
+qmndtiklcagnpfojuwejmhrbvx
+qysdtialcagnpfozuwejmdrqvx
+qysdtiklcagnpfozuwejtzrbvv
+qysdtiklxagnpyozufejmhrbvx
+qysdtiklcagnpfgzewejahrbvx
+qysdtiklcagppsozuwejmhrdvx
+qykdtiklcainpfozuwejqhrbvx
+qysdtiklcagnpfszxwejmhubvx
+qyrdtiklcagkptozuwejmhrbvx
+qysdsiklcagnpfozsvejmhrbvx
+qypdtiklcagypfozuwejmhrlvx
+qssdtiklcagnpfozuwqjmirbvx
+qyshtiklcagnpfrzuwyjmhrbvx
+qysdtiklcagnpfqzuwenmgrbvx
+qysdtiklcagnpfonuwejmhkwvx
+qysdhiklcagnpfokuwejmhrfvx
+jysrtiklcaenpfozuwejmhrbvx
+qysdtiilcagnpfozuwejmhcbvl
+qysdtiklcagnheozuwejmhrbvn
+qysdtikucagwpfojuwejmhrbvx
+qysdtinlctgnpfozuwujmhrbvx
+qysdtiklcagnpiozuwejmtrbjx
+qysktiklcagqpfozuwcjmhrbvx
+qysddiklcagnpfozpwejmhrbvh
+wysdtiplcagnpfozuwejyhrbvx
+qysdtiklcagnpfjzlwejmhrcvx
+qysdtikleagopbozuwejmhrbvx
+qysdtqklcwgnpfozuwejmirbvx
+qysdtiklcugnpmozuwejmhrbvp
+qysdtiklcagnpfozpwejmnrbvz
+qysdtiklcagnpcozuwejmhbbmx
+uysitiklcagnpfozewejmhrbvx
+qykdtiklcasnpfozuwejdhrbvx
+qyjdtiklcagnpqozuzejmhrbvx
+qysdtiklcagaifozuwejmhrbvh
+qysdtiklcagnhfozuwyjrhrbvx
+qysetiklcaanpfozuwyjmhrbvx
+qyfdtiklcagnphozulejmhrbvx
+qysdtikkcrgnpfozuwejmhpbvx
+qysdtiklcarnpfdzuwejmhrbvq
+qysdtiklcfyrpfozuwejmhrbvx
+rysdtitlcagnpfoznwejmhrbvx
+qysdtiilcagnffozugejmhrbvx
+qysdyifloagnpfozuwejmhrbvx
+qysdtiklcegnpfozuwejmlrcvx
+qysdtiklcagnpfozuwajmhbbqx
+qysptrklcarnpfozuwejmhrbvx
+qysdtiklcagnldozuwejmhwbvx
+qysdtiklczgqpfozuwejmhobvx
+qyxdtiklcagcpfoiuwejmhrbvx
+qysatiklczgnpfozawejmhrbvx
+qysduiklcagnpfoziwejyhrbvx
+qysdtgklqagnpfozujejmhrbvx
+qysdtiqlcagnpfozzdejmhrbvx
+qysdtiklcngnpfofuwejmzrbvx
+qysdtiklcagnyfozuwejrnrbvx
+qysdtiplcagnpfozowmjmhrbvx
+qyswtiklcagnplozuwedmhrbvx
+qyseiiklcagnpfozuwejmhibvx
+qysdtiklcagnpfozutusmhrbvx
+qysdtimlcagnpfozccejmhrbvx
+qnsdniklcagnpfobuwejmhrbvx
+qysrtiklcagnpfofuwejmhrbyx
+qyzdtiklcagnpfoizwejmhrbvx
+qysdtjslcdgnpfozuwejmhrbvx
+qysdtiklcagnpxoyuwejmrrbvx
+qysdtikllagnpfmzuwbjmhrbvx
+qysdtitlcagnkfozuwejwhrbvx
+qymdtiklcggnpfozuwejmzrbvx
+qysdtiklclfnpfozuhejmhrbvx
+qysdtyklcagnpfozuwejmhhbix
+qysetiklcagnpfozuwejmhrspx
+qysdipklcagnpfozuwejmhrbex
+uysgtiklcagnpmozuwejmhrbvx
+qysdtiklmagnpfozuwqlmhrbvx
+qysdtiklcagnyfozxwejmhrmvx
+qysutillcagnpfozuwejmhrbbx
+casdtiklcagnpfopuwejmhrbvx
+qesdtiklctgnpfmzuwejmhrbvx
+qysdtiklcagopfozjwejmdrbvx
+jzsdtiklcagnpfozuwejmurbvx
+qysdtiklcjgnpfonuwejrhrbvx
+qysdtiklcrgnpnozuwejmhqbvx
+oyhdtiklcagnpfozuwekmhrbvx
+qysstiklcagjpfozuwejmhrbnx
+qyudtiklsagnpsozuwejmhrbvx
+qysdtiilcagnpfozusejmhrbva
+qysdtiklcaknpfozmwejmhgbvx
+qysdbiklcpgnpfozuwejmrrbvx
+qybdtiklcagvpfokuwejmhrbvx
+qysatiklcagnpwofuwejmhrbvx
+qysdtiklcadnpfonuwejmcrbvx
+qysdtijfcagnpfozuvejmhrbvx
+qysdtiklcagnpfhluuejmhrbvx
+qysdtiklcagnpfoguwejqhrwvx
+qlsdtiklcagnpfojuwehmhrbvx
+qyhdtiolcagnpfozuwejmhrzvx
+qmsdtiklcagnppozuwpjmhrbvx
+qysdtiklvvgnpfvzuwejmhrbvx
+qysdtiklcagnpfszuwajmhrcvx
+qysdtiklcagnpfmzuwekmhrbyx
+qysdtiklcagwpfozumevmhrbvx
+qysdtaklcagnpfozuwejvhzbvx
+qysotiklcagntffzuwejmhrbvx
+qysdtiklcagnpfowuweqmhrivx
+qysdtrkloagnxfozuwujmhrbvx
+qasdiiklcagnpfozuwegmhrbvx
+qysbtiklcagnpfozuwejthrbhx
+hysdtikllagnpfozuwejmhrbbx
+qyqdtiklcagnpsozuwejmcrbvx
+qysdtiklcagnpiqzuwejmhrbux
+qnsdtiklcagnpfozdwejmhbbvx
+qysjbiklcagzpfozuwejmhrbvx
+qysdtiklcagnpfifuwejmhrbvg
+qysdtiklcaggpkozunejmhrbvx
+qxsdtiklcavnpfozuwfjmhrbvx
+qysdtikycabnpfkzuwejmhrbvx
+qyswtzklcagnpfozuwejmhrlvx
+qysdtikqcagnpfozuwejrhnbvx
+qysdtiplaagnpfozuwejmhruvx
+qjcdtiklcagnpfozujejmhrbvx
+nysdtyklcagnpfozutejmhrbvx
+qysrtiklcagnpfnzuwejmhrbdx
+zysdtielcagnpfozuwezmhrbvx
+qysdtikpvagnpfozuzejmhrbvx
+qysdwiklcagnpfozueejmhrlvx
+dysdmiklcagnpfozuwejzhrbvx
+qysdtiklcjgnpfozuweimhmbvx
+qysdtiklciynpyozuwejmhrbvx
+qksdtiklcagnpbozubejmhrbvx
+qysdtiklkagnpfozuwejmhrjvb
+yyxdtiklcagnpfomuwejmhrbvx
+qysdtiklcagnfnozuwejmhrbvv
+qysdtzklcagnpfozuwejmhrmvb
+qysduiklclgnpfozuwejmhrbvn
+qyndtmklcavnpfozuwejmhrbvx
+qisdkiklcagnpfozuwqjmhrbvx
+qysdtrkycagypfozuwejmhrbvx
+qhsdtiklcwgnmfozuwejmhrbvx
+qysdaiklcannpfozupejmhrbvx
+zysdtiklcagnpjozuwejmhrbwx
+qysdtikxcagnpfozuwejmcrxvx
+qysdtzklcagnpfozewejmhrbvk
+qysdwtklcagnhfozuwejmhrbvx
+qysdtqklcaenpfozuwejmdrbvx
+qysdtiklcagnpfozuoeemhqbvx
+nysdtikocagnpfozuwejmhwbvx
+qysxtiklcagnpfozqwejmhrbax
+qysdtielcasnpfozuwejmhsbvx
+qysdtiklcaknpfozuwejcwrbvx
+qysytiklcagnpfozdfejmhrbvx
+qysdtiklcagmpfozuwejmgrbox
+qysdtielcagnpfpzuwejhhrbvx";
     }
 }
