@@ -10,7 +10,7 @@ namespace AdventCalendar2018
     public static class Day25
     {
         private const int refDist = 3;
-        private static void MainDay25()
+        private static void Main()
         {
             var stars = Parse(Input);
             var constellations = new List<Constellation>();
