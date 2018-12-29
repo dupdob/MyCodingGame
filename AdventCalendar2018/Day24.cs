@@ -18,6 +18,7 @@ namespace AdventCalendar2018
             
             ParseSpecifications(specs, immuneGroup, infectionGroup);
 
+            Log = true;
             RunGame(immuneGroup, infectionGroup);
             var totalInfection = infectionGroup.TotalPower;
             var totalImmune = immuneGroup.TotalPower;
@@ -27,7 +28,7 @@ namespace AdventCalendar2018
             var maxBoost = 100;
 //            var boost = maxBoost;
             var foundMax = false;
-            for (var boost = 0; boost<50; boost++)
+            for (var boost = 0; boost<2000; boost++)
             {
                 Console.WriteLine($"Trying with boost {boost}");
                 immuneGroup.Reset();
@@ -127,11 +128,17 @@ namespace AdventCalendar2018
 
         private static void RunGame(Family immuneGroup, Family infectionGroup)
         {
+            var i = 3;
             for (; !immuneGroup.IsDead && !infectionGroup.IsDead;)
             {
                 var pairs = new List<(Unit attacking, Unit defending)>();
                 if (Log)
                 {
+                    i--;
+                    if (i == 0)
+                    {
+                        Log = false;
+                    }
                     Console.WriteLine();
                 }
                 
@@ -143,7 +150,8 @@ namespace AdventCalendar2018
                 }
                 var totalKills = 0;
 
-                foreach (var (attacking, defending) in pairs.OrderBy(x => -x.attacking.Initiative).ToList())
+                var valueTuples = pairs.OrderByDescending(x => x.attacking.Initiative).ToList();
+                foreach (var (attacking, defending) in valueTuples)
                 {
                     totalKills+= attacking.Attack(defending);
                 }
@@ -256,8 +264,15 @@ Infection:
         {
             var targets = group.AliveUnits();
             var pairs = new List<(Unit, Unit)>();
-            var orderedEnumerable = AliveUnits().OrderBy(unit => -unit.EffectivePower).ToList();
-            foreach (var unit in orderedEnumerable)
+            var orderedEnumerable = AliveUnits().ToList();
+            orderedEnumerable.Sort((unit, unit1) =>
+            {
+                
+                var ret = unit.EffectivePower.CompareTo(unit1.EffectivePower);
+                return ret == 0 ? unit.Initiative.CompareTo(unit1.Initiative) : ret;
+            });
+            orderedEnumerable.Reverse();
+            foreach(var unit in orderedEnumerable)
             {
                 if (!unit.HasUnits)
                     continue;
@@ -266,7 +281,11 @@ Infection:
                 {
                     continue;
                 }
-                targets.Remove(target);
+
+                if (!targets.Remove(target))
+                {
+                    Console.WriteLine("failed to remove target");
+                }
                 pairs.Add((unit, target));
             }
 
@@ -375,40 +394,30 @@ Infection:
         {
             Unit target = null;
             var maxDamage = 0;
-            foreach (var unit in targets.OrderBy(x => EffectivePower))
-            {
-                var damage = unit.DamageFactor(attackType) * EffectivePower;
-                if (damage == 0 || !unit.HasUnits)
-                    continue;
-                if (Day24.Log)
-                {
-                    Console.WriteLine($"{Id} would deal {unit.Id} {damage} damage.");
-                }
-                if (target == null || damage > maxDamage)
-                {
-                    target = unit;
-                    maxDamage = damage;
-                }
-                else if (damage == maxDamage)
-                {
-                    if ((target.EffectivePower<unit.EffectivePower)
-                        ||(target.EffectivePower == unit.EffectivePower && target.Initiative < unit.Initiative))
-                    {
-                        target = unit;
-                    }
-                }
-            }
 
-            return target;
+            var orderedTargets = targets.Where(unit => unit.DamageFactor(attackType)!=0).ToList();
+            if (orderedTargets.Count == 0)
+                return null;
+            orderedTargets.Sort((unit, unit1) =>
+            {
+                var first = unit.DamageFactor(attackType).CompareTo(unit1.DamageFactor(attackType));
+                if (first != 0)
+                    return first;
+                first = unit.EffectivePower.CompareTo(unit1.EffectivePower);
+                if (first != 0)
+                    return first;
+                return unit.Initiative.CompareTo(unit1.Initiative);
+            });
+
+            orderedTargets.Reverse();
+            return orderedTargets[0];
         }
 
         private int DamageFactor(string type)
         {
             if (immunities.Contains(type))
                 return 0;
-            if (weaknesses.Contains(type))
-                return 2;
-            return 1;
+            return weaknesses.Contains(type) ? 2 : 1;
         }
 
         public int Attack(Unit second)
