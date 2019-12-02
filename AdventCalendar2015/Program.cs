@@ -6,11 +6,10 @@ namespace AdventCalendar2015
     {
         static void Main(string[] args)
         {
-            var day = new Day3();
+            var day = new Day4();
 
-            day.ParseInput();
-            Console.WriteLine("Answer 1: {0}", day.VisitedHouses());
-            Console.WriteLine("Answer 2: {0}", day.VisitedHousesWithRobot());
+            Console.WriteLine("Answer 1: {0}", day.Md5Suffix("bgvyzdsv", "00000"));
+            Console.WriteLine("Answer 2: {0}", day.Md5Suffix("bgvyzdsv", "000000"));
         }
     }
 }
