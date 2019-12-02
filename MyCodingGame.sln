@@ -17,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Advent Calendar", "Advent C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdventCalendar2018", "AdventCalendar2018\AdventCalendar2018.csproj", "{9B317E8E-9768-44E4-A80C-602B363413B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdventCalendar2019", "AdventCalendar2019\AdventCalendar2019.csproj", "{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdventCalendar2015", "AdventCalendar2015\AdventCalendar2015.csproj", "{12A3B830-5721-4133-8877-5D84B00A81BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -54,11 +58,25 @@ Global
 		{9B317E8E-9768-44E4-A80C-602B363413B1}.Release|x86.Build.0 = Release|Any CPU
 		{9B317E8E-9768-44E4-A80C-602B363413B1}.Test|x86.ActiveCfg = Debug|Any CPU
 		{9B317E8E-9768-44E4-A80C-602B363413B1}.Test|x86.Build.0 = Debug|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Debug|x86.Build.0 = Debug|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Release|x86.ActiveCfg = Release|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Release|x86.Build.0 = Release|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Test|x86.ActiveCfg = Debug|Any CPU
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E}.Test|x86.Build.0 = Debug|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Debug|x86.Build.0 = Debug|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Release|x86.ActiveCfg = Release|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Release|x86.Build.0 = Release|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Test|x86.ActiveCfg = Debug|Any CPU
+		{12A3B830-5721-4133-8877-5D84B00A81BF}.Test|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9B317E8E-9768-44E4-A80C-602B363413B1} = {E012DB0C-4CD1-48FC-AEE0-0668A95B610C}
+		{1A9DA2A8-6181-4C6F-ACAA-1C77C8EEA10E} = {E012DB0C-4CD1-48FC-AEE0-0668A95B610C}
+		{12A3B830-5721-4133-8877-5D84B00A81BF} = {E012DB0C-4CD1-48FC-AEE0-0668A95B610C}
 	EndGlobalSection
 EndGlobal
