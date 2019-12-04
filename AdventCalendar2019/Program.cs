@@ -6,14 +6,26 @@ namespace AdventCalendar2019
     {
         static void Main(string[] args)
         {
-            var puzzle = new Day3();
-
-            puzzle.Parse();
+            var puzzle = new Day4();
+            var count = 0;
+            for (var i = 347312; i <= 805915; i++)
+            {
+                if (puzzle.IsValidPassword(i, false))
+                {
+                    count++;
+                }
+            }
             
-            Console.Write("Answer 1: ");
-            Console.WriteLine(puzzle.FindCloserIntersection());
-            Console.Write("Answer 2: ");
-            Console.WriteLine(puzzle.FindShortestPathToIntersection());
+            Console.WriteLine($"Answer 1: {count}");
+             count = 0;
+            for (var i = 347312; i <= 805915; i++)
+            {
+                if (puzzle.IsValidPassword(i, true))
+                {
+                    count++;
+                }
+            }
+            Console.WriteLine($"Answer 2: {count}");
         }
     }
 }

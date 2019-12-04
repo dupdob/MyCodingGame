@@ -13,6 +13,7 @@
         <e p="Day5.cs" t="Include" />
         <e p="Day6.cs" t="Include" />
         <e p="Day7.cs" t="Include" />
+        <e p="Day8.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp3.0" t="Include">
@@ -66,6 +67,7 @@
         <e p="Day1.cs" t="Include" />
         <e p="Day2.cs" t="Include" />
         <e p="Day3.cs" t="Include" />
+        <e p="Day4.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp3.0" t="Include">
