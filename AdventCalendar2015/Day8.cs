@@ -359,7 +359,6 @@ namespace AdventCalendar2015
 ""yrtdrieazfxyyneo""
 ""nywbv\\""
 ""twc\\ehfqxhgomgrgwpxyzmnkioj""
-""qludrkkvljljd\\xvdeum\x4e""
-";
+""qludrkkvljljd\\xvdeum\x4e""";
     }
 }
