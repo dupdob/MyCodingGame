@@ -59,11 +59,11 @@ namespace AdventCalendar2015
         public int FindLongest(HashSet<GraphNode> visitedNodes, int dest)
         {
 
-            var minDist = int.MinValue;
+            var maxDist = 0;
             if (!visitedNodes.Contains(this))
             {
                 // already visited
-                return minDist;
+                return maxDist;
             }
             if (visitedNodes.Count == 1)
             {
@@ -71,10 +71,10 @@ namespace AdventCalendar2015
             }
             visitedNodes.Remove(this);
             
-            minDist = distance.Select(pair => pair.Key.FindShortest(visitedNodes, dest + pair.Value)).Concat(new[] {minDist}).Max();
+            maxDist = distance.Select(pair => pair.Key.FindLongest(visitedNodes, dest + pair.Value)).Max();
 
             visitedNodes.Add(this);
-            return minDist;
+            return maxDist;
         }
         
         private readonly string id;
