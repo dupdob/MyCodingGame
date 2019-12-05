@@ -6,10 +6,10 @@ namespace AdventCalendar2015
     {
         private static void Main(string[] args)
         {
-            var day = new Day9();
+            var day = new Day10();
             day.Parse();
-            Console.WriteLine("Answer 1: {0}", day.FindShortestPath());
-            Console.WriteLine("Answer 2: {0}", day.FindLongestPath());
+            Console.WriteLine("Answer 1: {0}", day.RepeatedLookAndSay(40));
+            Console.WriteLine("Answer 2: {0}", day.RepeatedLookAndSay(10));
         }
     }
 }

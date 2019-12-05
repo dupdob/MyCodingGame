@@ -7,6 +7,7 @@
         <e p="AdventCalendar2015.csproj" t="IncludeRecursive" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="Day1.cs" t="Include" />
+        <e p="Day10.cs" t="Include" />
         <e p="Day2.cs" t="Include" />
         <e p="Day3.cs" t="Include" />
         <e p="Day4.cs" t="Include" />
